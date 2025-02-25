@@ -1,0 +1,27 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "QCMT9464MK.com.mrdots.aroundme"
+        ],
+        "components": [
+          {
+            "/": "*",
+            "comment": "Matches all routes"
+          }
+        ]
+      }
+    ]
+  },
+  "activitycontinuation": {
+    "apps": [
+      "QCMT9464MK.com.mrdots.aroundme"
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "QCMT9464MK.com.mrdots.aroundme"
+    ]
+  }
+}

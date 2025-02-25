@@ -2,7 +2,6 @@
 
 import ChatBot from "@/component/ChatBot";
 import React, { useState } from "react";
-import Image from "next/image";
 
 // Interface for brand
 interface Brand {
@@ -46,7 +45,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen items-start justify-between md:pt-10 mx-auto md:px-32 max-w-screen-2xl ">
+    <main className="flex min-h-screen flex-col items-center justify-between  md:pt-10   mx-auto  md:px-32  max-w-screen-2xl ">
       <div
         style={{
           borderRight: "1px solid #ccc",
@@ -85,17 +84,13 @@ export default function Home() {
                 marginBottom: "10px",
               }}
             >
-              <Image
+              <img
                 src={brand.imageUrl}
                 alt={brand.name}
-                width={50}
-                height={50}
                 style={{ objectFit: "contain", width: "100%", height: "100%" }}
               />
             </div>
-            <p
-              style={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}
-            >
+            <p style={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}>
               {brand.name}
             </p>
           </button>
