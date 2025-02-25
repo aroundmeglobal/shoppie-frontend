@@ -43,9 +43,13 @@ const ChatBubble = ({
 }: {
   message: Message;
   isTyping: boolean;
-  handleProductClick: () => {};
+  handleProductClick: (product: any) => void;
 }) => {
-  const [textBefore, textAfter] = message.text?.split("@@START") ?? ["", ""];
+  const [textBefore, restOfText] = message.text?.split("@@SUGGESTIONS START@@") ?? ["", ""];
+  
+  // If restOfText is empty, ensure textAfter is assigned properly
+  const [suggestionText, textAfter] = restOfText ? restOfText.split("@@SUGGESTIONS END@@") : ["", restOfText];
+
 
   return (
     <div
@@ -53,26 +57,22 @@ const ChatBubble = ({
         message.sender === "You" ? "justify-end" : "justify-start"
       }`}
     >
-      <div
-        className={`${
-          message.sender === "You" ? "bg-[#1E60FB]" : "trnasparent"
-        } text-white p-[8px] rounded-[8px]  break-words whitespace-pre-wrap overflow-hidden`}
-      >
+      <div className={` text-white  overflow-hidden`}>
         <div
           className={`${
             message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-          } max-w-[400px]`}
+          } max-w-[400px] rounded-[8px] p-[8px] `}
         >
           <p>{textBefore}</p>
         </div>
 
-        {/* -- Suggestions Rendering -- */}
         <div className="overflow-hidden mt-4 ">
-          {message.suggestions && (
+          
+           {suggestionText ? (
             <div className="flex overflow-x-auto gap-4 pb-4">
               {(() => {
                 try {
-                  const suggestionData = JSON.parse(message.suggestions);
+                  const suggestionData = JSON.parse(suggestionText);
                   if (
                     suggestionData.products &&
                     Array.isArray(suggestionData.products)
@@ -81,7 +81,7 @@ const ChatBubble = ({
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#2d2d2d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
                       >
                         <Image
                           src={product.image_url}
@@ -112,18 +112,109 @@ const ChatBubble = ({
                 return null;
               })()}
             </div>
-          )}
+          ): message.suggestions ? (
+            <div className="flex overflow-x-auto gap-4 pb-4">
+              {(() => {
+                try {
+                  const suggestionData = JSON.parse(message.suggestions);
+                  if (
+                    suggestionData.products &&
+                    Array.isArray(suggestionData.products)
+                  ) {
+                    return suggestionData.products.map((product: any) => (
+                      <div
+                        key={product.id}
+                        onClick={() => handleProductClick(product)} // Open product modal on click
+                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                      >
+                        <Image
+                          src={product.image_url}
+                          alt={product.title}
+                          width={100}
+                          height={48}
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                        <div className="ml-4 flex flex-col justify-between flex-grow">
+                          <h3 className="font-semibold line-clamp-2">
+                            {product.title}
+                          </h3>
+                          <p className="text-sm mt-3">
+                            <span className="line-through text-[grey]/90 mr-2">
+                              {product.original_price}
+                            </span>
+                            <span className="text-green-400">
+                              {product.discounted_price}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    ));
+                  }
+                } catch (error) {
+                  console.error("Error parsing suggestions JSON:", error);
+                }
+                return null;
+              })()}
+            </div>
+          ): null}
+          {/* {message.suggestions && (
+            <div className="flex overflow-x-auto gap-4 pb-4">
+              {(() => {
+                try {
+                  const suggestionData = JSON.parse(message.suggestions);
+                  if (
+                    suggestionData.products &&
+                    Array.isArray(suggestionData.products)
+                  ) {
+                    return suggestionData.products.map((product: any) => (
+                      <div
+                        key={product.id}
+                        onClick={() => handleProductClick(product)} // Open product modal on click
+                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                      >
+                        <Image
+                          src={product.image_url}
+                          alt={product.title}
+                          width={100}
+                          height={48}
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                        <div className="ml-4 flex flex-col justify-between flex-grow">
+                          <h3 className="font-semibold line-clamp-2">
+                            {product.title}
+                          </h3>
+                          <p className="text-sm mt-3">
+                            <span className="line-through text-[grey]/90 mr-2">
+                              {product.original_price}
+                            </span>
+                            <span className="text-green-400">
+                              {product.discounted_price}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    ));
+                  }
+                } catch (error) {
+                  console.error("Error parsing suggestions JSON:", error);
+                }
+                return null;
+              })()}
+            </div>
+          )} */}
         </div>
 
-        <div
-          className={`${
-            message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-          } max-w-[400px]`}
-        >
-          <div>
-            <p>{textAfter}</p>
+        {textAfter && (
+          <div
+            className={`${
+              message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+            } max-w-[400px] rounded-[8px] p-[8px] `}
+          >
+            <div>
+              <p>{textAfter}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {isTyping && <TypingIndicator />}
       </div>
@@ -261,13 +352,14 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
               if (responseText === "@@" && !isCapturingSuggestions) {
                 isCapturingSuggestions = true;
                 suggestionBuffer = "";
-                botFullResponse += "@@START";
+                botFullResponse += "@@SUGGESTIONS START@@";
               }
 
               if (isCapturingSuggestions) {
                 suggestionBuffer += responseText;
                 if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
                   isCapturingSuggestions = false;
+                  botFullResponse += "@@SUGGESTIONS END@@";
                   const cleanSuggestionText = suggestionBuffer
                     .replace(/@@SUGGESTIONS START@@/g, "")
                     .replace(/@@SUGGESTIONS END@@/g, "")
@@ -453,8 +545,7 @@ const BrandModal = ({
   return (
     <div className="flex flex-col p-2.5 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
       <div className="p-8 rounded-md w-full">
-        <div className="mt-4 text-white">
-          </div>
+        <div className="mt-4 text-white"></div>
       </div>
     </div>
   );
@@ -467,7 +558,7 @@ const ProductModal = ({
   onClose: () => void;
 }) => {
   return (
-    <div className="flex flex-col p-2.5 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
+    <div className="flex flex-col p-2.5 px-10 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
       <div className="text-[15px] font-bold flex flex-col  gap-[15px] text-white">
         <h3 className="text-xl">{selectedProduct.title}</h3>
         <Image
@@ -475,7 +566,7 @@ const ProductModal = ({
           alt={selectedProduct.title}
           width={80}
           height={80}
-          style={{ width: "250px", height: "250px", borderRadius: 20 }}
+          style={{ width: "250px", height: "200px", borderRadius: 20 }}
         />
       </div>
       <div className="rounded-md w-full">
