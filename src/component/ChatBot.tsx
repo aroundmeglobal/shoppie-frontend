@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 
+const LLM_BASE_URL = "https://anythingllm.aroundme.global/api/";
+const LLM_AUTH_TOKEN = "J4GCTGM-C0RMBYZ-HSZXQTD-1GXP4AF";
+
 interface Brand {
   name: string;
   imageUrl: string;
@@ -20,9 +23,6 @@ type Message = {
   suggestions?: string;
 };
 
-const LLM_BASE_URL = "https://anythingllm.aroundme.global/api/";
-const LLM_AUTH_TOKEN = "J4GCTGM-C0RMBYZ-HSZXQTD-1GXP4AF";
-
 const TypingIndicator: React.FC = () => {
   return (
     <div className="flex items-center space-x-1 mt-2">
@@ -35,12 +35,15 @@ const TypingIndicator: React.FC = () => {
     </div>
   );
 };
+
 const ChatBubble = ({
   message,
   isTyping,
+  handleProductClick,
 }: {
   message: Message;
   isTyping: boolean;
+  handleProductClick: () => {};
 }) => {
   const [textBefore, textAfter] = message.text?.split("@@START") ?? ["", ""];
 
@@ -77,7 +80,8 @@ const ChatBubble = ({
                     return suggestionData.products.map((product: any) => (
                       <div
                         key={product.id}
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#2d2d2d] text-yellow-50 h-[320px] gap-5"
+                        onClick={() => handleProductClick(product)} // Open product modal on click
+                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#2d2d2d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
                       >
                         <Image
                           src={product.image_url}
@@ -133,6 +137,9 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [fetchingMessage, setFetchingMessage] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showBrandModal, setShowBrandModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -326,12 +333,32 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
   };
 
   const handleBack = () => {
+    if (showBrandModal) setShowBrandModal(false);
+    else if (showProductModal) setShowProductModal(false);
     router.push("/");
+  };
+  const handleBrandIconClick = () => {
+    setShowBrandModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowBrandModal(false);
+  };
+
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product);
+    setShowProductModal(true);
+  };
+
+  const handleCloseProductModal = () => {
+    setShowProductModal(false);
+    setSelectedProduct(null);
   };
 
   return (
     <div>
       <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[550px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30">
+        {/* Header */}
         <div className="flex justify-between md:justify-between items-center p-[10px]">
           <div className="text-[15px] font-bold flex items-center gap-[15px] text-white">
             <span role="img" aria-label="Back" onClick={handleBack}>
@@ -340,10 +367,15 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
                 alt="Back"
                 width={20}
                 height={20}
-                style={{ width: "20px", height: "20px", marginLeft: "10px" }}
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  marginLeft: "10px",
+                }}
               />
             </span>
             <Image
+              onClick={handleBrandIconClick}
               src={selectedBrand.imageUrl}
               alt="Chat"
               width={20}
@@ -353,76 +385,113 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
           </div>
         </div>
 
-        {/* <div
-          className="flex-grow overflow-y-auto p-[15px] font-sans text-[15px] text-black no-scrollbar "
-          style={{ height: "calc(100% - 150px)" }}
-        >
-          {fetchingMessage && (
-            // typing
-            <div className="flex items-center p-2.5">
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-            </div>
-          )}
-          {messages.map(renderMessage)}
+        {/* Modals */}
+        {showBrandModal && (
+          <BrandModal
+            selectedBrand={selectedBrand}
+            onClose={handleCloseModal}
+          />
+        )}
+        {showProductModal && (
+          <ProductModal
+            selectedProduct={selectedProduct}
+            onClose={handleCloseProductModal}
+          />
+        )}
 
-          {isTyping && (
-            <div className="flex items-center p-2.5">
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-            </div>
-          )}
-        </div> */}
-        <div className="flex-grow overflow-y-auto p-[10px] bg-[#161616]">
-          {messages.map((msg, index) => {
-            // If this is the *last* bot message, we conditionally pass isTyping
-            const isLastBotMessage =
-              index === messages.length - 1 && msg.sender === "Bunny";
-            return (
-              <ChatBubble
-                key={index}
-                message={msg}
-                isTyping={isLastBotMessage && isTyping}
-              />
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-        {/* <SwipeableViews className="no-scrollbar">
-          <div className="flex flex-row overflow-y-auto p-[10px] gap-[5px] bg-transparent rounded-[10px] cursor-pointer scroll-smooth mt-[10px] mb-[5px] no-scrollbar">
-            {quickQuestions.map((question, index) => (
-              <div
-                className="p-[9px] rounded-[10px] text-white bg-[#4f46e5] transition-transform duration-300 min-w-[200px] flex-shrink-0 hover:bg-[#4f46e5] overflow-y-scroll scrollbar-hide"
-                key={index}
-                onClick={() => handleQuickQuestion(question)}
-              >
-                {question}
-              </div>
-            ))}
+        {/* Chat Messages */}
+        <>
+          <div className="flex-grow overflow-y-auto p-[10px] bg-[#161616]">
+            {messages.map((msg, index) => {
+              const isLastBotMessage =
+                index === messages.length - 1 && msg.sender === "Bunny";
+              return (
+                <ChatBubble
+                  key={index}
+                  message={msg}
+                  isTyping={isLastBotMessage && isTyping}
+                  handleProductClick={handleProductClick}
+                />
+              );
+            })}
+            <div ref={messagesEndRef} />
           </div>
-        </SwipeableViews> */}
-        <div className="flex p-[10px] bg-[#09090b] border-t-[0.1px]-[#1d1d1d] gap-[10px]">
-          <input
-            className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d]"
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            style={{ width: "100%", height: "40px", color: "white" }}
-          />
-          <Image
-            src="/img/send_button.svg"
-            alt="Send"
-            width={50}
-            height={20}
-            onClick={handleSend}
-            className="cursor-pointer"
-          />
-        </div>
+
+          {/* Input */}
+          <div className="flex p-[10px] bg-[#09090b] border-t-[0.1px]-[#1d1d1d] gap-[10px]">
+            <input
+              className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d]"
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              style={{ width: "100%", height: "40px", color: "white" }}
+            />
+            <Image
+              src="/img/send_button.svg"
+              alt="Send"
+              width={50}
+              height={20}
+              onClick={handleSend}
+              className="cursor-pointer"
+            />
+          </div>
+        </>
       </div>
     </div>
   );
 }
+
+const BrandModal = ({
+  selectedBrand,
+  onClose,
+}: {
+  selectedBrand: Brand;
+  onClose: () => void;
+}) => {
+  return (
+    <div className="flex flex-col p-2.5 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
+      <div className="p-8 rounded-md w-full">
+        <div className="mt-4 text-white">
+          </div>
+      </div>
+    </div>
+  );
+};
+
+const ProductModal = ({
+  selectedProduct,
+}: {
+  selectedProduct: any; // This should match the shape of your product data
+  onClose: () => void;
+}) => {
+  return (
+    <div className="flex flex-col p-2.5 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
+      <div className="text-[15px] font-bold flex flex-col  gap-[15px] text-white">
+        <h3 className="text-xl">{selectedProduct.title}</h3>
+        <Image
+          src={selectedProduct.image_url}
+          alt={selectedProduct.title}
+          width={80}
+          height={80}
+          style={{ width: "250px", height: "250px", borderRadius: 20 }}
+        />
+      </div>
+      <div className="rounded-md w-full">
+        <div className="mt-4 text-white">
+          <h3>{selectedProduct.title}</h3>
+          <p>{selectedProduct.description}</p>
+          <p>
+            <span className="line-through text-[grey]/90 mr-2">
+              {selectedProduct.original_price}
+            </span>
+            <span className="text-green-400">
+              {selectedProduct.discounted_price}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
