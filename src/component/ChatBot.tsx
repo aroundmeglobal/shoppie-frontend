@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
+import api from "@/lib/axiosInstance";
+import { MdVerified } from "react-icons/md";
 
 const LLM_BASE_URL = "https://anythingllm.aroundme.global/api/";
 const LLM_AUTH_TOKEN = "J4GCTGM-C0RMBYZ-HSZXQTD-1GXP4AF";
@@ -45,11 +47,14 @@ const ChatBubble = ({
   isTyping: boolean;
   handleProductClick: (product: any) => void;
 }) => {
-  const [textBefore, restOfText] = message.text?.split("@@SUGGESTIONS START@@") ?? ["", ""];
-  
-  // If restOfText is empty, ensure textAfter is assigned properly
-  const [suggestionText, textAfter] = restOfText ? restOfText.split("@@SUGGESTIONS END@@") : ["", restOfText];
+  const [textBefore, restOfText] = message.text?.split(
+    "@@SUGGESTIONS START@@"
+  ) ?? ["", ""];
 
+  // If restOfText is empty, ensure textAfter is assigned properly
+  const [suggestionText, textAfter] = restOfText
+    ? restOfText.split("@@SUGGESTIONS END@@")
+    : ["", restOfText];
 
   return (
     <div
@@ -67,8 +72,7 @@ const ChatBubble = ({
         </div>
 
         <div className="overflow-hidden mt-4 ">
-          
-           {suggestionText ? (
+          {suggestionText ? (
             <div className="flex overflow-x-auto gap-4 pb-4">
               {(() => {
                 try {
@@ -112,7 +116,7 @@ const ChatBubble = ({
                 return null;
               })()}
             </div>
-          ): message.suggestions ? (
+          ) : message.suggestions ? (
             <div className="flex overflow-x-auto gap-4 pb-4">
               {(() => {
                 try {
@@ -156,7 +160,7 @@ const ChatBubble = ({
                 return null;
               })()}
             </div>
-          ): null}
+          ) : null}
           {/* {message.suggestions && (
             <div className="flex overflow-x-auto gap-4 pb-4">
               {(() => {
@@ -449,33 +453,8 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
 
   return (
     <div>
-      <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[550px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30">
+      <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[500px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30">
         {/* Header */}
-        <div className="flex justify-between md:justify-between items-center p-[10px]">
-          <div className="text-[15px] font-bold flex items-center gap-[15px] text-white">
-            <span role="img" aria-label="Back" onClick={handleBack}>
-              <Image
-                src={"/img/white-back-arrow.svg"}
-                alt="Back"
-                width={20}
-                height={20}
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  marginLeft: "10px",
-                }}
-              />
-            </span>
-            <Image
-              onClick={handleBrandIconClick}
-              src={selectedBrand.imageUrl}
-              alt="Chat"
-              width={20}
-              height={20}
-              style={{ width: "50px", height: "50px" }}
-            />
-          </div>
-        </div>
 
         {/* Modals */}
         {showBrandModal && (
@@ -493,6 +472,37 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
 
         {/* Chat Messages */}
         <>
+          <div className="flex justify-between md:justify-between items-center p-[10px]">
+            <div className="text-[15px] font-bold flex items-center gap-[15px] text-white">
+              <span role="img" aria-label="Back" onClick={handleBack}>
+                <Image
+                  src={"/img/white-back-arrow.svg"}
+                  alt="Back"
+                  width={20}
+                  height={20}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    marginLeft: "10px",
+                  }}
+                />
+              </span>
+              <Image
+                onClick={handleBrandIconClick}
+                src={selectedBrand.imageUrl}
+                alt="Chat"
+                width={20}
+                height={20}
+                style={{ width: "50px", height: "50px" }}
+              />
+              <div
+                onClick={handleBrandIconClick}
+                className="text-white text-lg"
+              >
+                {selectedBrand.name}
+              </div>
+            </div>
+          </div>
           <div className="flex-grow overflow-y-auto p-[10px] bg-[#161616]">
             {messages.map((msg, index) => {
               const isLastBotMessage =
@@ -534,7 +544,6 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
     </div>
   );
 }
-
 const BrandModal = ({
   selectedBrand,
   onClose,
@@ -542,10 +551,190 @@ const BrandModal = ({
   selectedBrand: Brand;
   onClose: () => void;
 }) => {
+  const [brandDetaile, setBrandDetailes] = useState<any>(null);
+  const [productDetails, setProductDetails] = useState<any>([]);
+
+  useEffect(() => {
+    const fetchBrandDetails = async () => {
+      try {
+        const response = await api.get("/users/brand-details", {
+          user_id: 369,
+        });
+        const data = response.data;
+        setBrandDetailes(data);
+        console.log("brand data", data.meta);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const fetchProductDetailes = async () => {
+      try {
+        const response = await api.get(
+          "/users/product-details-by-brand?brand_id=23"
+        );
+        const data = response.data;
+        setProductDetails(data); // Set product details here
+        console.log("brand product details", data[0]);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchBrandDetails();
+    fetchProductDetailes();
+  }, []);
+
+  const extractDomain = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      return domain;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const getFavicon = (url: string) => {
+    const domain = extractDomain(url);
+    if (domain) {
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; // Requesting a larger size (128x128)
+    }
+    return null;
+  };
+
+  const socialLinks = [
+    { name: "Facebook", url: brandDetaile?.meta?.facebook },
+    { name: "Instagram", url: brandDetaile?.meta?.instagram },
+    { name: "LinkedIn", url: brandDetaile?.meta?.linkedin },
+    { name: "Twitter", url: brandDetaile?.meta?.x?.twitter },
+    { name: "YouTube", url: brandDetaile?.meta?.youtube },
+    { name: "Website", url: brandDetaile?.meta?.website },
+  ];
+
   return (
-    <div className="flex flex-col p-2.5 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
-      <div className="p-8 rounded-md w-full">
-        <div className="mt-4 text-white"></div>
+    <div className="flex flex-col p-2.5 fixed bg-black mt-0 w-[500px] h-[672px] rounded-xl overflow-y-auto">
+      <div className="flex justify-between md:justify-between items-center ">
+        <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white">
+          <span
+            role="img"
+            aria-label="Back"
+            onClick={onClose}
+            className=" mt-[-60px]"
+          >
+            <Image
+              src={"/img/white-back-arrow.svg"}
+              alt="Back"
+              width={20}
+              height={20}
+              style={{
+                width: "20px",
+                height: "20px",
+                marginLeft: "10px",
+              }}
+            />
+          </span>
+          <div className="flex flex-1 justify-center">
+            <div className=" ml-[-50px] flex flex-col gap-2 items-center">
+              <Image
+                src={selectedBrand.imageUrl}
+                alt="Brand Logo"
+                width={20}
+                height={20}
+                style={{ width: "80px", height: "80px" }}
+              />
+              <div className="flex items-center gap-2">
+                <div className="text-white text-xl">{selectedBrand.name}</div>
+                <MdVerified color="#00affe" size={18} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-10">
+        {/* Brand description section */}
+        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
+          Brand Description
+        </h1>
+        <div className="rounded-xl w-full mt-2 border border-[#4a4a4a] p-2">
+          <div className=" text-white/60 text-sm">
+            <p>{brandDetaile?.meta?.brand_description}</p>
+          </div>
+        </div>
+        {/* Social media section */}
+        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
+          Socials
+        </h1>
+        <div className="rounded-xl mt-2 border border-[#4a4a4a] flex items-center justify-between px-5 py-2">
+          {socialLinks.map((link, index) =>
+            link.url ? (
+              <a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Image
+                  src={getFavicon(link.url)}
+                  alt={`${link.name} favicon`}
+                  width={35}
+                  height={35}
+                  style={{ borderRadius: 50, backgroundColor: "white" }}
+                />
+              </a>
+            ) : null
+          )}
+        </div>
+
+        {/* Product cards section */}
+        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
+          Products
+        </h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mt-4">
+          {productDetails.map((product: any) => (
+            <div
+              key={product.id}
+              className="bg-[#1c1c1c] p-4 rounded-xl border border-[#4a4a4a]"
+            >
+              <div className="flex flex-col items-center">
+                <Image
+                  src={product.media[0]} 
+                  alt={product.title}
+                  width={150}
+                  height={150}
+                  className="rounded-lg"
+                />
+                <h3 className="text-white text-lg mt-4">{product.title}</h3>
+                <p className="text-gray-400 text-sm mt-2">
+                  {product.description}
+                </p>
+                <div className="mt-4">
+                  <p className="text-[#4a90e2] text-lg">
+                    ₹
+                    {product.prices?.discounted_price ||
+                      product.prices?.original_price}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    {product.purchase_urls?.map(
+                      (url: string, index: number) => (
+                        <a
+                          key={index}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-[#4a90e2] hover:underline"
+                        >
+                          Buy Now
+                        </a>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
@@ -558,7 +747,7 @@ const ProductModal = ({
   onClose: () => void;
 }) => {
   return (
-    <div className="flex flex-col p-2.5 px-10 fixed bg-black mt-16 w-[550px] h-[605px] rounded-xl overflow-y-auto">
+    <div className="flex flex-col p-2.5 px-10 fixed bg-black mt-16 w-[500px] h-[605px] rounded-xl overflow-y-auto">
       <div className="text-[15px] font-bold flex flex-col  gap-[15px] text-white">
         <h3 className="text-xl">{selectedProduct.title}</h3>
         <Image
