@@ -2,12 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import SwipeableViews from "react-swipeable-views";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
-import ReactMarkdown from "react-markdown";
-
-const BASE_URL = "https://fastapi.aroundme.tech";
 
 interface Brand {
   name: string;
@@ -18,41 +14,127 @@ interface ChatPageProps {
   selectedBrand: Brand;
 }
 
-interface Message {
-  id: string;
-  message: string;
+type Message = {
   sender: string;
-  user_id: number;
-}
+  text: string;
+  suggestions?: string;
+};
+
+const LLM_BASE_URL = "https://anythingllm.aroundme.global/api/";
+const LLM_AUTH_TOKEN = "J4GCTGM-C0RMBYZ-HSZXQTD-1GXP4AF";
+
+const TypingIndicator: React.FC = () => {
+  return (
+    <div className="flex items-center space-x-1 mt-2">
+      {/* Dot 1 */}
+      <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0s]" />
+      {/* Dot 2 */}
+      <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0.3s]" />
+      {/* Dot 3 */}
+      <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0.6s]" />
+    </div>
+  );
+};
+const ChatBubble = ({
+  message,
+  isTyping,
+}: {
+  message: Message;
+  isTyping: boolean;
+}) => {
+  const [textBefore, textAfter] = message.text?.split("@@START") ?? ["", ""];
+
+  return (
+    <div
+      className={`mb-[10px] flex ${
+        message.sender === "You" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div
+        className={`${
+          message.sender === "You" ? "bg-[#1E60FB]" : "trnasparent"
+        } text-white p-[8px] rounded-[8px]  break-words whitespace-pre-wrap overflow-hidden`}
+      >
+        <div
+          className={`${
+            message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+          } max-w-[400px]`}
+        >
+          <p>{textBefore}</p>
+        </div>
+
+        {/* -- Suggestions Rendering -- */}
+        <div className="overflow-hidden mt-4 ">
+          {message.suggestions && (
+            <div className="flex overflow-x-auto gap-4 pb-4">
+              {(() => {
+                try {
+                  const suggestionData = JSON.parse(message.suggestions);
+                  if (
+                    suggestionData.products &&
+                    Array.isArray(suggestionData.products)
+                  ) {
+                    return suggestionData.products.map((product: any) => (
+                      <div
+                        key={product.id}
+                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#2d2d2d] text-yellow-50 h-[320px] gap-5"
+                      >
+                        <Image
+                          src={product.image_url}
+                          alt={product.title}
+                          width={100}
+                          height={48}
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                        <div className="ml-4 flex flex-col justify-between flex-grow">
+                          <h3 className="font-semibold line-clamp-2">
+                            {product.title}
+                          </h3>
+                          <p className="text-sm mt-3">
+                            <span className="line-through text-[grey]/90 mr-2">
+                              {product.original_price}
+                            </span>
+                            <span className="text-green-400">
+                              {product.discounted_price}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    ));
+                  }
+                } catch (error) {
+                  console.error("Error parsing suggestions JSON:", error);
+                }
+                return null;
+              })()}
+            </div>
+          )}
+        </div>
+
+        <div
+          className={`${
+            message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+          } max-w-[400px]`}
+        >
+          <div>
+            <p>{textAfter}</p>
+          </div>
+        </div>
+
+        {isTyping && <TypingIndicator />}
+      </div>
+    </div>
+  );
+};
 
 export default function ChatPage({ selectedBrand }: ChatPageProps) {
-  useEffect(() => {
-    if (selectedBrand) {
-      console.log(`Selected brand: ${selectedBrand.name}`);
-      console.log(`Brand image: ${selectedBrand.imageUrl}`);
-      // Handle the selected brand's name and image here
-    }
-  }, [selectedBrand]);
-
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [inputValue, setInputValue] = useState("");
-  const [anonymousUserId, setAnonymousUserId] = useState("");
-  const [quickQuestions, setQuickQuestions] = useState([
-    "What is this app about?",
-    "What are the features of the app?",
-    "Will the app be free to use?",
-    "Tell me about the app's privacy policy.",
-  ]);
   const [isTyping, setIsTyping] = useState(false);
   const [fetchingMessage, setFetchingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    const userId = uuidv4();
-    setAnonymousUserId(userId);
-  }, []);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -60,93 +142,180 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
     }
   }, [messages]);
 
-  const addMessage = (sender: string, message: string, user_id: number) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { id: uuidv4(), sender, message, user_id }, // Add id here
-    ]);
+  const transformMessages = (data: Array<any>) => {
+    return data.map((msg) => ({
+      id: uuidv4(),
+      message: msg.content, // Use `msg.content` for the message
+      sender: msg.role === "user" ? "You" : "Bunny", // Sender logic
+      user_id: msg.role === "user" ? 1 : 2,
+      text: msg.content, // Ensure `text` is included here
+    }));
   };
 
-  // fetch previous message
   useEffect(() => {
     setFetchingMessage(true);
     const fetchMessages = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/api/anonymous-conversations/list`,
-          {
-            method: "GET",
-            credentials: "include", // Ensure cookies are sent with the request
-          }
-        );
+        const chatData = await fetch(`${LLM_BASE_URL}/v1/workspace/369/chats`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+          },
+        });
 
-        setFetchingMessage(false);
+        const messageData = await chatData.json();
 
-        if (response.ok) {
-          const data = await response.json();
+        const history = messageData?.history;
+        if (Array.isArray(history)) {
+          const transformedMessages = transformMessages(history);
+          console.log("trnasformed", transformedMessages);
 
-          const { messages: fetchedMessages } = data;
-          const reversedMessages = fetchedMessages.slice().reverse();
-          setMessages(reversedMessages);
+          setMessages(transformedMessages);
         } else {
-          setFetchingMessage(false);
-          console.log("Failed to fetch messages:", response.statusText);
+          console.error("No valid history found in messageData", messageData);
         }
+        setFetchingMessage(false);
       } catch (error) {
         setFetchingMessage(false);
         console.error("Error fetching messages:", error);
       }
+
+      console.log(messages);
     };
 
     fetchMessages();
   }, []);
 
   const handleSend = async () => {
-    if (inputValue.trim() === "") return;
-    addMessage("You", inputValue, Number(anonymousUserId));
+    if (!inputValue.trim()) return;
+    setMessages((prev) => [
+      ...prev,
+      { sender: "You", text: inputValue.trim() },
+    ]);
+    const messageToSend = inputValue.trim();
     setInputValue("");
 
+    // Immediately add a blank bot message to the array
+    // and set isBotTyping to true
     setIsTyping(true);
+    setMessages((prev) => [...prev, { sender: "Bunny", text: "" }]);
 
     try {
       const response = await fetch(
-        `${BASE_URL}/api/anonymous-conversations/ask`,
+        `${LLM_BASE_URL}v1/workspace/369/stream-chat`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
           },
-          credentials: "include",
           body: JSON.stringify({
-            message: inputValue,
+            message: JSON.stringify(messageToSend),
+            attachments: [],
           }),
         }
       );
 
-      setIsTyping(false);
-
-      if (response.ok) {
-        const data = await response.json();
-        // addMessage("Bunny", data.message.message);
-        addMessage("Bunny", data.message.message, 1);
-      } else {
-        const errorData = await response.json(); // Log or inspect this
-        console.error("API Error:", errorData);
-        // addMessage("Bunny", "Sorry, there was an error processing your request.");
-        addMessage(
-          "Bunny",
-          "Sorry, there was an error processing your request.",
-          1
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${errorText}`
         );
       }
-    } catch (error) {
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      let isCapturingSuggestions = false;
+      let suggestionBuffer = "";
+      let botFullResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+
+          if (trimmedLine === "data: [DONE]") {
+            // Mark the end of streaming
+            setIsTyping(false);
+            break;
+          }
+
+          if (trimmedLine.startsWith("data:")) {
+            try {
+              const jsonData = JSON.parse(trimmedLine.substring(5));
+              const responseText = jsonData.textResponse || "";
+
+              // Start capturing suggestions
+              if (responseText === "@@" && !isCapturingSuggestions) {
+                isCapturingSuggestions = true;
+                suggestionBuffer = "";
+                botFullResponse += "@@START";
+              }
+
+              if (isCapturingSuggestions) {
+                suggestionBuffer += responseText;
+                if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
+                  isCapturingSuggestions = false;
+                  const cleanSuggestionText = suggestionBuffer
+                    .replace(/@@SUGGESTIONS START@@/g, "")
+                    .replace(/@@SUGGESTIONS END@@/g, "")
+                    .trim();
+
+                  // Update the last bot message with suggestions
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].suggestions =
+                        cleanSuggestionText;
+                    }
+                    return updatedMessages;
+                  });
+                }
+              } else {
+                botFullResponse += responseText;
+                setMessages((prevMessages) => {
+                  const updatedMessages = [...prevMessages];
+                  if (
+                    updatedMessages.length > 0 &&
+                    updatedMessages[updatedMessages.length - 1].sender ===
+                      "Bunny"
+                  ) {
+                    updatedMessages[updatedMessages.length - 1].text =
+                      botFullResponse;
+                  }
+                  return updatedMessages;
+                });
+              }
+            } catch (jsonError) {
+              console.error(
+                "Error parsing JSON:",
+                jsonError,
+                "Line:",
+                trimmedLine
+              );
+            }
+          }
+        }
+      }
+
+      // Once the while loop finishes (stream ends), set isBotTyping to false
       setIsTyping(false);
-      console.error("Request Error:", error);
-      addMessage(
-        "Bunny",
-        "Sorry, there was an error processing your request.",
-        1
-      );
+    } catch (error: any) {
+      console.error("Error fetching from API:", error);
+      setMessages((prev) => [
+        ...prev,
+        { sender: "Bunny", text: "Error occurred while fetching response." },
+      ]);
+      setIsTyping(false);
     }
   };
 
@@ -156,96 +325,14 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
     }
   };
 
-  const handleQuickQuestion = async (question: string): Promise<void> => {
-    setQuickQuestions((prevQuestions) =>
-      prevQuestions.filter((q) => q !== question)
-    );
-    setInputValue(question);
-    addMessage("You", question, Number(anonymousUserId));
-
-    setInputValue("");
-
-    setIsTyping(true);
-
-    try {
-      const response = await fetch(
-        `${BASE_URL}/api/anonymous-conversations/ask`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            message: question,
-          }),
-        }
-      );
-
-      setIsTyping(false);
-
-      if (response.ok) {
-        const data = await response.json();
-        // addMessage("Bunny", data.message.message);
-        addMessage("Bunny", data.message.message, 1);
-      } else {
-        addMessage(
-          "Bunny",
-          "Sorry, there was an error processing your request.",
-          1
-        );
-      }
-    } catch (error) {
-      console.log(error);
-
-      setIsTyping(false);
-      addMessage(
-        "Bunny",
-        "Sorry, there was an error processing your request.",
-        1
-      );
-    }
-  };
-
-  const renderMessage = (msg: Message, index: number) => (
-    <div
-      ref={messagesEndRef}
-      key={index}
-      className={
-        msg.user_id === 1 // Chatbot messages
-          ? "bg-[#1d1d1d] text-white p-2.5 rounded-[10px] mb-2.5 self-start max-w-[80%] break-words"
-          : "bg-[#4f46e5] text-white p-2.5 rounded-[10px] mb-2.5 ml-auto self-end max-w-max break-words"
-      }
-    >
-      <ReactMarkdown>{msg.message}</ReactMarkdown>
-      {msg.message.includes("Instagram") && (
-        <>
-          <a
-            href="https://instagram.com/aroundme_app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              src="/img/follow-on-insta-cta.svg"
-              alt="Join Instagram"
-              width={150}
-              height={100}
-            />
-          </a>
-          <div style={{ height: "5px" }}></div>
-        </>
-      )}
-    </div>
-  );
-
   const handleBack = () => {
     router.push("/");
   };
 
   return (
     <div>
-      <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[400px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30 border-2 ">
-        <div className="flex justify-between md:justify-between items-center p-[10px] border-b-[1px]">
+      <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[550px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30">
+        <div className="flex justify-between md:justify-between items-center p-[10px]">
           <div className="text-[15px] font-bold flex items-center gap-[15px] text-white">
             <span role="img" aria-label="Back" onClick={handleBack}>
               <Image
@@ -266,7 +353,7 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
           </div>
         </div>
 
-        <div
+        {/* <div
           className="flex-grow overflow-y-auto p-[15px] font-sans text-[15px] text-black no-scrollbar "
           style={{ height: "calc(100% - 150px)" }}
         >
@@ -287,8 +374,23 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
               <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
             </div>
           )}
+        </div> */}
+        <div className="flex-grow overflow-y-auto p-[10px] bg-[#161616]">
+          {messages.map((msg, index) => {
+            // If this is the *last* bot message, we conditionally pass isTyping
+            const isLastBotMessage =
+              index === messages.length - 1 && msg.sender === "Bunny";
+            return (
+              <ChatBubble
+                key={index}
+                message={msg}
+                isTyping={isLastBotMessage && isTyping}
+              />
+            );
+          })}
+          <div ref={messagesEndRef} />
         </div>
-        <SwipeableViews className="no-scrollbar">
+        {/* <SwipeableViews className="no-scrollbar">
           <div className="flex flex-row overflow-y-auto p-[10px] gap-[5px] bg-transparent rounded-[10px] cursor-pointer scroll-smooth mt-[10px] mb-[5px] no-scrollbar">
             {quickQuestions.map((question, index) => (
               <div
@@ -300,7 +402,7 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
               </div>
             ))}
           </div>
-        </SwipeableViews>
+        </SwipeableViews> */}
         <div className="flex p-[10px] bg-[#09090b] border-t-[0.1px]-[#1d1d1d] gap-[10px]">
           <input
             className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d]"

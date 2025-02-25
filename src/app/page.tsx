@@ -90,14 +90,15 @@ export default function Home() {
                 style={{ objectFit: "contain", width: "100%", height: "100%" }}
               />
             </div>
-            <p style={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}>
+            <p
+              style={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}
+            >
               {brand.name}
             </p>
           </button>
         ))}
       </div>
-
-      {selectedBrand && <ChatBot selectedBrand={selectedBrand} />}
+        {selectedBrand && <ChatBot selectedBrand={selectedBrand} />}
     </main>
   );
 }
