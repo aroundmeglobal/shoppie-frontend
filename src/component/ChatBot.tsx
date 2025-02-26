@@ -6,6 +6,8 @@ import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import api from "@/lib/axiosInstance";
 import { MdVerified } from "react-icons/md";
+import { GiDivert } from "react-icons/gi";
+import { IoSearchOutline } from "react-icons/io5";
 
 const LLM_BASE_URL = "https://anythingllm.aroundme.global/api/";
 const LLM_AUTH_TOKEN = "J4GCTGM-C0RMBYZ-HSZXQTD-1GXP4AF";
@@ -27,7 +29,7 @@ type Message = {
 
 const TypingIndicator: React.FC = () => {
   return (
-    <div className="flex items-center space-x-1 mt-2">
+    <div className="flex items-center space-x-1 mt-2 z-0">
       {/* Dot 1 */}
       <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0s]" />
       {/* Dot 2 */}
@@ -270,8 +272,6 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
         const history = messageData?.history;
         if (Array.isArray(history)) {
           const transformedMessages = transformMessages(history);
-          console.log("trnasformed", transformedMessages);
-
           setMessages(transformedMessages);
         } else {
           console.error("No valid history found in messageData", messageData);
@@ -281,8 +281,6 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
         setFetchingMessage(false);
         console.error("Error fetching messages:", error);
       }
-
-      console.log(messages);
     };
 
     fetchMessages();
@@ -453,7 +451,7 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
 
   return (
     <div>
-      <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[500px] md:h-[75%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[20%] shadow-md overflow-hidden z-30">
+      <div className="flex flex-col top-0 fixed w-full h-full bg-[#141414] md:w-[470px] md:h-[85%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[10%] shadow-md overflow-hidden z-30">
         {/* Header */}
 
         {/* Modals */}
@@ -461,14 +459,19 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
           <BrandModal
             selectedBrand={selectedBrand}
             onClose={handleCloseModal}
+            handleProductClick={handleProductClick}
+            // setSelectedProduct={setSelectedProduct}
           />
         )}
         {showProductModal && (
-          <ProductModal
-            selectedProduct={selectedProduct}
-            onClose={handleCloseProductModal}
-          />
-        )}
+        <ProductModal
+          key={selectedProduct?.id} 
+          selectedBrand={selectedBrand}
+          selectedProduct={selectedProduct}
+          onClose={handleCloseProductModal}
+          handleProductClick={handleProductClick}
+        />
+      )}
 
         {/* Chat Messages */}
         <>
@@ -478,11 +481,11 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
                 <Image
                   src={"/img/white-back-arrow.svg"}
                   alt="Back"
-                  width={20}
-                  height={20}
+                  width={16}
+                  height={16}
                   style={{
-                    width: "20px",
-                    height: "20px",
+                    width: "16px",
+                    height: "16px",
                     marginLeft: "10px",
                   }}
                 />
@@ -503,7 +506,7 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
               </div>
             </div>
           </div>
-          <div className="flex-grow overflow-y-auto p-[10px] bg-[#161616]">
+          <div className="flex-grow overflow-y-auto p-[10px] bg-[#141414]">
             {messages.map((msg, index) => {
               const isLastBotMessage =
                 index === messages.length - 1 && msg.sender === "Bunny";
@@ -520,7 +523,7 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
           </div>
 
           {/* Input */}
-          <div className="flex p-[10px] bg-[#09090b] border-t-[0.1px]-[#1d1d1d] gap-[10px]">
+          <div className="flex p-[10px] bg-[#141414] border-t-[0.1px]-[#1d1d1d] gap-[10px]">
             <input
               className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d]"
               type="text"
@@ -544,15 +547,21 @@ export default function ChatPage({ selectedBrand }: ChatPageProps) {
     </div>
   );
 }
+
 const BrandModal = ({
   selectedBrand,
   onClose,
-}: {
+  handleProductClick,
+}: // setSelectedProduct,
+{
   selectedBrand: Brand;
   onClose: () => void;
+  handleProductClick: (product: any) => void;
+  // setSelectedProduct: (product: any) => void;
 }) => {
   const [brandDetaile, setBrandDetailes] = useState<any>(null);
-  const [productDetails, setProductDetails] = useState<any>([]);
+  const [productDetails, setProductDetails] = useState<any[]>([]);
+  const [showAllProductModal, setShowAllProductModal] = useState(false);
 
   useEffect(() => {
     const fetchBrandDetails = async () => {
@@ -562,7 +571,6 @@ const BrandModal = ({
         });
         const data = response.data;
         setBrandDetailes(data);
-        console.log("brand data", data.meta);
       } catch (err) {
         console.error(err);
       }
@@ -571,11 +579,10 @@ const BrandModal = ({
     const fetchProductDetailes = async () => {
       try {
         const response = await api.get(
-          "/users/product-details-by-brand?brand_id=23"
+          "/users/product-details-by-brand?brand_id=26"
         );
         const data = response.data;
-        setProductDetails(data); // Set product details here
-        console.log("brand product details", data[0]);
+        setProductDetails(data);
       } catch (err) {
         console.error(err);
       }
@@ -597,7 +604,7 @@ const BrandModal = ({
   const getFavicon = (url: string) => {
     const domain = extractDomain(url);
     if (domain) {
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; // Requesting a larger size (128x128)
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
     }
     return null;
   };
@@ -611,8 +618,13 @@ const BrandModal = ({
     { name: "Website", url: brandDetaile?.meta?.website },
   ];
 
+  const handleSeeAllClick = () => {
+    setShowAllProductModal(true);
+  };
+
   return (
-    <div className="flex flex-col p-2.5 fixed bg-black mt-0 w-[500px] h-[672px] rounded-xl overflow-y-auto">
+    <div className="lex flex-col top-0 fixed w-full h-full bg-[#141414] md:w-[470px] md:h-[85%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[10%] shadow-md overflow-hidden  overflow-y-auto p-2.5">
+      {/* Brand Modal Header */}
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white">
           <span
@@ -624,11 +636,11 @@ const BrandModal = ({
             <Image
               src={"/img/white-back-arrow.svg"}
               alt="Back"
-              width={20}
-              height={20}
+              width={16}
+              height={16}
               style={{
-                width: "20px",
-                height: "20px",
+                width: "16px",
+                height: "16px",
                 marginLeft: "10px",
               }}
             />
@@ -644,28 +656,29 @@ const BrandModal = ({
               />
               <div className="flex items-center gap-2">
                 <div className="text-white text-xl">{selectedBrand.name}</div>
-                <MdVerified color="#00affe" size={18} />
+                <MdVerified color="#1E60FB" size={18} />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-10">
-        {/* Brand description section */}
-        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
+      {/* Brand Description */}
+      <div className="px-2 py-2">
+        <h1 className="text-[#a4a4a4] text-[13px] font-semibold mt-8 font-[BR Firma]">
           Brand Description
         </h1>
-        <div className="rounded-xl w-full mt-2 border border-[#4a4a4a] p-2">
-          <div className=" text-white/60 text-sm">
+        <div className="rounded-xl text-[13px] w-full mt-2 bg-[#1d1d1d] p-[14px] min-h-[55px]">
+          <div className=" text-white ">
             <p>{brandDetaile?.meta?.brand_description}</p>
           </div>
         </div>
-        {/* Social media section */}
-        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
+
+        {/* Social Media Links */}
+        <h1 className="text-[#fff]/50 text-[14px] font-semibold mt-4">
           Socials
         </h1>
-        <div className="rounded-xl mt-2 border border-[#4a4a4a] flex items-center justify-between px-5 py-2">
+        <div className="rounded-xl mt-2 bg-[#1d1d1d] flex items-center p-[14px] min-h-[55px]">
           {socialLinks.map((link, index) =>
             link.url ? (
               <a
@@ -673,12 +686,13 @@ const BrandModal = ({
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="mr-4"
               >
                 <Image
                   src={getFavicon(link.url)}
-                  alt={`${link.name} favicon`}
-                  width={35}
-                  height={35}
+                  alt={link.name}
+                  width={45}
+                  height={45}
                   style={{ borderRadius: 50, backgroundColor: "white" }}
                 />
               </a>
@@ -686,55 +700,166 @@ const BrandModal = ({
           )}
         </div>
 
-        {/* Product cards section */}
-        <h1 className="text-[#5a5a5a] text-[14px] font-semibold mt-8">
-          Products
-        </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mt-4">
-          {productDetails.map((product: any) => (
+        {/* Products and See All Button */}
+        <div className="text-[#fff] text-[14px] font-semibold mt-4 flex justify-between items-center">
+          <h1>Our Products</h1>
+          <button onClick={handleSeeAllClick} className="text-white/80">
+            See All
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mt-4 ">
+          {productDetails.slice(0, 4).map((product: any) => (
             <div
               key={product.id}
-              className="bg-[#1c1c1c] p-4 rounded-xl border border-[#4a4a4a]"
+              className="bg-[#1c1c1c] rounded-xl overflow-hidden "
+              onClick={() => {
+                handleProductClick(product);
+                // setSelectedProduct(product);
+              }}
             >
               <div className="flex flex-col items-center">
                 <Image
-                  src={product.media[0]} 
+                  src={product.media[0]}
                   alt={product.title}
                   width={150}
-                  height={150}
-                  className="rounded-lg"
+                  height={180}
+                  className="w-[100%]"
                 />
-                <h3 className="text-white text-lg mt-4">{product.title}</h3>
-                <p className="text-gray-400 text-sm mt-2">
-                  {product.description}
-                </p>
-                <div className="mt-4">
-                  <p className="text-[#4a90e2] text-lg">
-                    ₹
-                    {product.prices?.discounted_price ||
-                      product.prices?.original_price}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    {product.purchase_urls?.map(
-                      (url: string, index: number) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-[#4a90e2] hover:underline"
-                        >
-                          Buy Now
-                        </a>
-                      )
-                    )}
+                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+                  <h3 className="text-white  line-clamp-1">{product.title}</h3>
+                  <div>
+                    <span className="">₹{product.prices.Discounted_price}</span>
+                    <span className=" line-through text-[#a4a4a4] ml-2">
+                      ₹{product.prices.Original_price}
+                    </span>
+                    <span className=" text-[#15CF74] ml-2">
+                      {`${Math.round(
+                        ((product.prices.Original_price -
+                          product.prices.Discounted_price) /
+                          product.prices.Original_price) *
+                          100
+                      )}% Off`}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      </div>
 
+      {/* Show All Products Modal */}
+      {showAllProductModal && (
+        <AllProductModal
+          handleProductClick={handleProductClick}
+          // setSelectedProduct={setSelectedProduct}
+          productDetails={productDetails}
+          onClose={() => setShowAllProductModal(false)}
+          selectedBrand={selectedBrand}
+        />
+      )}
+    </div>
+  );
+};
+
+const AllProductModal = ({
+  productDetails,
+  onClose,
+  selectedBrand,
+  handleProductClick,
+}: {
+  productDetails: any[];
+  onClose: () => void;
+  selectedBrand: Brand;
+  handleProductClick: (product: any) => void;
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter products based on search input
+  const filteredProducts = productDetails.filter((product) =>
+    product.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="lex flex-col top-0 fixed w-full h-full bg-[#141414] md:w-[470px] md:h-[85%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[10%] shadow-md overflow-hidden  overflow-y-auto p-2.5">
+      <div className="flex justify-between md:justify-between items-center ">
+        <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white py-2.5">
+          <span role="img" aria-label="Back" onClick={onClose}>
+            <Image
+              src={"/img/white-back-arrow.svg"}
+              alt="Back"
+              width={16}
+              height={16}
+              style={{
+                width: "16px",
+                height: "16px",
+                marginLeft: "10px",
+              }}
+            />
+          </span>
+          <div className="flex flex-1 justify-center">
+            <div className=" ml-[-50px] text-[16px] flex flex-col gap-2 items-center">
+              All products
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center rounded-xl items-center mt-2 mb-4 p-[8px] px-[15px] bg-[#1d1d1d]">
+        <IoSearchOutline color="#afafaf" size={22} />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search products"
+          className="w-full p-2 bg-[#1d1d1d] text-white placeholder:text-[#afafaf] focus:outline-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mt-4">
+        {filteredProducts.map((product: any) => (
+          <div
+            key={product.id}
+            className="bg-[#1c1c1c] rounded-xl overflow-hidden"
+            onClick={() => {
+              handleProductClick(product);
+            }}
+          >
+            <div className="flex flex-col items-center">
+              <Image
+                src={product.media[0]}
+                alt={product.title}
+                width={150}
+                height={150}
+                className="w-[100%]"
+              />
+              <div className="px-3 bg-[#2d2d2d] py-2 w-full">
+                <h3 className="text-white text-[13px] line-clamp-1">
+                  {product.title}
+                </h3>
+                <p className="text-[13px]">
+                  {product.prices?.Discounted_price && (
+                    <span className="font-bold">
+                      ₹{product.prices.Discounted_price}
+                    </span>
+                  )}
+                  {product.prices?.Original_price && (
+                    <span className="text-[13px] line-through text-[#a4a4a4] ml-2">
+                      ₹{product.prices.Original_price}
+                    </span>
+                  )}
+                  <span className=" text-[13px] font-medium text-[#15CF74] ml-2">
+                    {`${Math.round(
+                      ((product.prices.Original_price -
+                        product.prices.Discounted_price) /
+                        product.prices.Original_price) *
+                        100
+                    )}% Off`}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -742,36 +867,212 @@ const BrandModal = ({
 
 const ProductModal = ({
   selectedProduct,
+  selectedBrand,
+  onClose,
+  handleProductClick,
 }: {
-  selectedProduct: any; // This should match the shape of your product data
+  selectedBrand: Brand;
+  selectedProduct: any;
   onClose: () => void;
+  handleProductClick: (product: any) => void;
 }) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [productDetails, setProductDetails] = useState<any[]>([]);
+  const [showAllProductModal, setShowAllProductModal] = useState(false);
+
+  useEffect(() => {
+    const fetchProductDetailes = async () => {
+      try {
+        const response = await api.get(
+          "/users/product-details-by-brand?brand_id=26"
+        );
+        const data = response.data;
+        setProductDetails(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProductDetailes();
+  }, []);
+
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
+  const handleSeeAllClick = () => {
+    setShowAllProductModal(true);
+  };
+
+  const getFavicon = (url: string) => {
+    const domain = extractDomain(url);
+    if (domain) {
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    }
+    return null;
+  };
+
+  const extractDomain = (url: string) => {
+    try {
+      const { hostname } = new URL(url);
+      return hostname.replace("www.", ""); // Remove 'www.' part from the domain if needed
+    } catch (error) {
+      return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col p-2.5 px-10 fixed bg-black mt-16 w-[500px] h-[605px] rounded-xl overflow-y-auto">
-      <div className="text-[15px] font-bold flex flex-col  gap-[15px] text-white">
-        <h3 className="text-xl">{selectedProduct.title}</h3>
-        <Image
-          src={selectedProduct.image_url}
-          alt={selectedProduct.title}
-          width={80}
-          height={80}
-          style={{ width: "250px", height: "200px", borderRadius: 20 }}
-        />
-      </div>
-      <div className="rounded-md w-full">
-        <div className="mt-4 text-white">
-          <h3>{selectedProduct.title}</h3>
-          <p>{selectedProduct.description}</p>
-          <p>
-            <span className="line-through text-[grey]/90 mr-2">
-              {selectedProduct.original_price}
-            </span>
-            <span className="text-green-400">
-              {selectedProduct.discounted_price}
-            </span>
-          </p>
+    <div className="lex flex-col top-0 fixed w-full h-full bg-[#141414] md:w-[470px] md:h-[85%] md:rounded-[10px] md:bottom-[0px] md:right-[50px] md:top-[10%] shadow-md overflow-hidden  overflow-y-auto p-2.5">
+      <div className="flex items-start w-full">
+        <span role="img" aria-label="Back">
+          <Image
+            onClick={onClose}
+            src={"/img/white-back-arrow.svg"}
+            alt="Back"
+            width={16}
+            height={16}
+            style={{
+              width: "16px",
+              height: "16px",
+              margin: "10px",
+            }}
+          />
+        </span>
+        <div className="text-[15px] w-[80%] h-[250px] bg-[#1d1d1d] rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
+          <Image
+            src={selectedProduct.image_url || selectedProduct?.media[0]}
+            alt={selectedProduct.title}
+            width={80}
+            height={80}
+            style={{ width: "70%", height: "200px", borderRadius: 20 }}
+          />
         </div>
       </div>
+      <div className="rounded-md w-full px-2">
+        <div className="mt-2 text-white ">
+          <h3 className="text-[18px] font-bold">{selectedProduct.title}</h3>
+          <div className="mt-[5px] text-[13px]">
+            {!selectedProduct.prices.Original_price ? (
+              <div>
+                <span className="line-through text-[#a4a4a4] mr-2">
+                  {selectedProduct.original_price}
+                </span>
+                <span className="text-green-400">
+                  {selectedProduct.discounted_price}
+                </span>
+              </div>
+            ) : (
+              <div>
+                <span className="text-[18px] font-bold">
+                  ₹{selectedProduct.prices.Discounted_price}
+                </span>
+                <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
+                  ₹{selectedProduct.prices.Original_price}
+                </span>
+                <span className=" text-[14.5px] font-medium text-[#15CF74] ml-2">
+                  {`${Math.round(
+                    ((selectedProduct.prices.Original_price -
+                      selectedProduct.prices.Discounted_price) /
+                      selectedProduct.prices.Original_price) *
+                      100
+                  )}% Off`}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="text-[13px] text-[white]/80 leading-2 mt-3">
+            {showFullDescription
+              ? selectedProduct.description
+              : `${selectedProduct.description.slice(0, 100)}...`}
+            <button
+              onClick={toggleDescription}
+              className={`text-[#1E60FB] ml-[4px]`}
+            >
+              {showFullDescription ? "Show less" : "Show more"}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="w-full p-2">
+        <h1 className="text-[14px] font-semibold">Buy this product through</h1>
+        <div className="bg-[#1d1d1d] mt-3 rounded-xl flex items-center p-[14px] space-x-4">
+          {selectedProduct.purchase_urls.map((url, index) => {
+            const faviconUrl = getFavicon(url);
+            return (
+              <a
+                target="blank"
+                href={url}
+                key={index}
+                className="rounded-xl overflow-hidden"
+              >
+                {faviconUrl && (
+                  <Image
+                    width={40}
+                    height={40}
+                    src={faviconUrl}
+                    alt="Favicon"
+                  />
+                )}
+              </a>
+            );
+          })}
+        </div>
+
+        {/* Products and See All Button */}
+        <div className="text-[#fff] text-[14px] font-semibold mt-4 flex justify-between items-center">
+          <h1>Similar products</h1>
+          <button onClick={handleSeeAllClick} className="text-white/80">
+            See All
+          </button>
+        </div>
+        <div className="flex gap-6 mt-4 overflow-hidden overflow-x-auto">
+          {productDetails.map((product: any) => (
+            <button
+              key={product.id}
+              className="bg-[#1c1c1c] rounded-xl overflow-hidden min-w-[200px]"
+              onClick={() => {
+                handleProductClick(product);
+                console.log("product hit in product model");
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <Image
+                  src={product.media[0]}
+                  alt={product.title}
+                  width={150}
+                  height={180}
+                  className="w-[100%]"
+                />
+                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+                  <h3 className="text-white  line-clamp-1">{product.title}</h3>
+                  <div>
+                    <span className="">₹{product.prices.Discounted_price}</span>
+                    <span className=" line-through text-[#a4a4a4] ml-2">
+                      ₹{product.prices.Original_price}
+                    </span>
+                    <span className=" text-[#15CF74] ml-2">
+                      {`${Math.round(
+                        ((product.prices.Original_price -
+                          product.prices.Discounted_price) /
+                          product.prices.Original_price) *
+                          100
+                      )}% Off`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Show All Products Modal */}
+      {showAllProductModal && (
+        <AllProductModal
+          handleProductClick={handleProductClick}
+          productDetails={productDetails}
+          onClose={() => setShowAllProductModal(false)}
+          selectedBrand={selectedBrand}
+        />
+      )}
     </div>
   );
 };
