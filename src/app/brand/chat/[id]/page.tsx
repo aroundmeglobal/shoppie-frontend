@@ -240,9 +240,9 @@ export default function ChatPage({ params }: PageProps) {
               //   onClick={handleBrandIconClick}
               src={brand.imageUrl}
               alt="Chat"
-              width={20}
-              height={20}
-              style={{ width: "50px", height: "50px", borderRadius: "50px" }}
+              width={40}
+              height={40}
+              style={{ width: "40px", height: "40px", borderRadius: "50px" }}
             />
             <div
               // onClick={handleBrandIconClick}

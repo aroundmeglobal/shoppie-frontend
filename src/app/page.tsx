@@ -23,7 +23,7 @@ const brands: Brand[] = [
     imageUrl: "/muscleblaze.png", // Local image
     description:
       "Muscle Blaze is a leading sports nutrition brand offering premium supplements for athletes and fitness enthusiasts.",
-    tags: ["Ecommerce", "Food and Beverage", "Clothing"],
+    tags: ["Ecommerce", "Food", "Clothing"],
   },
   {
     name: "Nykaa",
@@ -37,7 +37,7 @@ const brands: Brand[] = [
     imageUrl: "/cipla.png", // Local image
     description:
       "Cipla is a global pharmaceutical company focused on providing affordable medicine to improve health and well-being.",
-    tags: ["Ecommerce", "Food and Beverage"],
+    tags: ["Ecommerce", "Food"],
   },
   {
     name: "AroundMe",
@@ -60,7 +60,7 @@ const tags = [
   "Clothing",
   "Ecommerce",
   "Electronics",
-  "Food and Beverage",
+  "Food",
 ];
 
 export default function Home() {
@@ -122,23 +122,22 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center justify-between  mx-auto  max-w-screen-2xl ">
         <Navbar />
 
-        <div className="mt-16 text-6xl font-bold text-center leading-relaxed font-[AbhayLibre]">
-          <h1>Lorem ipsum is typically a corrupted</h1>
-          <h1>version of De finibus</h1>
+        <div className="mt-5 md:mt-16 text-4xl md:text-6xl font-bold text-center leading-relaxed font-[AbhayLibre]">
+          <h1>Shop smarter, not harder!</h1>
         </div>
 
         {/* Search Bar */}
-        <div className="mt-16 items-center px-4 py-2 flex justify-center w-[80%] bg-[#121212 ] rounded-[40px] overflow-hidden border-2 border-[#333333]">
-          <IoSearchOutline color="#afafaf" size={34} />
+        <div className="mt-5 md:mt-16 items-center px-4 flex justify-center w-[90%]  md:w-[80%] bg-[#121212] rounded-[12px] md:rounded-[43px] overflow-hidden border-[1px] md:border-2 border-[#333333]">
+          <IoSearchOutline color="#afafaf" className="w-[16px] h-[16px] md:w-[32px] md:h-[32px]" />
           <input
             type="text"
             placeholder="Search here..."
-            className="p-3 text-lg rounded-lg w-full  bg-transparent  focus:outline-none  placeholder:text-[#afafaf]"
+            className="p-3 text-[14px] md:text-lg rounded-lg w-full  bg-transparent  focus:outline-none  placeholder:text-[#afafaf]"
           />
         </div>
 
         {/* Tags Section */}
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-4 md:mt-8 flex text-[14px] md:text-[18px] px-4 md:justify-center  md:flex-wrap items-center gap-2 md:gap-4 w-full overflow-hidden overflow-x-auto">
           {tags.map((tag, index) => (
             <button
               key={index}
@@ -155,17 +154,17 @@ export default function Home() {
         </div>
 
         {/* Brands Section */}
-        <div className="mt-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full px-10">
+        <div className="mt-4 md:mt-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10 w-full px-4 md:px-10">
           {filteredBrands.map((brand, index) => (
             <div
               key={index}
-              className="rounded-3xl p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
+              className="rounded-3xl p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
             >
               <button
                 onClick={() => handleBrandOverview(brand)}
                 className="flex flex-col items-center"
               >
-                <div className="h-[120px] w-[120px] rounded-full overflow-hidden mb-2">
+                <div className="h-[80px] w-[80px] md:h-[120px] md:w-[120px] rounded-full overflow-hidden mb-2">
                   <Image
                     width={120}
                     height={120}
@@ -173,7 +172,7 @@ export default function Home() {
                     alt={brand.name}
                   />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
                   {brand.name}
                 </h2>
                 <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
