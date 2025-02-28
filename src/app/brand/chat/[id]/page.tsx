@@ -1,79 +1,17 @@
-// "use client";
-
-// import React, { useEffect, useRef } from "react";
-// import { useQuery } from "@tanstack/react-query";
-// import { getWorkspaceHistory } from "@/api/getWorkspaceHistory";
-// import { v4 as uuidv4 } from "uuid";
-// import { ChatBubble } from "@/component/ChatBubble";
-
-// interface PageProps {
-//   params: {
-//     id: string;
-//   };
-// }
-
-// export default function Page({ params }: PageProps) {
-//   const messagesEndRef = useRef<HTMLDivElement>(null);
-//   const { data, error, isLoading } = useQuery({
-//     queryKey: ["workspaceHistory", params.id],
-//     queryFn: async () => {
-//       const messageData = await getWorkspaceHistory(params.id);
-//       const history = messageData?.history;
-//       if (Array.isArray(history)) {
-//         return history.map((msg: any) => ({
-//           id: uuidv4(),
-//           message: msg.content, // message content
-//           sender: msg.role === "user" ? "You" : "Bunny", // determine sender
-//           user_id: msg.role === "user" ? 1 : 2,
-//           text: msg.content,
-//         }));
-//       }
-//       throw new Error("No valid history found");
-//     },
-//   });
-
-//   useEffect(() => {
-//     if (messagesEndRef.current) {
-//       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-//     }
-//   }, [data]);
-
-//   if (isLoading) return <div>Loading chat history...</div>;
-//   if (error) return <div>Error: {(error as Error).message}</div>;
-
-//   return (
-//     <div className="p-4">
-//       <h1 className="text-xl font-bold mb-4">
-//         Workspace History for {params.id}
-//       </h1>
-//       <div className="space-y-4">
-//         {(data || []).map((msg: any) => (
-//           <ChatBubble
-//             key={msg.id}
-//             message={msg}
-//             isTyping={false}
-//             handleProductClick={() => {}}
-//           />
-//         ))}
-//         <div ref={messagesEndRef} />
-//       </div>
-//     </div>
-//   );
-// }
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import SwipeableViews from "react-swipeable-views";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { ChatBubble } from "@/component/ChatBubble";
 import { getWorkspaceHistory } from "@/api/getWorkspaceHistory";
+import useBrandStore from "@/store/selectedBrand";
+import { IoMdArrowUp } from "react-icons/io";
 
-// A helper function to choose the correct image source based on theme.
-const getImageSrc = (imgSrc: string, whiteImgSrc?: string, theme = "dark") =>
-  theme === "dark" ? (whiteImgSrc || imgSrc) : imgSrc;
+const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
+const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
 
 interface PageProps {
   params: {
@@ -86,10 +24,11 @@ export default function ChatPage({ params }: PageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const theme = "dark"; // or derive from context
+  const [messages, setMessages] = useState<any[]>([]);
+  const brand = useBrandStore((state) => state.brand);
 
-  // Use React Query to fetch workspace history.
-  const { data, error, isLoading, refetch } = useQuery({
+  // Fetch initial chat history via React Query.
+  const { data, error, isLoading } = useQuery({
     queryKey: ["workspaceHistory", params.id],
     queryFn: async () => {
       const messageData = await getWorkspaceHistory(params.id);
@@ -107,49 +46,168 @@ export default function ChatPage({ params }: PageProps) {
     },
   });
 
-  // Auto-scroll to the bottom when data (messages) update.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (data) {
+      setMessages(data);
+    }
   }, [data]);
 
-  // Handler for the Back button.
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleBack = () => {
     router.push("/");
   };
 
-  // Handler for sending a message.
   const handleSend = async () => {
     if (!inputValue.trim()) return;
     const messageToSend = inputValue.trim();
+    setMessages((prev) => [
+      ...prev,
+      { id: uuidv4(), sender: "You", text: messageToSend },
+    ]);
     setInputValue("");
+
+    // Immediately add a blank bot message and start typing.
     setIsTyping(true);
+    setMessages((prev) => [
+      ...prev,
+      { id: uuidv4(), sender: "Bunny", text: "" },
+    ]);
 
     try {
-      // Post your message to the API endpoint.
-      const response = await fetch(`/api/workspace/${params.id}/ask`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend }),
-      });
+      const response = await fetch(
+        `${LLM_BASE_URL}v1/workspace/369/stream-chat`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: JSON.stringify(messageToSend),
+            attachments: [],
+          }),
+        }
+      );
+
       if (!response.ok) {
-        console.error("Error sending message:", response.statusText);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${errorText}`
+        );
       }
-    } catch (err) {
-      console.error("Error sending message:", err);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      let isCapturingSuggestions = false;
+      let suggestionBuffer = "";
+      let botFullResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+
+          if (trimmedLine === "data: [DONE]") {
+            // End streaming.
+            setIsTyping(false);
+            break;
+          }
+
+          if (trimmedLine.startsWith("data:")) {
+            try {
+              const jsonData = JSON.parse(trimmedLine.substring(5));
+              const responseText = jsonData.textResponse || "";
+
+              // Start capturing suggestions.
+              if (responseText === "@@" && !isCapturingSuggestions) {
+                isCapturingSuggestions = true;
+                suggestionBuffer = "";
+                botFullResponse += "@@SUGGESTIONS START@@";
+              }
+
+              if (isCapturingSuggestions) {
+                suggestionBuffer += responseText;
+                if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
+                  isCapturingSuggestions = false;
+                  botFullResponse += "@@SUGGESTIONS END@@";
+                  const cleanSuggestionText = suggestionBuffer
+                    .replace(/@@SUGGESTIONS START@@/g, "")
+                    .replace(/@@SUGGESTIONS END@@/g, "")
+                    .trim();
+
+                  // Update last bot message with suggestions.
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].suggestions =
+                        cleanSuggestionText;
+                    }
+                    return updatedMessages;
+                  });
+                }
+              } else {
+                botFullResponse += responseText;
+                setMessages((prevMessages) => {
+                  const updatedMessages = [...prevMessages];
+                  if (
+                    updatedMessages.length > 0 &&
+                    updatedMessages[updatedMessages.length - 1].sender ===
+                      "Bunny"
+                  ) {
+                    updatedMessages[updatedMessages.length - 1].text =
+                      botFullResponse;
+                  }
+                  return updatedMessages;
+                });
+              }
+            } catch (jsonError) {
+              console.error(
+                "Error parsing JSON:",
+                jsonError,
+                "Line:",
+                trimmedLine
+              );
+            }
+          }
+        }
+      }
+
+      setIsTyping(false);
+    } catch (error: any) {
+      console.error("Error fetching from API:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uuidv4(),
+          sender: "Bunny",
+          text: "Error occurred while fetching response.",
+        },
+      ]);
+      setIsTyping(false);
     }
-    setIsTyping(false);
-    // After sending, refetch the conversation history.
-    await refetch();
   };
 
-  // Handle Enter key press in the input field.
+  // Handle Enter key press.
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") handleSend();
+    if (event.key === "Enter") {
+      handleSend();
+    }
   };
 
-
-
-  // A helper to render each message using your custom ChatBubble.
+  // Render each message using your ChatBubble component.
   const renderMessage = (msg: any, index: number) => (
     <ChatBubble
       key={msg.id || index}
@@ -163,46 +221,35 @@ export default function ChatPage({ params }: PageProps) {
     <div>
       <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[400px] md:h-[75%] md:rounded-[10px] md:bottom-[90px] md:right-[20px] md:top-[10%] shadow-md overflow-hidden z-30 ">
         {/* Top Bar */}
-        <div className="flex justify-between md:justify-between items-center p-[10px] border-b-[1px]">
-          <div className="text-[15px] font-bold flex gap-[15px] text-white">
+        <div className="flex justify-between items-center p-[10px] border-b-[1px]">
+          <div className="text-[15px] font-bold flex items-center gap-[15px] text-white p-1">
             <span role="img" aria-label="Back" onClick={handleBack}>
               <Image
-                src={getImageSrc("/img/white-back-arrow.svg", undefined, theme)}
+                src={"/img/white-back-arrow.svg"}
                 alt="Back"
-                width={100}
-                height={100}
-                style={{ width: "40px", height: "50px", marginLeft: "10px" }}
+                width={16}
+                height={16}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  marginLeft: "10px",
+                }}
               />
             </span>
             <Image
-              src={getImageSrc("/img/bunny-icon-new.svg", undefined, theme)}
-              height={100}
-              width={100}
+              //   onClick={handleBrandIconClick}
+              src={brand.imageUrl}
               alt="Chat"
-              style={{ width: "200px", height: "50px", marginLeft: "10px" }}
+              width={20}
+              height={20}
+              style={{ width: "50px", height: "50px", borderRadius: "50px" }}
             />
-            <Image
-              src={getImageSrc("/img/Bunny_text.svg", undefined, theme)}
-              height={100}
-              width={100}
-              alt="Chat"
-              style={{ width: "70px", height: "50px", marginRight: "45px" }}
-            />
-          </div>
-          <div className="flex justify-center mt-2.5 mb-2.5">
-            <a
-              href="https://instagram.com/aroundme_app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mx-2.5 my-0 "
+            <div
+              // onClick={handleBrandIconClick}
+              className="text-white text-lg"
             >
-              <Image
-                src={getImageSrc("/img/follow-on-insta.svg", undefined, theme)}
-                alt="Instagram"
-                width={180}
-                height={100}
-              />
-            </a>
+              {brand.name}
+            </div>
           </div>
         </div>
 
@@ -219,7 +266,7 @@ export default function ChatPage({ params }: PageProps) {
             </div>
           )}
           {error && <div className="p-2 text-red-500">{error.message}</div>}
-          {data && data.map(renderMessage)}
+          {messages && messages.map(renderMessage)}
           {isTyping && (
             <ChatBubble
               message={{
@@ -237,27 +284,25 @@ export default function ChatPage({ params }: PageProps) {
         </div>
 
         {/* Input Bar fixed at the bottom */}
-        <div className="flex p-[10px] bg-[#09090b] border-t gap-[10px]">
+        <div className="flex bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px]">
           <input
-            className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d]"
+            className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            style={{ width: "100%", height: "40px", color: "white" }}
+            placeholder="Ask me anything..."
+            style={{ width: "100%", color: "white" }}
           />
-          <Image
-            src="/img/send_button.svg"
-            alt="Send"
-            width={50}
-            height={20}
-            onClick={handleSend}
-            className="cursor-pointer"
-          />
+          <button
+            className={`cursor-pointer m-2 p-1 rounded-full ${
+              inputValue.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
+            }`}
+          >
+            <IoMdArrowUp size={18} onClick={handleSend} />
+          </button>
         </div>
       </div>
-
     </div>
   );
 }
