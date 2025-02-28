@@ -102,7 +102,7 @@ export default function Home() {
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
       setBrand(brand);
-      router.push("/chat-page");
+      router.push("/brand/chat/369");
     } else {
       handleBrandClick(brand);
     }
