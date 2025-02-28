@@ -286,13 +286,14 @@ export default function ChatPage({ params }: PageProps) {
         {/* Input Bar fixed at the bottom */}
         <div className="flex bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px]">
           <input
+            autoFocus
             className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask me anything..."
-            style={{ width: "100%", color: "white" }}
+            // style={{ width: "100%", color: "white" }}
           />
           <button
             className={`cursor-pointer m-2 p-1 rounded-full ${
