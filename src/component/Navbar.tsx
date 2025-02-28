@@ -3,7 +3,7 @@ import React from "react";
 
 function Navbar() {
   return (
-    <div className="flex items-center justify-between w-full p-4 px-4  max-w-screen-2xl sticky top-0 z-20 bg-[#0D0D0D] border-b-[#2B2B2B] border-b-2">
+    <div className="flex items-center justify-between w-full p-4 px-4  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-2">
       <button>logo</button>
       <div className="flex gap-5 ">
         <button className="font-bold">sign up</button>

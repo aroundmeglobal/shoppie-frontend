@@ -19,7 +19,8 @@
     "react-swipeable-views": "^0.14.0",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+     "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

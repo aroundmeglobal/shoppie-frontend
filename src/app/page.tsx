@@ -6,8 +6,10 @@ import React, { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import Image from "next/image";
 import { AiOutlineMessage } from "react-icons/ai";
+import BrandModel from "@/component/BrandModel";
+import { useRouter } from "next/navigation";
+import useBrandStore from "@/store/selectedBrand";
 
-// Interface for brand
 export interface Brand {
   name: string;
   imageUrl: string;
@@ -64,6 +66,19 @@ const tags = [
 export default function Home() {
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [brandOverview, setBrandOverview] = useState<Brand | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
+  const setBrand = useBrandStore((state) => state.setBrand);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleTagClick = (tag: string) => {
     // Set only the selected tag
@@ -84,100 +99,136 @@ export default function Home() {
     }
   };
 
+  const handleBotClick = (brand: Brand) => {
+    if (isMobile) {
+      setBrand(brand);
+      router.push("/chat-page");
+    } else {
+      handleBrandClick(brand);
+    }
+  };
+
+  const handleBrandOverview = (brand: Brand) => {
+    setBrand(brand);
+    if (isMobile) {
+      router.push("/brand-page");
+    } else {
+      setBrandOverview(brand);
+    }
+  };
+
   return (
-    <main className="flex pb-5 flex-col items-center max-w-screen-2xl bg-[#0d0d0d] z-0">
-      <Navbar />
+    <div>
+      <main className="flex min-h-screen flex-col items-center justify-between  mx-auto  max-w-screen-2xl ">
+        <Navbar />
 
-      <div className="mt-16 text-6xl font-bold text-center leading-relaxed font-[AbhayLibre]">
-        <h1>Lorem ipsum is typically a corrupted</h1>
-        <h1>version of De finibus</h1>
-      </div>
+        <div className="mt-16 text-6xl font-bold text-center leading-relaxed font-[AbhayLibre]">
+          <h1>Lorem ipsum is typically a corrupted</h1>
+          <h1>version of De finibus</h1>
+        </div>
 
-      {/* Search Bar */}
-      <div className="mt-16 items-center px-4 py-2 flex justify-center w-[80%] bg-[#121212 ] rounded-[40px] overflow-hidden border-2 border-[#333333]">
-        <IoSearchOutline color="#afafaf" size={34} />
-        <input
-          type="text"
-          placeholder="Search here..."
-          className="p-3 text-lg rounded-lg w-full  bg-transparent  focus:outline-none  placeholder:text-[#afafaf]"
-        />
-      </div>
+        {/* Search Bar */}
+        <div className="mt-16 items-center px-4 py-2 flex justify-center w-[80%] bg-[#121212 ] rounded-[40px] overflow-hidden border-2 border-[#333333]">
+          <IoSearchOutline color="#afafaf" size={34} />
+          <input
+            type="text"
+            placeholder="Search here..."
+            className="p-3 text-lg rounded-lg w-full  bg-transparent  focus:outline-none  placeholder:text-[#afafaf]"
+          />
+        </div>
 
-      {/* Tags Section */}
-      <div className="mt-8 flex flex-wrap justify-center gap-4">
-        {tags.map((tag, index) => (
-          <button
-            key={index}
-            onClick={() => handleTagClick(tag)}
-            className={`px-6 py-2 rounded-2xl hover:bg-white hover:text-black focus:outline-none ${
-              selectedTag === tag
-                ? "bg-white text-black"
-                : "bg-[#121212] text-white"
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
+        {/* Tags Section */}
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          {tags.map((tag, index) => (
+            <button
+              key={index}
+              onClick={() => handleTagClick(tag)}
+              className={`px-6 py-2 rounded-2xl hover:bg-white hover:text-black focus:outline-none ${
+                selectedTag === tag
+                  ? "bg-white text-black"
+                  : "bg-[#121212] text-white"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
 
-      {/* Brands Section */}
-      <div className="mt-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full px-10">
-        {filteredBrands.map((brand, index) => (
-          <div
-            key={index}
-            className="rounded-3xl p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
-          >
-            <div className="h-[120px] w-[120px] rounded-full overflow-hidden mb-2">
-              <Image
-                width={120}
-                height={120}
-                src={brand.imageUrl}
-                alt={brand.name}
-              />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">{brand.name}</h2>
-            <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
-              {brand.description}
-            </p>
-            <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
-              {[...Array(3)].map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`h-[32px] w-[32px] rounded-full overflow-hidden ${
-                    idx > 0 ? "ml-[-8px]" : ""
-                  }
-                  ${idx === 0 ? "z-30" : idx === 1 ? "z-20" : "z-10"}
-                  `}
-                >
+        {/* Brands Section */}
+        <div className="mt-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full px-10">
+          {filteredBrands.map((brand, index) => (
+            <div
+              key={index}
+              className="rounded-3xl p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
+            >
+              <button
+                onClick={() => handleBrandOverview(brand)}
+                className="flex flex-col items-center"
+              >
+                <div className="h-[120px] w-[120px] rounded-full overflow-hidden mb-2">
                   <Image
-                    width={28}
-                    height={28}
+                    width={120}
+                    height={120}
                     src={brand.imageUrl}
                     alt={brand.name}
                   />
                 </div>
-              ))}
-              <p className="text-[#A4A4A4] text-[14px]">+182 interactions</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {brand.name}
+                </h2>
+                <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
+                  {brand.description}
+                </p>
+                <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
+                  {[...Array(3)].map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-[28px] w-[28px] rounded-full overflow-hidden ${
+                        idx > 0 ? "ml-[-8px]" : ""
+                      }
+                  ${idx === 0 ? "z-[10]" : idx === 1 ? "z-[8]" : "z-[2]"}
+                  `}
+                    >
+                      <Image
+                        width={28}
+                        height={28}
+                        src={brand.imageUrl}
+                        alt={brand.name}
+                      />
+                    </div>
+                  ))}
+                  <p className="text-[#A4A4A4] text-[14px]">
+                    +182 interactions
+                  </p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleBotClick(brand)}
+                className="flex items-center justify-center gap-2 bg-white w-full mt-4 py-2 px-4 rounded-xl font-semibold text-[#000]"
+              >
+                <p>Chat with AI</p>
+                <div className="bg-[#A4A4A4]/20 p-2 rounded-full">
+                  <AiOutlineMessage />
+                </div>
+              </button>
             </div>
-            <button
-              onClick={() => handleBrandClick(brand)}
-              className="flex items-center justify-center gap-2 bg-white w-full mt-4 py-2 px-4 rounded-xl font-semibold text-[#000]"
-            >
-              <p>Chat with AI</p>
-              <div className="bg-[#A4A4A4]/20 p-2 rounded-full">
-                <AiOutlineMessage />
-              </div>
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {selectedBrand && (
-        <ChatBot
-          selectedBrand={selectedBrand}
-          setSelectedBrand={setSelectedBrand}
+        {selectedBrand && (
+          <ChatBot
+            selectedBrand={selectedBrand}
+            setSelectedBrand={setSelectedBrand}
+          />
+        )}
+      </main>
+      {brandOverview && (
+        <BrandModel
+          brand={brandOverview}
+          onClose={() => setBrandOverview(null)}
+          handleBotClick={handleBotClick}
         />
       )}
-    </main>
+    </div>
   );
 }

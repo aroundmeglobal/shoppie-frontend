@@ -15,13 +15,10 @@ import { Brand } from "@/app/page";
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
 
-
 interface ChatPageProps {
   selectedBrand: Brand | null;
   setSelectedBrand: Dispatch<SetStateAction<Brand | null>>;
 }
-
-
 
 type Message = {
   sender: string;
@@ -619,7 +616,6 @@ const BrandModal = ({
     // Return a fallback image path if domain is null
     return "/aroundImg.png";
   };
-  
 
   const socialLinks = [
     { name: "Facebook", url: brandDetaile?.meta?.facebook },
@@ -635,7 +631,7 @@ const BrandModal = ({
   };
 
   return (
-    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30 overflow-y-auto">
+    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30 overflow-y-auto ">
       {/* Brand Modal Header */}
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white">
@@ -659,13 +655,12 @@ const BrandModal = ({
           </span>
           <div className="flex flex-1 mt-2 justify-center">
             <div className=" ml-[-50px] flex flex-col gap-2 items-center ">
-
               <Image
                 src={selectedBrand.imageUrl}
                 alt="Brand Logo"
                 width={20}
                 height={20}
-                style={{ width: "80px", height: "80px",borderRadius:"40px" }}
+                style={{ width: "80px", height: "80px", borderRadius: "40px" }}
               />
               <div className="flex items-center gap-2">
                 <div className="text-white text-xl">{selectedBrand.name}</div>
@@ -1002,7 +997,9 @@ const ProductModal = ({
         </div>
       </div>
       <div className="w-full p-2">
-        <h1 className="text-[14px] font-semibold m-4">Buy this product through</h1>
+        <h1 className="text-[14px] font-semibold m-4">
+          Buy this product through
+        </h1>
         <div className="bg-[#1d1d1d] m-4 rounded-xl flex items-center p-[14px] space-x-4">
           {selectedProduct.purchase_urls.map((url, index) => {
             const faviconUrl = getFavicon(url);
