@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const TypingIndicator: React.FC = () => {
   return (
     <div className="flex items-center space-x-1 mt-2 z-0">
@@ -11,7 +13,7 @@ const TypingIndicator: React.FC = () => {
   );
 };
 
-export const  ChatBubble = ({
+export const ChatBubble = ({
   message,
   isTyping,
   handleProductClick,
