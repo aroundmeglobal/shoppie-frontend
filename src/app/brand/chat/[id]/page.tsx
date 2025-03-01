@@ -238,7 +238,10 @@ export default function ChatPage({ params }: PageProps) {
             </span>
             <Image
               //   onClick={handleBrandIconClick}
-              src={brand.imageUrl}
+              src={
+                brand.imageUrl ||
+                "https://www.feedough.com/wp-content/uploads/2016/09/brand-image.png"
+              }
               alt="Chat"
               width={40}
               height={40}
