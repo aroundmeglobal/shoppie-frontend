@@ -302,7 +302,7 @@ export default function ChatPage({
 
     try {
       const response = await fetch(
-        `${LLM_BASE_URL}v1/workspace/369/stream-chat`,
+        `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
         {
           method: "POST",
           headers: {
