@@ -8,7 +8,7 @@ interface BrandStoreState {
   setBrand: (newBrand: Brand) => void;
 }
 
-const useBrandStore = create<BrandStoreState>()(
+const useSelectedBrandStore = create<BrandStoreState>()(
   persist(
     (set) => ({
       // Initial state
@@ -23,4 +23,4 @@ const useBrandStore = create<BrandStoreState>()(
   )
 );
 
-export default useBrandStore;
+export default useSelectedBrandStore;

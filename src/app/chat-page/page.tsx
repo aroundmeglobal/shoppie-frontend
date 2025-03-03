@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import useBrandStore from "@/store/selectedBrand";
+import useSelectedBrandStore from "@/store/selectedBrand";
 
 export default function Page() {
-  const brand = useBrandStore((state) => state.brand);
+  const brand = useSelectedBrandStore((state) => state.brand);
   return <div>{brand.name}</div>;
 }

@@ -1,4 +1,4 @@
-import { FAQ } from "@/components/ui/FaqComponent";
+import { FAQ } from "@/component/ui/FaqComponent";
 
 const embed = async (userId: string, locations: string[]) => {
   if (locations.length > 0) {

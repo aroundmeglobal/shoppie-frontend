@@ -8,7 +8,7 @@ import Image from "next/image";
 import { AiOutlineMessage } from "react-icons/ai";
 import BrandModel from "@/component/BrandModel";
 import { useRouter } from "next/navigation";
-import useBrandStore from "@/store/selectedBrand";
+import useSelectedBrandStore from "@/store/selectedBrand";
 
 export interface Brand {
   name: string;
@@ -69,7 +69,7 @@ export default function Home() {
   const [brandOverview, setBrandOverview] = useState<Brand | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
-  const setBrand = useBrandStore((state) => state.setBrand);
+  const setBrand = useSelectedBrandStore((state) => state.setBrand);
 
   useEffect(() => {
     const handleResize = () => {
