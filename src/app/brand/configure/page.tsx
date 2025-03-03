@@ -15,7 +15,7 @@ const Page = () => {
 
   useEffect(() => {
     const checkWorkspace = async () => {
-      const exists = await checkWorkspaceExistence(workspaceSlug);
+      const exists = await checkWorkspaceExistence("369");
       setWorkspaceExist(exists);
       setLoading(false);
     };

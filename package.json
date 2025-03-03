@@ -19,6 +19,7 @@
     "class-variance-authority": "^0.7.0",
     "clipboard": "^2.0.11",
     "clsx": "^2.1.1",
+    "formik": "^2.4.6",
     "framer-motion": "^11.3.28",
     "gray-matter": "^4.0.3",
     "js-cookie": "^3.0.5",
@@ -45,6 +46,7 @@
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0",
+    "yup": "^1.6.1",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

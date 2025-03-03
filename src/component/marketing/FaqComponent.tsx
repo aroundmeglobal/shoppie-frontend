@@ -124,12 +124,14 @@ const FaqComponent: React.FC<FaqComponentProps> = ({ faqs, onChange }) => {
 
           {/* Show More / Show Less Button */}
           {faqs.length > 2 && (
-            <div
-              className="mt-2  justify-center flex  "
-            >
-                <button onClick={openFaqModal}  className="mt-2 text-[#fff] w-auto justify-center flex text-sm hover:underline "
-            >  Show More</button>
-            
+            <div className="mt-2  justify-center flex  ">
+              <button
+                onClick={openFaqModal}
+                className="mt-2 text-[#fff] w-auto justify-center flex text-sm hover:underline "
+              >
+                {" "}
+                Show More
+              </button>
             </div>
           )}
         </div>
@@ -174,6 +176,7 @@ const FaqComponent: React.FC<FaqComponentProps> = ({ faqs, onChange }) => {
                             openEditFaqModal(index);
                           }}
                           className="bg-[#5A5A5A] rounded-full p-1"
+                          aria-label="plus icon"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -224,8 +227,7 @@ const FaqComponent: React.FC<FaqComponentProps> = ({ faqs, onChange }) => {
                 Save
               </button>
             </div>
-           
-           </div>
+          </div>
         </div>
       )}
 
