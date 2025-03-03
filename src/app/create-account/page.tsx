@@ -5,16 +5,14 @@ import { MdOutlineFileUpload } from "react-icons/md";
 import { FaChevronDown } from "react-icons/fa";
 import useBrandStore from "@/store/useBrandStore";
 import { useRouter } from "next/navigation";
-// import api from "@/lib/axiosInstance";
-// import createGeneralWorkSpace from "@/lib/createGeneralWorkSpace";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const email = useBrandStore((state) => state.email);
   const setLogoInStore = useBrandStore((state) => state.setLogo);
   const setBrandName = useBrandStore((state) => state.setBrandName);
 
   const initialValues = {
+    email: "",
     brandName: "",
     brandDescription: "",
     businessDomain: "",
@@ -27,12 +25,13 @@ export default function RegisterPage() {
   };
 
   const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
     brandName: Yup.string().required("Brand name is required"),
     brandDescription: Yup.string().required("Brand description is required"),
     businessDomain: Yup.string().required("Business domain is required"),
-    website: Yup.string()
-      .url("Enter a valid URL")
-      .nullable(),
+    website: Yup.string().url("Enter a valid URL").nullable(),
     contactName: Yup.string().required("Contact name is required"),
     contactPhone: Yup.string().required("Contact phone is required"),
     acceptedTerms: Yup.boolean().oneOf(
@@ -55,57 +54,98 @@ export default function RegisterPage() {
         website,
         contactName,
         contactPhone,
+        email,
       } = values;
 
-      // Step 1: Fetch the upload URLs for both files
-      const response = await fetch("/api/upload", {
-        method: "POST",
-      });
-      const {
-        brandLogoUrl,
-        gstCertificateUrl,
-        brandLogoFileKey,
-        gstCertificateFileKey,
-      } = await response.json();
+      // Get file types
+      const brandLogoType = brandLogo.type;
+      const gstCertificateType = gstCertificate.type;
 
-      // Upload the brand logo
-      await fetch(brandLogoUrl, {
+      // Step 1: Generate upload URL for brand logo
+      const logoResponse = await fetch(
+        "https://fastapi.aroundme.global/api/upload/generate-upload-url",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-logo`,
+            type: brandLogoType,
+            asset_for: "user-image",
+          }),
+        }
+      );
+
+      const logoData = await logoResponse.json();
+
+      // Step 2: Generate upload URL for incorporation certificate
+      const certificateResponse = await fetch(
+        "https://fastapi.aroundme.global/api/upload/generate-upload-url",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-certificate`,
+            type: gstCertificateType,
+            asset_for: "user-image",
+          }),
+        }
+      );
+
+      const certificateData = await certificateResponse.json();
+
+      // Step 3: Upload the brand logo
+      await fetch(logoData.signed_url, {
         method: "PUT",
+        headers: {
+          "Content-Type": brandLogoType,
+        },
         body: brandLogo,
       });
 
-      // Upload the GST certificate
-      await fetch(gstCertificateUrl, {
+      // Step 4: Upload the GST certificate
+      await fetch(certificateData.signed_url, {
         method: "PUT",
+        headers: {
+          "Content-Type": gstCertificateType,
+        },
         body: gstCertificate,
       });
 
-      const brandLogoPublicUrl = `https://pub-b1946b9de83b4357be05860f410a0024.r2.dev/${brandLogoFileKey}`;
-      const gstCertificatePublicUrl = `https://pub-b1946b9de83b4357be05860f410a0024.r2.dev/${gstCertificateFileKey}`;
-
-      const body = {
+      // Step 5: Create brand with the uploaded files
+      const brandData = {
+        email: email,
         name: brandName,
-        email,
         description: brandDescription,
         industry: businessDomain,
-        website,
-        logo: brandLogoPublicUrl,
-        contactName,
-        contactPhone,
-        gstCertificate: gstCertificatePublicUrl,
+        website: website || "",
+        logo: logoData.public_url,
+        incoperation_certificate: certificateData.public_url,
+        contact_person_name: contactName,
+        contact_person_phone_number: contactPhone,
       };
 
-      console.log(body);
-      // Uncomment and use your API calls as needed:
-      // const brandCreateResponse = await api.post("/brands", body);
-      // setLogoInStore(brandLogoPublicUrl);
-      // setBrandName(brandName);
-      // await createGeneralWorkSpace(
-      //   brandCreateResponse.data.user_id,
-      //   brandName,
-      //   brandDescription,
-      //   businessDomain
-      // );
+      console.log("Creating brand with data:", brandData);
+
+      const brandResponse = await fetch("http://localhost:8000/api/brands", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(brandData),
+      });
+
+      const brand = await brandResponse.json();
+      console.log("Brand created:", brand);
+
+      // Store important data in the store
+      setLogoInStore(logoData.public_url);
+      setBrandName(brandName);
+
+      // Navigate to the brand status page
       router.push("/brand-status");
     } catch (error) {
       console.error("Error during submission", error);
@@ -114,6 +154,7 @@ export default function RegisterPage() {
     }
   };
 
+  // Rest of the component remains the same
   return (
     <div className="flex py-10 items-center justify-center bg-authBackground px-4">
       <div className="w-full max-w-lg rounded-2xl bg-authCard px-8 py-5 shadow-lg">
@@ -121,8 +162,8 @@ export default function RegisterPage() {
           Create an Account 🚀
         </h2>
         <p className="mt-1 text-xs text-gray-400">
-          Create an account to discover people, join conversations, and grow your
-          network.
+          Create an account to discover people, join conversations, and grow
+          your network.
         </p>
 
         <Formik
@@ -170,16 +211,20 @@ export default function RegisterPage() {
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-gray-300">
-                  Email
+                <label className="block text-xs font-medium">
+                  <span className="text-red-400">*</span> Email
                 </label>
-                <input
+                <Field
                   type="email"
-                  defaultValue={email}
+                  name="email"
+                  placeholder="Enter your email"
                   className="mt-1 block text-sm w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]"
-                  disabled
                   required
-                  aria-label="email"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-sm"
                 />
               </div>
 
@@ -235,6 +280,7 @@ export default function RegisterPage() {
                     <option value="Retail">Retail</option>
                     <option value="Technology">Technology</option>
                     <option value="Healthcare">Healthcare</option>
+                    <option value="IT">IT</option>
                   </Field>
                   <FaChevronDown
                     size={12}
@@ -269,7 +315,8 @@ export default function RegisterPage() {
               {/* GST Certificate Upload */}
               <div>
                 <label className="block text-xs font-medium">
-                  <span className="text-red-400">*</span> Incorporation certificate / GST
+                  <span className="text-red-400">*</span> Incorporation
+                  certificate / GST
                 </label>
                 <div className="relative mt-1">
                   <input
@@ -285,7 +332,9 @@ export default function RegisterPage() {
                   />
                   <div className="flex items-center bg-gray-700 mt-1 w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]">
                     <span className="flex-grow text-sm text-gray-400">
-                      Attach document here
+                      {values.gstCertificate
+                        ? values.gstCertificate.name
+                        : "Attach document here"}
                     </span>
                     <MdOutlineFileUpload />
                   </div>
@@ -295,11 +344,6 @@ export default function RegisterPage() {
                   component="div"
                   className="text-red-500 text-sm"
                 />
-                {values.gstCertificate && (
-                  <p className="mt-2 text-sm text-gray-400">
-                    Selected GST Certificate: {values.gstCertificate.name}
-                  </p>
-                )}
               </div>
 
               {/* Contact Person Details */}
