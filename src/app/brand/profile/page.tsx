@@ -1,7 +1,7 @@
 'use client'
 
 import EditProfile from "@/component/marketing/EditProfile";
-import Profucts from "@/component/marketing/Profucts";
+import Products from "@/component/marketing/Products";
 import React, { useState } from "react";
 
 type Props = {};
@@ -35,7 +35,7 @@ const Page = (props: Props) => {
       {/* Conditionally render the component based on activeTab */}
       <div className="ml-20 mt-5 overflow-y-auto h-[85vh] no-scrollbar">
         {activeTab === "profile" && <EditProfile />}
-        {activeTab === "product" && <Profucts />}
+        {activeTab === "product" && <Products />}
       </div>
     </div>
   );

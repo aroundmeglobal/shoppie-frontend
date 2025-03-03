@@ -75,7 +75,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   );
 };
 
-const Profucts = () => {
+const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const userId = useBrandStore((state) => state.userId);
@@ -240,4 +240,4 @@ const Profucts = () => {
   );
 };
 
-export default Profucts;
+export default Products;

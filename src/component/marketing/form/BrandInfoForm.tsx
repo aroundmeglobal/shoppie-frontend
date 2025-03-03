@@ -24,8 +24,6 @@ const BrandInfoForm: React.FC<BrandInfoFormProps> = ({
 }) => {
   return (
     <form className="p-5">
-     
-
       {/* Upload Photo */}
       <div className="flex flex-col items-center mb-6">
         <label
