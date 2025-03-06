@@ -230,7 +230,7 @@ const ChatBubble = ({
 export default function ChatPage({
   selectedBrand,
   setSelectedBrand,
-}: ChatPageProps) {
+}: ChatPageProps) {  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -260,7 +260,7 @@ export default function ChatPage({
     // setFetchingMessage(true);
     const fetchMessages = async () => {
       try {
-        const chatData = await fetch(`${LLM_BASE_URL}/v1/workspace/369/chats`, {
+        const chatData = await fetch(`${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
@@ -302,11 +302,13 @@ export default function ChatPage({
 
     try {
       const response = await fetch(
-        `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
+        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+      
+            `,
           },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
@@ -314,6 +316,19 @@ export default function ChatPage({
           }),
         }
       );
+      // const response = await fetch(
+      //   `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+      //     },
+      //     body: JSON.stringify({
+      //       message: JSON.stringify(messageToSend),
+      //       attachments: [],
+      //     }),
+      //   }
+      // );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -494,7 +509,7 @@ export default function ChatPage({
               </span> */}
               <Image
                 onClick={handleBrandIconClick}
-                src={selectedBrand.imageUrl}
+                src={selectedBrand?.brand_logo}
                 alt="Chat"
                 width={20}
                 height={20}
@@ -504,7 +519,7 @@ export default function ChatPage({
                 onClick={handleBrandIconClick}
                 className="text-white text-lg"
               >
-                {selectedBrand.name}
+                {selectedBrand?.brand_name}
               </div>
             </div>
             <span

@@ -9,61 +9,76 @@ import { AiOutlineMessage } from "react-icons/ai";
 import BrandModel from "@/component/BrandModel";
 import { useRouter } from "next/navigation";
 import useSelectedBrandStore from "@/store/selectedBrand";
+import api from "@/lib/axiosInstance";
 
 export interface Brand {
-  name: string;
-  imageUrl: string;
-  description: string;
-  tags: string[];
+  brand_id: number;
+  brand_name: string;
+  brand_description: string;
+  brand_email: string;
+  brand_industry: string;
+  brand_logo: string;
+  brand_website: string;
+  workspaces: any[]; // Adjust the type of workspaces based on its structure
 }
 
-const brands: Brand[] = [
-  {
-    name: "Muscle Blaze",
-    imageUrl: "/muscleblaze.png", // Local image
-    description:
-      "Muscle Blaze is a leading sports nutrition brand offering premium supplements for athletes and fitness enthusiasts.",
-    tags: ["Ecommerce", "Food", "Clothing"],
-  },
-  {
-    name: "Nykaa",
-    imageUrl: "/nykaa.png", // Local image
-    description:
-      "Nykaa is a popular beauty and wellness brand providing a wide range of cosmetics, skincare, and haircare products.",
-    tags: ["Ecommerce", "Clothing"],
-  },
-  {
-    name: "Cipla",
-    imageUrl: "/cipla.png", // Local image
-    description:
-      "Cipla is a global pharmaceutical company focused on providing affordable medicine to improve health and well-being.",
-    tags: ["Ecommerce", "Food"],
-  },
-  {
-    name: "AroundMe",
-    imageUrl: "/aroundImg.png", // Local image
-    description:
-      "AroundMe connects people nearby for spontaneous activities, discussions, and assistance with shared interests.",
-    tags: ["Ecommerce", "Electronics"],
-  },
-  {
-    name: "H&M",
-    imageUrl: "/hm.png", // Local image
-    description:
-      "H&M is a multinational clothing retail brand offering trendy fashion at affordable prices for men, women, and children.",
-    tags: ["Clothing"],
-  },
-];
 
-const tags = [
-  "All",
-  "Clothing",
-  "Ecommerce",
-  "Electronics",
-  "Food",
-];
+// const brands: Brand[] = [
+//   {
+//     name: "Muscle Blaze",
+//     imageUrl: "/muscleblaze.png", // Local image
+//     description:
+//       "Muscle Blaze is a leading sports nutrition brand offering premium supplements for athletes and fitness enthusiasts.",
+//     tags: ["Ecommerce", "Food", "Clothing"],
+//   },
+//   {
+//     name: "Nykaa",
+//     imageUrl: "/nykaa.png", // Local image
+//     description:
+//       "Nykaa is a popular beauty and wellness brand providing a wide range of cosmetics, skincare, and haircare products.",
+//     tags: ["Ecommerce", "Clothing"],
+//   },
+//   {
+//     name: "Cipla",
+//     imageUrl: "/cipla.png", // Local image
+//     description:
+//       "Cipla is a global pharmaceutical company focused on providing affordable medicine to improve health and well-being.",
+//     tags: ["Ecommerce", "Food"],
+//   },
+//   {
+//     name: "AroundMe",
+//     imageUrl: "/aroundImg.png", // Local image
+//     description:
+//       "AroundMe connects people nearby for spontaneous activities, discussions, and assistance with shared interests.",
+//     tags: ["Ecommerce", "Electronics"],
+//   },
+//   {
+//     name: "H&M",
+//     imageUrl: "/hm.png", // Local image
+//     description:
+//       "H&M is a multinational clothing retail brand offering trendy fashion at affordable prices for men, women, and children.",
+//     tags: ["Clothing"],
+//   },
+// ];
+
+const tags = ["All", "Clothing", "Ecommerce", "Electronics", "Food"];
 
 export default function Home() {
+  const [allBrands, setAllBrands] = useState([]);
+  useEffect(() => {
+    const getBrands = async () => {
+      try {
+        const res = await api.get(`${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/`);
+        console.log("brands", res.data.brands);
+        setAllBrands(res.data.brands);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+  
+    getBrands();
+  }, []);
+  
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [brandOverview, setBrandOverview] = useState<Brand | null>(null);
@@ -86,13 +101,13 @@ export default function Home() {
   };
 
   // Filter brands based on selected tag
-  const filteredBrands = brands.filter(
-    (brand) => selectedTag === "All" || brand.tags.includes(selectedTag)
+  const filteredBrands = allBrands.filter(
+    (brand) => selectedTag === "All" || brand?.brand_industry?.includes(selectedTag)
   );
 
   const handleBrandClick = (brand: Brand) => {
     // Toggle selected brand; if it's the same as the current one, close the chatbot
-    if (selectedBrand?.name === brand.name) {
+    if (selectedBrand?.brand_name === brand.brand_name) {
       setSelectedBrand(null);
     } else {
       setSelectedBrand(brand);
@@ -128,7 +143,10 @@ export default function Home() {
 
         {/* Search Bar */}
         <div className="mt-5 md:mt-16 items-center px-4 flex justify-center w-[90%]  md:w-[80%] bg-[#121212] rounded-[12px] md:rounded-[43px] overflow-hidden border-[1px] md:border-2 border-[#333333]">
-          <IoSearchOutline color="#afafaf" className="w-[16px] h-[16px] md:w-[32px] md:h-[32px]" />
+          <IoSearchOutline
+            color="#afafaf"
+            className="w-[16px] h-[16px] md:w-[32px] md:h-[32px]"
+          />
           <input
             type="text"
             placeholder="Search here..."
@@ -168,15 +186,15 @@ export default function Home() {
                   <Image
                     width={120}
                     height={120}
-                    src={brand.imageUrl}
-                    alt={brand.name}
+                    src={brand.brand_logo}
+                    alt={brand.brand_name}
                   />
                 </div>
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-                  {brand.name}
+                  {brand.brand_name}
                 </h2>
                 <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
-                  {brand.description}
+                  {brand.brand_description}
                 </p>
                 <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
                   {[...Array(3)].map((_, idx) => (
@@ -191,8 +209,8 @@ export default function Home() {
                       <Image
                         width={28}
                         height={28}
-                        src={brand.imageUrl}
-                        alt={brand.name}
+                        src={brand.brand_logo}
+                        alt={brand.brand_name}
                       />
                     </div>
                   ))}

@@ -34,7 +34,11 @@ const Form: React.FC = () => {
   const setCustomInstruction = useBrandStore(
     (state) => state.setCustomInstruction
   );
+  // const setBrandId = useBrandStore((state) => state.setBrandId)
 
+  
+
+  // useEffect(()=>{setBrandId('9')},[])
 
   // useEffect(() => {
   //   const fetchData = async () => {
