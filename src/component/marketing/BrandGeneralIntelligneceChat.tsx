@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { RiSendPlaneFill } from "react-icons/ri";
 import useBrandStore from "@/store/useBrandStore";
 import Image from "next/image";
+import api from "@/lib/axiosInstance";
 const TypingIndicator: React.FC = () => {
   return (
     <div className="flex items-center space-x-1 mt-2">
@@ -127,13 +128,30 @@ const BrandGeneralIntelligneceChat = () => {
   // State to track if the bot is currently "typing"
   const [isBotTyping, setIsBotTyping] = useState(false);
 
-  const userId = useBrandStore((state) => state.userId);
+  const brandId = useBrandStore((state) => state.brandId);
   const logo = useBrandStore((state) => state.logo);
   const brandName = useBrandStore((state) => state.brandName);
 
+  const [workspaceSlug, setWorkpaceSlug] = useState("");
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isBotTyping]);
+
+  useEffect(() => {
+    const fetchWorkspaceData = async () => {
+      try {
+        const responseCreateWorkspace = await api.get(
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/${brandId}`
+        );
+        console.log('workspace',responseCreateWorkspace.data.workspaces[0]);
+        setWorkpaceSlug(responseCreateWorkspace.data.workspaces[0].slug);
+      } catch (error) {
+        console.error("Error fetching workspace data:", error);
+      }
+    };
+
+    fetchWorkspaceData();
+  }, [brandId]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -143,15 +161,14 @@ const BrandGeneralIntelligneceChat = () => {
     ]);
     const messageToSend = inputValue.trim();
     setInputValue("");
-
-    // Immediately add a blank bot message to the array
-    // and set isBotTyping to true
     setIsBotTyping(true);
     setMessages((prev) => [...prev, { sender: "Bunny", text: "" }]);
 
     try {
+      console.log("workspaceSlug", workspaceSlug);
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}v1/workspace/${userId}/stream-chat`,
+        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}v1/workspace/${workspaceSlug}/stream-chat`,
         {
           method: "POST",
           headers: {
@@ -163,6 +180,9 @@ const BrandGeneralIntelligneceChat = () => {
           }),
         }
       );
+
+      console.log('response', JSON.stringify(response));
+      
 
       if (!response.ok) {
         const errorText = await response.text();

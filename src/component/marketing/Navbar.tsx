@@ -14,12 +14,13 @@ import AroundMe from "../../../public/assets/svg/AroundMe";
 // import MuscleBlaz from "@/public/assets/muscle blaze logo.png";
 import Image from "next/image";
 import useBrandStore from "@/store/useBrandStore";
+import Shoppiee from "../../../public/assets/svg/Shoppiee";
 
 const brandName = "Muscle blaze";
 
 // Define primary nav items along with their routes.
 const primaryItems = [
-  { title: "Around Me", icon: <AroundMe />, route: "/" },
+  { title: "Around Me", icon: <Shoppiee />, route: "/" },
   { 
     title: brandName, 
     icon: <></>, 
@@ -77,7 +78,7 @@ const Navbar = () => {
                     `}
                   >
                     {index === 0 ? (
-                      <div className="text-2xl">{item?.icon}</div>
+                      <div className="ml-[-3px] mr-[-5px] scale-75">{item?.icon}</div>
                     ) : (
                       <Image
                         src={logo || "https://storage.aroundme.global/avatar_default.png"}

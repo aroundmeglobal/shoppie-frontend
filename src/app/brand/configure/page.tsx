@@ -3,36 +3,16 @@
 import React, { useEffect, useState } from "react";
 import ConfigureForm from "@/component/marketing/form/ConfigureForm";
 import BrandGeneralIntelligneceChat from "@/component/marketing/BrandGeneralIntelligneceChat";
-import checkWorkspaceExistence from "@/lib/checkWorkspaceExistence";
+
 import useBrandStore from "@/store/useBrandStore";
 import { GrConfigure } from "react-icons/gr";
 
 const Page = () => {
-  const [workspaceExist, setWorkspaceExist] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const userId = useBrandStore((state) => state.userId);
-  const workspaceSlug = `${userId}`; // Example dynamic slug
+  const brandId = useBrandStore((state) => state.brandId);
+  const workspaceExist = useBrandStore((state) => state.workspaceExists);
 
-  useEffect(() => {
-    const checkWorkspace = async () => {
-      const exists = await checkWorkspaceExistence("369");
-      setWorkspaceExist(exists);
-      setLoading(false);
-    };
+  console.log(workspaceExist);
 
-    checkWorkspace();
-  }, [workspaceSlug]);
-
-  if (loading) {
-    return (
-      <div className="ml-20 p-5 pt-10 overflow-y-auto h-screen">
-        <h1 className="text-2xl font-bold">Configure</h1>
-        <div className="flex w-full h-[88vh] mt-5 gap-5">
-          <div className="w-full h-[80vh] bg-gradient-to-r from-[#000]  via-[#1d1d1d] to-[#000] animate-shimmer rounded-xl"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 import Image from "next/image";
 import uploadProducts from "@/lib/uploadProducts";
 import useBrandStore from "@/store/useBrandStore";
 import { ClipLoader } from "react-spinners";
+import api from "@/lib/axiosInstance";
 
 // Define the product type based on your CSV structure.
 type Product = {
@@ -19,9 +20,18 @@ type Product = {
   purchase_link: string;
 };
 
+type OldProduct = {
+  product_name: string;
+  product_description: string;
+  product_images: string;
+  product_prices: { Original_price: string; Discounted_price: string };
+  tags: string[];
+  purchase_link: string;
+};
+
 // Component to display an individual product card.
 const ProductCard = ({ product }: { product: Product }) => {
-  const url = new URL(product.purchase_link);
+  const url = new URL(product?.purchase_link);
   const domain = url.hostname;
   return (
     <div className="border p-4 rounded-xl bg-[#161616] text-yellow-50 flex flex-col h-full">
@@ -78,8 +88,40 @@ const ProductCard = ({ product }: { product: Product }) => {
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const userId = useBrandStore((state) => state.userId);
   const [loading, setLoading] = useState(false);
+  const brandName = useBrandStore((state) => state.brandName);
+  const brandId = useBrandStore((state) => state.brandId);
+  const [oldProducts, setOldProducts] = useState<OldProduct[]>([]);
+
+  useEffect(() => {
+    const fetchOldProducts = async () => {
+      const responseOldProducts = await api.get(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/?brand_id=${brandId}`
+      );
+      console.log("responseOldProducts", responseOldProducts.data);
+      setOldProducts(responseOldProducts.data);
+    };
+
+    fetchOldProducts();
+  }, []);
+
+  const renderOldProducts = oldProducts.map((product, index) => {
+    return (
+      <ProductCard
+        key={index}
+        product={{
+          product_name: product.product_name || "Unknown Product",
+          product_description:
+            product.product_description || "No description available",
+          product_images: product.product_images[0] || "",
+          original_price: product.product_prices?.Original_price || "N/A",
+          discounted_price: product.product_prices?.Discounted_price || "N/A",
+          tags: product.tags || [],
+          purchase_link: product.purchase_link[0] || "",
+        }}
+      />
+    );
+  });
 
   // Handler for CSV file upload.
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +169,64 @@ const Products = () => {
       setLoading(false);
       return;
     }
-    await uploadProducts(userId, uploadedFile);
+
+    // upload to cdn
+
+    console.log(uploadedFile);
+
+    const uploadFileType = uploadedFile.type;
+    console.log("uploadFileType", uploadFileType);
+
+    const productResponse = await fetch(
+      `https://fastapi.aroundme.tech/api/upload/generate-upload-url`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-product`,
+          type: `${uploadedFile.type}`,
+          asset_for: "user-products",
+        }),
+      }
+    );
+
+    const productData = await productResponse.json();
+
+    await fetch(productData.signed_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": uploadedFile.type,
+      },
+      body: uploadedFile,
+    });
+
+    console.log("productData", productData.public_url);
+
+    //hit file upload api
+
+    const body = {
+      brand_id: brandId,
+      file: `${productData.public_url}`,
+    };
+    const responseFileUpload = await api.post(
+      `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
+      body
+    );
+
+    console.log("file upload", responseFileUpload);
+
+    // hit brand update with empty json
+
+    const brandBody = {};
+    const responseUpdateBrand = await api.put(
+      `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+      brandBody
+    );
+
+    console.log("brand updated", responseUpdateBrand);
+
     setLoading(false);
   };
 
@@ -234,6 +333,13 @@ const Products = () => {
           {products.map((product, index) => (
             <ProductCard key={index} product={product} />
           ))}
+        </div>
+      </div>
+
+      {/* if products exist */}
+      <div className="flex flex-col mt-3 px-28 gap-10 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {renderOldProducts} {/* Display old products here */}
         </div>
       </div>
     </div>

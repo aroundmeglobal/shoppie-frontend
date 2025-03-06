@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const setLogoInStore = useBrandStore((state) => state.setLogo);
   const setBrandName = useBrandStore((state) => state.setBrandName);
+  const setBrandId = useBrandStore((state) => state.setBrandId);
 
   const initialValues = {
     email: "",
@@ -130,20 +131,24 @@ export default function RegisterPage() {
 
       console.log("Creating brand with data:", brandData);
 
-      const brandResponse = await fetch("http://localhost:8000/api/brands", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(brandData),
-      });
+      const brandResponse = await fetch(
+        `https://shoppie-backend.aroundme.global/api/brands/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(brandData),
+        }
+      );
 
       const brand = await brandResponse.json();
-      console.log("Brand created:", brand);
+      console.log("Brand created:", brand);      
 
       // Store important data in the store
       setLogoInStore(logoData.public_url);
       setBrandName(brandName);
+      setBrandId(brand.id);
 
       // Navigate to the brand status page
       router.push("/brand-status");
