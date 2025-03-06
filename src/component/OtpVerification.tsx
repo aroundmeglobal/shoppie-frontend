@@ -45,6 +45,8 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
         otp: Otp,
       });
       console.log(response.data.session_token);
+      console.log(response);
+      
       if (response.data.session_token) {
         Cookies.set("authToken", response.data.session_token, {
           expires: 365,

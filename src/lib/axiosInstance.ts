@@ -1,9 +1,9 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const BASE_URL =
-  // process.env.NEXT_PUBLIC_API_URL || 
-  "https://fastapi.aroundme.tech/api";
+const BASE_URL = 
+// process.env.NEXT_PUBLIC_DEVBASEURL;
+"https://shoppie-backend.aroundme.global/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -15,7 +15,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("authToken");    
+    const token = Cookies.get("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,7 +38,7 @@ api.interceptors.response.use(
         console.warn("Access forbidden!");
         alert("You do not have permission to access this resource.");
       } else if (status === 500) {
-        console.error("Server error! Try again later.");
+        console.error("Server error! Try again later.", error.response);
       }
     } else {
       console.error("Network error! Please check your internet connection.");

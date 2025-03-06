@@ -13,7 +13,7 @@ const Page = () => {
   const [isEmailValid, setIsEmailValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const setEmailInStore = useBrandStore((state) => state.setEmail);
-  
+
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
@@ -32,10 +32,26 @@ const Page = () => {
 
     try {
       setIsLoading(true);
-      const response = await api.post("/session/request-otp", { email: email });
-      toast.success("OTP sented to email");
-      setEmailInStore(email);
-      setOtpScreen(true);
+      // const response = await api.post("/session/request-otp", { email: email });
+      const response = await api.post("/brands/otp/email/send", { email: email });
+      // const response = await fetch(
+      //   `https://shoppie-backend.aroundme.global/api/brands/otp/email/send`,
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       email: email,
+      //     }),
+      //   }
+      // );
+      console.log(response);
+      if (response.status === 200) {
+        toast.success("OTP sented to email");
+        setEmailInStore(email);
+        setOtpScreen(true);
+      }
     } catch (error) {
       toast.error("Failed to send OTP.");
     } finally {

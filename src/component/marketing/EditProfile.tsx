@@ -10,6 +10,8 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import BrandInfoForm from "./form/BrandInfoForm";
 import BrandSocialForm from "./form/BrandSocialForm";
+import { stat } from "fs";
+import { getBradData } from "@/api/getBradData";
 
 const EditProfile = () => {
   const initialSocialData = [
@@ -60,7 +62,7 @@ const EditProfile = () => {
     contactMobile: "",
     photo: null as File | null, // Storing the actual File
     meta: {},
-    user_id: "",
+    id: "",
   });
 
   const [isLogoUpdated, setIsLogoUpdated] = useState(false);
@@ -75,53 +77,68 @@ const EditProfile = () => {
   const [brandInfoChanges, setBrandInfoChanges] = useState(0);
   const [socialInfoChanges, setSocialInfoChanges] = useState(0);
 
+  const brandId = useBrandStore((state) => state.brandId);
   const setLogoInStore = useBrandStore((state) => state.setLogo);
-  const setBrandName = useBrandStore((state) => state.setBrandName)
-  const setUserId = useBrandStore((state) => state.setUserId)
-  const setBrandDescription = useBrandStore((state) => state.setBrandDescription)
-  const setBrandDomain = useBrandStore((state) => state.setBrandDomain)
+  const setBrandName = useBrandStore((state) => state.setBrandName);
+  const setBrandDescription = useBrandStore(
+    (state) => state.setBrandDescription
+  );
+  const setBrandDomain = useBrandStore((state) => state.setBrandDomain);
+  const setWorkspaceExists = useBrandStore((state) => state.setWorkspaceExists);
 
   useEffect(() => {
     const fetchBrandDetails = async () => {
       setIsLoading(true);
       try {
-        const response = await api.get("/users/brand-details");
-        const data = response.data;
+        const brandDataResponse = await getBradData(brandId);
+
+        // const response = await api.get(`/brands/`);
+        const data = brandDataResponse;
+        console.log("data", data);
+
         initialFetchedDataRef.current = data;
         isDataFetchedRef.current = true;
 
-        setLogoInStore(data.logo);
-        setBrandName(data.brand_name);
-        setUserId(data.user_id)
-        setBrandDescription(data.meta.brand_description)
-        setBrandDomain(data.domain)
+        setLogoInStore(data.brandData.logo);
+        setBrandName(data.brandData.name);
+        setBrandDescription(data.brandData.description);
+        setBrandDomain(data.brandData.industry);
 
+        if (data.brandData.workspaces && data.brandData.workspaces.length > 0) {
+          setWorkspaceExists(true);
+        } else {
+          setWorkspaceExists(false);
+        }
+        
 
         setFormData({
-          brandName: data.brand_name,
-          brandDomain: data.domain,
-          contactName: data.name,
-          contactMobile: data.phone_number,
-          email: data.email,
-          photo: data.logo, // If logo is a URL, adjust as needed
-          brandDescription: data.meta.brand_description || "",
-          meta: data.meta,
-          user_id: data.user_id,
+          brandName: data.brandData.name,
+          brandDomain: data.brandData.industry,
+          contactName: data.contactData.name,
+          contactMobile: data.contactData.phone_number,
+          // data.phone_number,
+          email: data.brandData.email,
+          photo: data.brandData.logo, // If logo is a URL, adjust as needed
+          brandDescription: data.brandData.description || "",
+          meta: {},
+          // data.meta,
+          id: data.brandData.id,
         });
 
         const updatedSocialData = [...socialMediaData];
         updatedSocialData.forEach((item) => {
-          if (item.platform === "Website") item.inputValue = data.website || "";
+          if (item.platform === "Website")
+            item.inputValue = data.brandData?.website || "";
           if (item.platform === "Instagram")
-            item.inputValue = data.meta.instagram || "";
+            item.inputValue = data?.brandData?.instagram || "";
           if (item.platform === "LinkedIn")
-            item.inputValue = data.meta.linkedin || "";
+            item.inputValue = data?.brandData?.linkedin || "";
           if (item.platform === "X/Twitter")
-            item.inputValue = data.meta["x/twitter"] ?? "";
+            item.inputValue = data?.brandData["x/twitter"] ?? "";
           if (item.platform === "YouTube")
-            item.inputValue = data.meta.youtube || "";
+            item.inputValue = data?.brandData?.youtube || "";
           if (item.platform === "Facebook")
-            item.inputValue = data.meta.facebook || "";
+            item.inputValue = data?.brandData?.facebook || "";
         });
 
         setSocialMediaData(updatedSocialData);
