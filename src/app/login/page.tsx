@@ -33,7 +33,14 @@ const Page = () => {
     try {
       setIsLoading(true);
       // const response = await api.post("/session/request-otp", { email: email });
-      const response = await api.post("/brands/otp/email/send", { email: email });
+
+      const body = {
+        email : `${email}`
+      }
+      const response = await api.post(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/otp/email/send`,
+        body
+      );
       // const response = await fetch(
       //   `https://shoppie-backend.aroundme.global/api/brands/otp/email/send`,
       //   {

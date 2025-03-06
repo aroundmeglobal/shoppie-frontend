@@ -168,11 +168,13 @@ const BrandGeneralIntelligneceChat = () => {
       console.log("workspaceSlug", workspaceSlug);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}v1/workspace/${workspaceSlug}/stream-chat`,
+        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${workspaceSlug}/stream-chat`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN}`,
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+      
+            `,
           },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
@@ -180,7 +182,7 @@ const BrandGeneralIntelligneceChat = () => {
           }),
         }
       );
-
+      // ${process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN}
       console.log('response', JSON.stringify(response));
       
 
