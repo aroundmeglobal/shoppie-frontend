@@ -64,7 +64,7 @@ export default function RegisterPage() {
 
       // Step 1: Generate upload URL for brand logo
       const logoResponse = await fetch(
-        "https://fastapi.aroundme.global/api/upload/generate-upload-url",
+        "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
         {
           method: "POST",
           headers: {
@@ -82,7 +82,7 @@ export default function RegisterPage() {
 
       // Step 2: Generate upload URL for incorporation certificate
       const certificateResponse = await fetch(
-        "https://fastapi.aroundme.global/api/upload/generate-upload-url",
+        "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
         {
           method: "POST",
           headers: {
