@@ -36,8 +36,6 @@ const Form: React.FC = () => {
   );
   // const setBrandId = useBrandStore((state) => state.setBrandId)
 
-  
-
   // useEffect(()=>{setBrandId('9')},[])
 
   // useEffect(() => {
@@ -110,15 +108,23 @@ const Form: React.FC = () => {
         // };
         const submissionData = {
           brandId,
-          brandName: brandName,  // Always include brandName
-          brandDescription: values.brandDescription !== brandDescription ? values.brandDescription : brandDescription, // If changed, send the new one
-          brandDomain: values.brandDescription !== brandDescription ? brandDomain : brandDomain,  // Always include brandDomain
+          brandName: brandName, // Always include brandName
+          brandDescription:
+            values.brandDescription !== brandDescription
+              ? values.brandDescription
+              : brandDescription, // If changed, send the new one
+          brandDomain:
+            values.brandDescription !== brandDescription
+              ? brandDomain
+              : brandDomain, // Always include brandDomain
           pdfs: values.pdfs,
           deletedDocuments: deletedDocuments,
           faqs: values.faqs !== brandFaqs ? values.faqs : brandFaqs, // Send updated faqs if changed
-          customInstruction: values.customInstruction !== brandCustomInstruction ? values.customInstruction : brandCustomInstruction, // Send updated customInstruction if changed
+          customInstruction:
+            values.customInstruction !== brandCustomInstruction
+              ? values.customInstruction
+              : brandCustomInstruction, // Send updated customInstruction if changed
         };
-        
 
         try {
           const response = await configureWorkspace(submissionData);
@@ -144,51 +150,7 @@ const Form: React.FC = () => {
           similarity_threshold: 0.7,
           open_ai_temp: 0.7,
           open_ai_history: 20,
-          open_ai_prompt: `
-      BRAND_NAME  : ${brandName}
-      BRAND_DESCRIPTION : ${brandDescription}
-      BRAND_DOMAIN : ${brandDomain}
-      given the following conversation, relevant context, and a follow-up question, reply with an answer to the current question the user is asking. Return only your response to the question given the above information following the user's instructions as needed.
-      You are an ai agent of above provided brand, access the above provided data. if somebody asks what you do you reply with i help customers in navigating them with their needs. Assist them in whatever way possible. Reply them to what they ask specifically be precise , helpful, considerate towards human feeling and humble.
-      
-      And only  whenever a user asks for product suggestions, please respond with a JSON object formatted exactly as shown below. Don’t respond with this if not clearly asked for product suggestion. The response must begin with a beautifully crafted one-liner appreciating and responding to the text and then it should give a reply:
-  
-  @@SUGGESTIONS START@@
-  
-  and end with:
-  
-  @@SUGGESTIONS END@@
-  
-  Between these markers, output a JSON object with one key "products" that contains an array of product objects. Each product object must have the following keys:
-  - id
-  - title
-  - image_url
-  - original_price
-  - buy_link
-  
-  For example, a valid output might look like:
-  
-  @@SUGGESTIONS START@@
-  {
-    "products": [
-      {
-        "id": "001",
-        "title": "product name",
-        "image_url": "product image_url",
-        "original_price": "original price",
-        "buy_link": "buy link"
-      },
-       {
-        "id": "002",
-        "title": "product name",
-        "image_url": "product image_url",
-        "original_price": "original price",
-        "buy_link": "buy link"
-      },
-    ]
-  }
-  @@SUGGESTIONS END@@
-      `,
+          open_ai_prompt: `${values.customInstruction}`,
           query_refusal_response:
             "There is no relevant information in this workspace to answer your query.",
           chat_mode: "chat",
