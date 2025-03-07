@@ -471,7 +471,7 @@ export default function ChatPage({
 
   return (
     <div>
-      <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828] md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30">
+      <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828] md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30">
         {/* Header */}
 
         {/* Modals */}
@@ -660,7 +660,7 @@ const BrandModal = ({
   };
 
   return (
-    <div className="flex flex-col top-0 fixed w-[100vw] h-[100vh] bg-[#282828]   md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30 overflow-y-auto">
+    <div className="flex flex-col top-0 fixed w-[100vw] h-[100vh] bg-[#282828]  md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto">
       {/* Brand Modal Header */}
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white">
@@ -816,7 +816,7 @@ const AllProductModal = ({
   );
 
   return (
-    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30 overflow-y-auto ">
+    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto ">
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white py-2.5">
           <span role="img" aria-label="Back" onClick={onClose}>
@@ -959,7 +959,7 @@ const ProductModal = ({
   };
 
   return (
-    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[75%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[22%] shadow-md overflow-hidden z-30 overflow-y-auto">
+    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto">
       <div className="flex items-start w-full mt-3">
         <span role="img" aria-label="Back">
           <Image

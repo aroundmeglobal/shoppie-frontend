@@ -10,9 +10,6 @@ import { getWorkspaceHistory } from "@/api/getWorkspaceHistory";
 import useBrandStore from "@/store/selectedBrand";
 import { IoMdArrowUp } from "react-icons/io";
 
-const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
-const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
-
 interface PageProps {
   params: {
     id: string;
@@ -26,6 +23,7 @@ export default function ChatPage({ params }: PageProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const brand = useBrandStore((state) => state.brand);
+
 
   // Fetch initial chat history via React Query.
   const { data, error, isLoading } = useQuery({
@@ -77,13 +75,15 @@ export default function ChatPage({ params }: PageProps) {
     ]);
 
     try {
+
       const response = await fetch(
-        `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
+        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${params.id}/stream-chat`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+      
+            `,
           },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
@@ -217,6 +217,10 @@ export default function ChatPage({ params }: PageProps) {
     />
   );
 
+  const handleBrandIconClick =()=>{
+    router.push(`/chat/details/${params.id}`)
+  }
+
   return (
     <div>
       <div className="flex flex-col top-0 fixed w-full h-full bg-[#09090b] md:w-[400px] md:h-[75%] md:rounded-[10px] md:bottom-[90px] md:right-[20px] md:top-[10%] shadow-md overflow-hidden z-30 ">
@@ -237,10 +241,10 @@ export default function ChatPage({ params }: PageProps) {
               />
             </span>
             <Image
-              //   onClick={handleBrandIconClick}
+                onClick={handleBrandIconClick}
               src={
-                brand.imageUrl ||
-                "https://www.feedough.com/wp-content/uploads/2016/09/brand-image.png"
+                brand.brand_logo ||
+                "https://storage.aroundme.global/avatar_default.png"
               }
               alt="Chat"
               width={40}
@@ -248,10 +252,10 @@ export default function ChatPage({ params }: PageProps) {
               style={{ width: "40px", height: "40px", borderRadius: "50px" }}
             />
             <div
-              // onClick={handleBrandIconClick}
+              onClick={handleBrandIconClick}
               className="text-white text-lg"
             >
-              {brand.name}
+              {brand.brand_name}
             </div>
           </div>
         </div>
