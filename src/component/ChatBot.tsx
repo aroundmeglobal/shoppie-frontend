@@ -81,7 +81,7 @@ const ChatBubble = ({
                   if (
                     suggestionData.products &&
                     Array.isArray(suggestionData.products)
-                  ) {
+                  ) {  
                     return suggestionData.products.map((product: any) => (
                       <div
                         key={product.id}
@@ -230,7 +230,7 @@ const ChatBubble = ({
 export default function ChatPage({
   selectedBrand,
   setSelectedBrand,
-}: ChatPageProps) {  
+}: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -260,12 +260,15 @@ export default function ChatPage({
     // setFetchingMessage(true);
     const fetchMessages = async () => {
       try {
-        const chatData = await fetch(`${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
-          },
-        });
+        const chatData = await fetch(
+          `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+            },
+          }
+        );
 
         const messageData = await chatData.json();
 
@@ -482,7 +485,7 @@ export default function ChatPage({
         )}
         {showProductModal && (
           <ProductModal
-            key={selectedProduct?.id}
+          key={new Date().getTime()}
             selectedBrand={selectedBrand}
             selectedProduct={selectedProduct}
             onClose={handleCloseProductModal}
@@ -576,33 +579,35 @@ const BrandModal = ({
   handleProductClick,
 }: // setSelectedProduct,
 {
-  selectedBrand: Brand;
+  selectedBrand: Brand | null;
   onClose: () => void;
   handleProductClick: (product: any) => void;
   // setSelectedProduct: (product: any) => void;
 }) => {
-  const [brandDetaile, setBrandDetailes] = useState<any>(null);
+  const [brandDetails, setBrandDetails] = useState<any>(null);
   const [productDetails, setProductDetails] = useState<any[]>([]);
+  const [socialDetails, setSocialDetails] = useState<any[]>([]);
   const [showAllProductModal, setShowAllProductModal] = useState(false);
 
   useEffect(() => {
     const fetchBrandDetails = async () => {
       try {
-        const response = await api.get("/users/brand-details", {
-          user_id: 369,
-        });
+        const response = await api.get(`/brands/${selectedBrand?.brand_id}`);
         const data = response.data;
-        setBrandDetailes(data);
+        setBrandDetails(data);
       } catch (err) {
         console.error(err);
       }
     };
 
-    const fetchProductDetailes = async () => {
+    const fetchProductDetails = async () => {
       try {
-        const response = await api.get(
-          "/users/product-details-by-brand?user_id=369"
-        );
+        // Construct query params correctly
+        const response = await api.get("/files/", {
+          params: {
+            brand_id: selectedBrand?.brand_id || "",
+          },
+        });
         const data = response.data;
         setProductDetails(data);
       } catch (err) {
@@ -610,9 +615,22 @@ const BrandModal = ({
       }
     };
 
+    const fetchSocialDetails = async () => {
+      try {
+        const response = await api.get(
+          `/social/brand-social/${selectedBrand?.brand_id}`
+        );
+        const data = response.data;
+        setSocialDetails(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchBrandDetails();
-    fetchProductDetailes();
-  }, []);
+    fetchProductDetails();
+    fetchSocialDetails();
+  }, [selectedBrand?.brand_id]);
 
   const extractDomain = (url: string) => {
     try {
@@ -632,14 +650,10 @@ const BrandModal = ({
     return "/aroundImg.png";
   };
 
-  const socialLinks = [
-    { name: "Facebook", url: brandDetaile?.meta?.facebook },
-    { name: "Instagram", url: brandDetaile?.meta?.instagram },
-    { name: "LinkedIn", url: brandDetaile?.meta?.linkedin },
-    { name: "Twitter", url: brandDetaile?.meta?.x?.twitter },
-    { name: "YouTube", url: brandDetaile?.meta?.youtube },
-    { name: "Website", url: brandDetaile?.meta?.website },
-  ];
+  const socialLinks = socialDetails.map((link: any) => ({
+    name: link.type,
+    url: link.link,
+  }));
 
   const handleSeeAllClick = () => {
     setShowAllProductModal(true);
@@ -671,14 +685,14 @@ const BrandModal = ({
           <div className="flex flex-1 mt-2 justify-center">
             <div className=" ml-[-50px] flex flex-col gap-2 items-center ">
               <Image
-                src={selectedBrand.imageUrl}
+                src={brandDetails?.logo}
                 alt="Brand Logo"
                 width={20}
                 height={20}
                 style={{ width: "80px", height: "80px", borderRadius: "40px" }}
               />
               <div className="flex items-center gap-2">
-                <div className="text-white text-xl">{selectedBrand.name}</div>
+                <div className="text-white text-xl">{brandDetails?.name}</div>
                 <MdVerified color="#1E60FB" size={18} />
               </div>
             </div>
@@ -693,7 +707,7 @@ const BrandModal = ({
         </h1>
         <div className="rounded-xl text-[13px] w-full mt-2 bg-[#1d1d1d] p-[14px] min-h-[55px]">
           <div className=" text-white ">
-            <p>{brandDetaile?.meta?.brand_description}</p>
+            <p>{brandDetails?.description}</p>
           </div>
         </div>
 
@@ -742,25 +756,27 @@ const BrandModal = ({
             >
               <div className="flex flex-col items-center">
                 <Image
-                  src={product.media[0]}
+                  src={product.product_images[0]}
                   alt={product.title}
                   width={150}
                   height={180}
                   className="w-[100%]"
                 />
                 <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
-                  <h3 className="text-white  line-clamp-1">{product.title}</h3>
+                  <h3 className="text-white  line-clamp-1">
+                    {product.product_name}
+                  </h3>
                   <div>
-                    <span className="">₹{product.prices.Discounted_price}</span>
+                    <span className="">
+                      {product.product_prices?.Discounted_price}
+                    </span>
                     <span className=" line-through text-[#a4a4a4] ml-2">
-                      ₹{product.prices.Original_price}
+                      {product.product_prices?.Original_price}
                     </span>
                     <span className=" text-[#15CF74] ml-2">
-                      {`${Math.round(
-                        ((product.prices.Original_price -
-                          product.prices.Discounted_price) /
-                          product.prices.Original_price) *
-                          100
+                      {`${percentageDifference(
+                        product.product_prices?.Original_price,
+                        product.product_prices?.Discounted_price
                       )}% Off`}
                     </span>
                   </div>
@@ -774,8 +790,8 @@ const BrandModal = ({
       {/* Show All Products Modal */}
       {showAllProductModal && (
         <AllProductModal
+          key={productDetails.length || new Date().getTime()}
           handleProductClick={handleProductClick}
-          // setSelectedProduct={setSelectedProduct}
           productDetails={productDetails}
           onClose={() => setShowAllProductModal(false)}
         />
@@ -794,10 +810,9 @@ const AllProductModal = ({
   handleProductClick: (product: any) => void;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-
   // Filter products based on search input
   const filteredProducts = productDetails.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase())
+    product.product_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -846,33 +861,31 @@ const AllProductModal = ({
           >
             <div className="flex flex-col items-center">
               <Image
-                src={product.media[0]}
-                alt={product.title}
+                src={product.product_images[0]}
+                alt={product.product_name}
                 width={150}
                 height={150}
                 className="w-[100%]"
               />
               <div className="px-3 bg-[#2d2d2d] py-2 w-full">
                 <h3 className="text-white text-[13px] line-clamp-1">
-                  {product.title}
+                  {product.product_name}
                 </h3>
                 <p className="text-[13px]">
-                  {product.prices?.Discounted_price && (
+                  {product.product_prices?.Discounted_price && (
                     <span className="font-bold">
-                      ₹{product.prices.Discounted_price}
+                      ₹{product.product_prices.Discounted_price}
                     </span>
                   )}
-                  {product.prices?.Original_price && (
+                  {product.product_prices?.Original_price && (
                     <span className="text-[13px] line-through text-[#a4a4a4] ml-2">
-                      ₹{product.prices.Original_price}
+                      ₹{product.product_prices.Original_price}
                     </span>
                   )}
-                  <span className=" text-[13px] font-medium text-[#15CF74] ml-2">
-                    {`${Math.round(
-                      ((product.prices.Original_price -
-                        product.prices.Discounted_price) /
-                        product.prices.Original_price) *
-                        100
+                  <span className=" text-[#15CF74] ml-2">
+                    {`${percentageDifference(
+                      product.product_prices?.Original_price,
+                      product.product_prices?.Discounted_price
                     )}% Off`}
                   </span>
                 </p>
@@ -886,10 +899,12 @@ const AllProductModal = ({
 };
 
 const ProductModal = ({
+  selectedBrand,
   selectedProduct,
   onClose,
   handleProductClick,
 }: {
+  selectedBrand: Brand | null;
   selectedProduct: any;
   onClose: () => void;
   handleProductClick: (product: any) => void;
@@ -899,18 +914,22 @@ const ProductModal = ({
   const [showAllProductModal, setShowAllProductModal] = useState(false);
 
   useEffect(() => {
-    const fetchProductDetailes = async () => {
+    const fetchProductDetails = async () => {
       try {
-        const response = await api.get(
-          "/users/product-details-by-brand?user_id=369"
-        );
+        // Construct query params correctly
+        const response = await api.get("/files/", {
+          params: {
+            brand_id: selectedBrand?.brand_id || "",
+          },
+        });
         const data = response.data;
         setProductDetails(data);
       } catch (err) {
         console.error(err);
       }
     };
-    fetchProductDetailes();
+
+    fetchProductDetails();
   }, []);
 
   const toggleDescription = () => {
@@ -958,8 +977,10 @@ const ProductModal = ({
         </span>
         <div className="text-[15px] w-[80%] h-[250px] bg-[#1d1d1d] rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
           <Image
-            src={selectedProduct.image_url || selectedProduct?.media[0]}
-            alt={selectedProduct.title}
+            src={
+              selectedProduct?.image_url || selectedProduct?.product_images[0]
+            }
+            alt={selectedProduct?.title || selectedProduct?.product_name}
             width={80}
             height={80}
             style={{ width: "70%", height: "200px", borderRadius: 20 }}
@@ -968,9 +989,11 @@ const ProductModal = ({
       </div>
       <div className="rounded-md w-full px-6 py-2">
         <div className="mt-2 text-white ">
-          <h3 className="text-[18px] font-bold">{selectedProduct.title}</h3>
+          <h3 className="text-[18px] font-bold">
+            {selectedProduct?.title || selectedProduct?.product_name}
+          </h3>
           <div className="mt-[5px] text-[13px]">
-            {!selectedProduct.prices.Original_price ? (
+            {!selectedProduct?.prices?.Original_price ? (
               <div>
                 <span className="line-through text-[#a4a4a4] mr-2">
                   {selectedProduct.original_price}
@@ -982,17 +1005,15 @@ const ProductModal = ({
             ) : (
               <div>
                 <span className="text-[18px] font-bold">
-                  ₹{selectedProduct.prices.Discounted_price}
+                  ₹{selectedProduct.product_prices.Discounted_price}
                 </span>
                 <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
-                  ₹{selectedProduct.prices.Original_price}
+                  ₹{selectedProduct.product_prices.Original_price}
                 </span>
-                <span className=" text-[14.5px] font-medium text-[#15CF74] ml-2">
-                  {`${Math.round(
-                    ((selectedProduct.prices.Original_price -
-                      selectedProduct.prices.Discounted_price) /
-                      selectedProduct.prices.Original_price) *
-                      100
+                <span className=" text-[#15CF74] ml-2">
+                  {`${percentageDifference(
+                    selectedProduct.product_prices?.Original_price,
+                    selectedProduct.product_prices?.Discounted_price
                   )}% Off`}
                 </span>
               </div>
@@ -1000,8 +1021,8 @@ const ProductModal = ({
           </div>
           <div className="text-[13px] text-[white]/80 leading-2 mt-3">
             {showFullDescription
-              ? selectedProduct.description
-              : `${selectedProduct.description.slice(0, 100)}...`}
+              ? selectedProduct?.product_description
+              : `${selectedProduct?.product_description?.slice(0, 100)}...`}
             <button
               onClick={toggleDescription}
               className={`text-[#1E60FB] ml-[4px]`}
@@ -1016,7 +1037,7 @@ const ProductModal = ({
           Buy this product through
         </h1>
         <div className="bg-[#1d1d1d] m-4 rounded-xl flex items-center p-[14px] space-x-4">
-          {selectedProduct.purchase_urls.map((url, index) => {
+          {selectedProduct?.purchase_link?.map((url, index) => {
             const faviconUrl = getFavicon(url);
             return (
               <a
@@ -1046,36 +1067,37 @@ const ProductModal = ({
           </button>
         </div>
         <div className="flex gap-6 mt-4 ml-4 mb-4 overflow-hidden overflow-x-auto">
-          {productDetails.map((product: any) => (
+          {productDetails?.map((product: any) => (
             <button
               key={product.id}
-              className="bg-[#1c1c1c] rounded-xl overflow-hidden min-w-[170px]"
+              className="bg-[#1c1c1c] rounded-xl overflow-hidden min-w-[200px]"
               onClick={() => {
                 handleProductClick(product);
-                console.log("product hit in product model");
               }}
             >
               <div className="flex flex-col items-center">
                 <Image
-                  src={product.media[0]}
-                  alt={product.title}
+                  src={product.product_images[0]}
+                  alt={product.product_name}
                   width={150}
                   height={180}
                   className="w-[100%]"
                 />
                 <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
-                  <h3 className="text-white  line-clamp-1">{product.title}</h3>
+                  <h3 className="text-white  line-clamp-1">
+                    {product.product_name}
+                  </h3>
                   <div>
-                    <span className="">₹{product.prices.Discounted_price}</span>
+                    <span className="">
+                      {product.product_prices.Discounted_price}
+                    </span>
                     <span className=" line-through text-[#a4a4a4] ml-2">
-                      ₹{product.prices.Original_price}
+                      {product.product_prices.Original_price}
                     </span>
                     <span className=" text-[#15CF74] ml-2">
-                      {`${Math.round(
-                        ((product.prices.Original_price -
-                          product.prices.Discounted_price) /
-                          product.prices.Original_price) *
-                          100
+                      {`${percentageDifference(
+                        product.product_prices?.Original_price,
+                        product.product_prices?.Discounted_price
                       )}% Off`}
                     </span>
                   </div>
@@ -1088,6 +1110,7 @@ const ProductModal = ({
       {/* Show All Products Modal */}
       {showAllProductModal && (
         <AllProductModal
+          key={productDetails.length || new Date().getTime()}
           handleProductClick={handleProductClick}
           productDetails={productDetails}
           onClose={() => setShowAllProductModal(false)}
@@ -1095,4 +1118,18 @@ const ProductModal = ({
       )}
     </div>
   );
+};
+
+const cleanPrice = (price: string) => {
+  return parseFloat(price.replace(/[₹,]/g, ""));
+};
+
+const percentageDifference = (
+  originalPrice: string,
+  discountedPrice: string
+) => {
+  const original = cleanPrice(originalPrice);
+  const discounted = cleanPrice(discountedPrice);
+
+  return Math.round(((original - discounted) / original) * 100);
 };
