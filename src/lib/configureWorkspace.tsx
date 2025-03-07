@@ -445,7 +445,7 @@ const configureWorkspace = async (
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              name: `${submissionData.brandName.replace(/\s+/g, "-").toLowerCase()}${uploadedFile.name}-pdf`,
+              name: `${submissionData.brandName.replace(/\s+/g, "-").toLowerCase()}${uploadedFile.name}`,
               type: uploadFileType,
               asset_for: "user-pdf",
             }),
