@@ -116,8 +116,10 @@ export default function Home() {
 
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
+      console.log(brand);
+      
       setBrand(brand);
-      router.push("/brand/chat/369");
+      router.push(`/chat/${brand?.workspaces[0].slug}`);
     } else {
       handleBrandClick(brand);
     }
@@ -186,17 +188,17 @@ export default function Home() {
                   <Image
                     width={120}
                     height={120}
-                    src={brand.brand_logo}
-                    alt={brand.brand_name}
+                    src={brand?.brand_logo}
+                    alt={brand?.brand_name}
                   />
                 </div>
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-                  {brand.brand_name}
+                  {brand?.brand_name}
                 </h2>
                 <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
-                  {brand.brand_description}
+                  {brand?.brand_description}
                 </p>
-                <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
+                {/* <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
                   {[...Array(3)].map((_, idx) => (
                     <div
                       key={idx}
@@ -217,7 +219,7 @@ export default function Home() {
                   <p className="text-[#A4A4A4] text-[14px]">
                     +182 interactions
                   </p>
-                </div>
+                </div> */}
               </button>
               <button
                 onClick={() => handleBotClick(brand)}
@@ -239,13 +241,13 @@ export default function Home() {
           />
         )}
       </main>
-      {brandOverview && (
+      {/* {brandOverview && (
         <BrandModel
           brand={brandOverview}
           onClose={() => setBrandOverview(null)}
           handleBotClick={handleBotClick}
         />
-      )}
+      )} */}
     </div>
   );
 }
