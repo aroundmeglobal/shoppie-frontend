@@ -117,9 +117,9 @@ const ProductPage = () => {
           <h3 className="text-[18px] font-bold">{productName}</h3>
           <div className="mt-[5px] text-[13px]">
             <div>
-              <span className="text-[18px] font-bold">{originalPrice}</span>
+              <span className="text-[18px] font-bold"> {discountedPrice}</span>
               <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
-                {discountedPrice}
+                {originalPrice}
               </span>
               <span className=" text-[#15CF74] ml-2">
                 {`${percentageDifference(
@@ -195,11 +195,11 @@ const ProductPage = () => {
                 <Image
                   src={product.product_images[0]}
                   alt={product.product_name}
-                  width={150}
-                  height={180}
-                  className="w-[100%]"
+                  width={100}
+                  height={48}
+                  className="w-[100%] h-[190px] object-contain bg-white"
                 />
-                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+                <div className="px-3 text-[13px] flex flex-col gap-2  bg-[#2d2d2d] py-3 w-full">
                   <h3 className="text-white line-clamp-1">
                     {product.product_name}
                   </h3>
