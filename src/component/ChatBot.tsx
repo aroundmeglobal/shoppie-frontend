@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import api from "@/lib/axiosInstance";
@@ -11,7 +10,7 @@ import { RxCross2 } from "react-icons/rx";
 import { IoMdArrowUp } from "react-icons/io";
 import { Dispatch, SetStateAction } from "react";
 import { Brand } from "@/app/page";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -49,13 +48,21 @@ const ChatBubble = ({
   isTyping: boolean;
   handleProductClick: (product: any) => void;
 }) => {
-  const [textBefore, restOfText] = message.text?.split(
+  const cleanMessageText = (text: string) => {
+    if (text.startsWith('"') && text.endsWith('"')) {
+      return text.slice(1, -1); // Remove leading and trailing quotes
+    }
+    return text;
+  };
+
+  const [textBefore, restOfText] = cleanMessageText(message.text)?.split(
     "@@SUGGESTIONS START@@"
   ) ?? ["", ""];
 
   const [suggestionText, textAfter] = restOfText
     ? restOfText.split("@@SUGGESTIONS END@@")
     : ["", restOfText];
+
 
   return (
     <div
@@ -73,13 +80,22 @@ const ChatBubble = ({
             children={textBefore}
             components={{
               h1: ({ node, ...props }) => (
-                <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+                <h1
+                  className="text-2xl font-bold mt-4 mb-2 text-white"
+                  {...props}
+                />
               ),
               h2: ({ node, ...props }) => (
-                <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+                <h2
+                  className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                  {...props}
+                />
               ),
               h3: ({ node, ...props }) => (
-                <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+                <h3
+                  className="text-lg font-semibold mt-2 mb-1 text-white/"
+                  {...props}
+                />
               ),
               p: ({ node, ...props }) => (
                 <p className="text-sm mb-2 leading-relaxed" {...props} />
@@ -93,9 +109,7 @@ const ChatBubble = ({
               strong: ({ node, ...props }) => (
                 <strong className="font-bold" {...props} />
               ),
-              em: ({ node, ...props }) => (
-                <em className="italic" {...props} />
-              ),
+              em: ({ node, ...props }) => <em className="italic" {...props} />,
             }}
           />
         </div>
@@ -203,13 +217,22 @@ const ChatBubble = ({
                 children={textAfter}
                 components={{
                   h1: ({ node, ...props }) => (
-                    <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+                    <h1
+                      className="text-2xl font-bold mt-4 mb-2 text-white"
+                      {...props}
+                    />
                   ),
                   h2: ({ node, ...props }) => (
-                    <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+                    <h2
+                      className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                      {...props}
+                    />
                   ),
                   h3: ({ node, ...props }) => (
-                    <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+                    <h3
+                      className="text-lg font-semibold mt-2 mb-1 text-white/"
+                      {...props}
+                    />
                   ),
                   p: ({ node, ...props }) => (
                     <p className="text-sm mb-2 leading-relaxed" {...props} />
@@ -237,8 +260,6 @@ const ChatBubble = ({
     </div>
   );
 };
-
-
 
 export default function ChatPage({
   selectedBrand,
@@ -498,7 +519,7 @@ export default function ChatPage({
         )}
         {showProductModal && (
           <ProductModal
-          key={new Date().getTime()}
+            key={new Date().getTime()}
             selectedBrand={selectedBrand}
             selectedProduct={selectedProduct}
             onClose={handleCloseProductModal}

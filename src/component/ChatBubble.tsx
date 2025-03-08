@@ -30,7 +30,14 @@ export const ChatBubble = ({
   isTyping: boolean;
   handleProductClick: (product: any) => void;
 }) => {
-  const [textBefore, restOfText] = message.text?.split(
+  const cleanMessageText = (text: string) => {
+    if (text.startsWith('"') && text.endsWith('"')) {
+      return text.slice(1, -1); // Remove leading and trailing quotes
+    }
+    return text;
+  };
+
+  const [textBefore, restOfText] = cleanMessageText(message.text)?.split(
     "@@SUGGESTIONS START@@"
   ) ?? ["", ""];
 
