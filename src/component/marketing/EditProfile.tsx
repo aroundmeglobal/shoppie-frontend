@@ -12,6 +12,7 @@ import BrandInfoForm from "./form/BrandInfoForm";
 import BrandSocialForm from "./form/BrandSocialForm";
 import { stat } from "fs";
 import { getBradData } from "@/api/getBradData";
+import { useQuery } from "@tanstack/react-query";
 
 const EditProfile = () => {
   const initialSocialData = [
@@ -86,11 +87,16 @@ const EditProfile = () => {
   const setBrandDomain = useBrandStore((state) => state.setBrandDomain);
   const setWorkspaceExists = useBrandStore((state) => state.setWorkspaceExists);
 
+  const { data: brandDataResponse, error } = useQuery({
+    queryKey: ["brands-data"],
+    queryFn: () => getBradData(brandId),
+  });
+
   useEffect(() => {
     const fetchBrandDetails = async () => {
       setIsLoading(true);
       try {
-        const brandDataResponse = await getBradData(brandId);
+        // const brandDataResponse = await getBradData(brandId);
 
         // const response = await api.get(`/brands/`);
         const data = brandDataResponse;
@@ -99,36 +105,38 @@ const EditProfile = () => {
         initialFetchedDataRef.current = data;
         isDataFetchedRef.current = true;
 
-        setLogoInStore(data.brandData.logo);
-        setBrandName(data.brandData.name);
-        setBrandDescription(data.brandData.description);
-        setBrandDomain(data.brandData.industry);
+        setLogoInStore(data?.brandData.logo);
+        setBrandName(data?.brandData.name);
+        setBrandDescription(data?.brandData.description);
+        setBrandDomain(data?.brandData.industry);
 
-        if (data.brandData.workspaces && data.brandData.workspaces.length > 0) {
+        if (
+          data?.brandData.workspaces &&
+          data?.brandData.workspaces.length > 0
+        ) {
           setWorkspaceExists(true);
         } else {
           setWorkspaceExists(false);
         }
-        
 
         setFormData({
-          brandName: data.brandData.name,
-          brandDomain: data.brandData.industry,
-          contactName: data.contactData.name,
-          contactMobile: data.contactData.phone_number,
+          brandName: data?.brandData.name,
+          brandDomain: data?.brandData.industry,
+          contactName: data?.contactData.name,
+          contactMobile: data?.contactData.phone_number,
           // data.phone_number,
-          email: data.brandData.email,
-          photo: data.brandData.logo, // If logo is a URL, adjust as needed
-          brandDescription: data.brandData.description || "",
+          email: data?.brandData.email,
+          photo: data?.brandData.logo, // If logo is a URL, adjust as needed
+          brandDescription: data?.brandData.description || "",
           meta: {},
           // data.meta,
-          id: data.brandData.id,
+          id: data?.brandData.id,
         });
 
         const updatedSocialData = [...socialMediaData];
         updatedSocialData.forEach((item) => {
           if (item.platform === "Website")
-            item.inputValue = data.brandData?.website || "";
+            item.inputValue = data?.brandData?.website || "";
           if (item.platform === "Instagram")
             item.inputValue = data?.brandData?.instagram || "";
           if (item.platform === "LinkedIn")
@@ -149,9 +157,10 @@ const EditProfile = () => {
         setIsLoading(false);
       }
     };
-
-    fetchBrandDetails();
-  }, []);
+    if (brandDataResponse) {
+      fetchBrandDetails();
+    }
+  }, [brandDataResponse]);
 
   const handleFormInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

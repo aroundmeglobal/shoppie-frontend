@@ -10,6 +10,7 @@ import BrandModel from "@/component/BrandModel";
 import { useRouter } from "next/navigation";
 import useSelectedBrandStore from "@/store/selectedBrand";
 import api from "@/lib/axiosInstance";
+import { useQuery } from "@tanstack/react-query";
 
 export interface Brand {
   brand_id: number;
@@ -21,7 +22,6 @@ export interface Brand {
   brand_website: string;
   workspaces: any[]; // Adjust the type of workspaces based on its structure
 }
-
 
 // const brands: Brand[] = [
 //   {
@@ -61,30 +61,38 @@ export interface Brand {
 //   },
 // ];
 
-const tags = ["All", "Clothing", "Ecommerce", "Electronics", "Food"];
+const tags = [
+  "All",
+  "Beauty & Self care",
+  "Pet care",
+  "Electronics",
+  "Health & wellness",
+  "Food & beverages",
+];
 
 export default function Home() {
-  const [allBrands, setAllBrands] = useState([]);
-  useEffect(() => {
-    const getBrands = async () => {
-      try {
-        const res = await api.get(`${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/`);
-        console.log("brands", res.data.brands);
-        setAllBrands(res.data.brands);
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-      }
-    };
-  
-    getBrands();
-  }, []);
-  
+  const fetchBrands = async () => {
+    const res = await api.get(`${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/`);
+    return res.data.brands;
+  };
+
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [brandOverview, setBrandOverview] = useState<Brand | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const setBrand = useSelectedBrandStore((state) => state.setBrand);
+
+  const {
+    data: allBrands,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["brands"],
+    queryFn: fetchBrands,
+  });
+
+  console.log(allBrands, "all");
 
   useEffect(() => {
     const handleResize = () => {
@@ -101,8 +109,9 @@ export default function Home() {
   };
 
   // Filter brands based on selected tag
-  const filteredBrands = allBrands.filter(
-    (brand) => selectedTag === "All" || brand?.brand_industry?.includes(selectedTag)
+  const filteredBrands = allBrands?.filter(
+    (brand) =>
+      selectedTag === "All" || brand?.brand_industry?.includes(selectedTag)
   );
 
   const handleBrandClick = (brand: Brand) => {
@@ -117,7 +126,7 @@ export default function Home() {
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
       console.log(brand);
-      
+
       setBrand(brand);
       router.push(`/chat/${brand?.workspaces[0].slug}`);
     } else {
@@ -157,7 +166,7 @@ export default function Home() {
         </div>
 
         {/* Tags Section */}
-        <div className="mt-4 md:mt-8 flex text-[14px] md:text-[18px] px-4 md:justify-center  md:flex-wrap items-center gap-2 md:gap-4 w-full overflow-hidden overflow-x-auto">
+        <div className="mt-4 md:mt-8 flex text-[14px] md:text-[18px] px-4 md:justify-center  md:flex-wrap items-center gap-2 md:gap-4 w-full overflow-hidden overflow-x-auto ">
           {tags.map((tag, index) => (
             <button
               key={index}
@@ -175,7 +184,7 @@ export default function Home() {
 
         {/* Brands Section */}
         <div className="mt-4 md:mt-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10 w-full px-4 md:px-10">
-          {filteredBrands.map((brand, index) => (
+          {filteredBrands?.map((brand, index) => (
             <div
               key={index}
               className="rounded-3xl p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
