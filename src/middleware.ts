@@ -14,7 +14,6 @@ const protectedRoutes = [
   "/chat-page",
   "/delete-account",
   "/marketing",
-  "/create-account",
   "/users(.*)",
   "/brand(.*)",
 ];

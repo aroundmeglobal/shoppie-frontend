@@ -3,6 +3,8 @@ import api from "@/lib/axiosInstance";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
+import useBrandStore from "@/store/useBrandStore";
+import { useRouter } from "next/navigation";
 
 interface Props {
   email: string;
@@ -10,10 +12,13 @@ interface Props {
 }
 
 export default function OtpVerification({ email, onChangeEmail }: Props) {
+  const router = useRouter()
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [isResendDisabled, setResendDisabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const setEmail = useBrandStore((state) => state.setEmail);
+  const setBrandId = useBrandStore((state) => state.setBrandId);
   // Countdown Timer Logic
   useEffect(() => {
     if (timer > 0) {
@@ -34,7 +39,6 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
       document.getElementById(`otp-${index + 1}`)?.focus();
     }
   };
-  console.log(otp.length, "oto");
 
   const handleVerifyOtp = async () => {
     try {
@@ -44,8 +48,6 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
         email,
         otp: Otp,
       });
-      console.log(response.data.token);
-      console.log(response);
       
       if (response.data.token) {
         Cookies.set("authToken", response.data.token, {
@@ -54,10 +56,15 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
           sameSite: "Strict", // Prevent CSRF attacks
           path: "/", // Makes it available across the site
         });
-
-        window.location.href = "/create-account";
+        setBrandId(response.data.id)
+        // window.location.href = "/brand/profile";
+        router.push('/brand/profile')
       }
     } catch (error) {
+      setEmail(email);
+      router
+      // window.location.href = "/create-account";
+      router.push('/create-account')
       toast.error(" OTP is invalid.Please try again.");
     } finally {
       setIsLoading(false);

@@ -11,6 +11,8 @@ import { IoMdArrowUp } from "react-icons/io";
 import { Dispatch, SetStateAction } from "react";
 import { Brand } from "@/app/page";
 import ReactMarkdown from "react-markdown";
+import userSessionStore from "@/store/userSessionStore";
+import useUuid from "@/hooks/useLocalStorage";
 import { useQuery } from "@tanstack/react-query";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
@@ -274,6 +276,10 @@ export default function ChatPage({
   const [showBrandModal, setShowBrandModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const sessionId = useUuid();
+  // userSessionStore((state) => state.sessionId);
+  // console.log("sessionId", sessionId);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -290,38 +296,52 @@ export default function ChatPage({
     }));
   };
 
-  useEffect(() => {
-    // setFetchingMessage(true);
-    const fetchMessages = async () => {
-      try {
-        const chatData = await fetch(
-          `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
-            },
-          }
-        );
-
-        const messageData = await chatData.json();
-
-        const history = messageData?.history;
-        if (Array.isArray(history)) {
-          const transformedMessages = transformMessages(history);
-          setMessages(transformedMessages);
-        } else {
-          console.error("No valid history found in messageData", messageData);
+  const fetchMessages = async () => {
+    try {
+      const chatData = await fetch(
+        `https://anythingllm.aroundme.global/api/embed/${selectedBrand?.workspaces[0]?.embed_id}/${sessionId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+          },
         }
-        // setFetchingMessage(false);
-      } catch (error) {
-        // setFetchingMessage(false);
-        console.error("Error fetching messages:", error);
+      );
+      // const chatData = await fetch(
+      //   `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
+      //   {
+      //     method: "GET",
+      //     headers: {
+      //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+      //     },
+      //   }
+      // );
+
+      console.log(chatData);
+
+      const messageData = await chatData.json();
+
+      const history = messageData?.history;
+      if (Array.isArray(history)) {
+        const transformedMessages = transformMessages(history);
+        setMessages(transformedMessages);
+      } else {
+        console.error("No valid history found in messageData", messageData);
       }
-    };
+      // setFetchingMessage(false);
+    } catch (error) {
+      // setFetchingMessage(false);
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // @ts-ignore
+  useEffect(() => {
+    if (!sessionId) return;
+    // setFetchingMessage(true);
 
     fetchMessages();
-  }, []);
+  }, [sessionId]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -339,26 +359,28 @@ export default function ChatPage({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
+        `https://anythingllm.aroundme.global/api/embed/${selectedBrand?.workspaces[0]?.embed_id}/stream-chat`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
-      
-            `,
-          },
+          // headers: {
+          //   Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+          //   `,
+          // },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
+            sessionId: sessionId,
             attachments: [],
           }),
         }
       );
       // const response = await fetch(
-      //   `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
+      //   `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
       //   {
       //     method: "POST",
       //     headers: {
-      //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+      //       Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+
+      //       `,
       //     },
       //     body: JSON.stringify({
       //       message: JSON.stringify(messageToSend),
@@ -366,7 +388,6 @@ export default function ChatPage({
       //     }),
       //   }
       // );
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -943,6 +964,8 @@ const ProductModal = ({
   onClose: () => void;
   handleProductClick: (product: any) => void;
 }) => {
+  console.log(selectedProduct);
+
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllProductModal, setShowAllProductModal] = useState(false);
   const [selectedProductDetails, setSelectedProductDetails] = useState();
