@@ -317,8 +317,6 @@ export default function ChatPage({
       //   }
       // );
 
-      console.log(chatData);
-
       const messageData = await chatData.json();
 
       const history = messageData?.history;
@@ -969,8 +967,6 @@ const ProductModal = ({
   onClose: () => void;
   handleProductClick: (product: any) => void;
 }) => {
-  console.log(selectedProduct);
-
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllProductModal, setShowAllProductModal] = useState(false);
   const [selectedProductDetails, setSelectedProductDetails] = useState();
@@ -985,7 +981,7 @@ const ProductModal = ({
   };
 
   const { data: productDetails } = useQuery({
-    queryKey: ["product-details"],
+    queryKey: ["product-details", selectedBrand],
     queryFn: fetchProductDetails,
     enabled: !!selectedBrand,
   });
@@ -995,6 +991,7 @@ const ProductModal = ({
       const response = productDetails?.filter(
         (item) => item.product_name === selectedProduct.title
       );
+
       setSelectedProductDetails(response[0]);
     }
   }, [productDetails]);
@@ -1089,7 +1086,10 @@ const ProductModal = ({
             )}
           </div>
           <BrandDescription
-            description={selectedProductDetails?.product_description}
+            description={
+              selectedProductDetails?.product_description ||
+              selectedProduct?.product_description
+            }
           />
         </div>
       </div>
@@ -1098,7 +1098,10 @@ const ProductModal = ({
           Buy this product through
         </h1>
         <div className="bg-[#1d1d1d] mx-4 rounded-xl flex items-center p-[14px] space-x-4">
-          {selectedProductDetails?.purchase_link?.map((url, index) => {
+          {(
+            selectedProductDetails?.purchase_link ||
+            selectedProduct?.purchase_link
+          )?.map((url, index) => {
             const faviconUrl = getFavicon(url);
 
             return (
@@ -1130,8 +1133,6 @@ const ProductModal = ({
         </div>
         <div className="flex gap-6 mt-4 ml-4 mb-4 overflow-hidden overflow-x-auto">
           {productDetails?.map((product: any) => {
-            console.log(product, "product");
-
             return (
               <button
                 key={product.id}
