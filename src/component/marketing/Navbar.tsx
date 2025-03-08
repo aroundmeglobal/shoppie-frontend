@@ -16,19 +16,8 @@ import Image from "next/image";
 import useBrandStore from "@/store/useBrandStore";
 import Shoppiee from "../../../public/assets/svg/Shoppiee";
 
-const brandName = "Muscle blaze";
-
 // Define primary nav items along with their routes.
-const primaryItems = [
-  { title: "Around Me", icon: <Shoppiee />, route: "/" },
-  { 
-    title: brandName, 
-    icon: <></>, 
-    route: "/brand/profile", // navigation link will always point to this route
-    activeRoutes: ["/brand/profile", "/brand/add-product"] // both routes count as active
-  },
 
-];
 
 // Define sub nav items with an explicit route for each.
 // For example, "Configure" uses "/marketing", and the rest follow the "/marketing/[slug]" pattern.
@@ -52,6 +41,17 @@ const subcomponent = [
 const Navbar = () => {
   const pathname = usePathname();
   const logo = useBrandStore((state) => state.logo);
+  const brandName = useBrandStore((state) => state.brandName);
+
+  const primaryItems = [
+    { title: "Shoppie", icon: <Shoppiee />, route: "/" },
+    {
+      title: brandName,
+      icon: <></>,
+      route: "/brand/profile", 
+      activeRoutes: ["/brand/profile", "/brand/add-product"], 
+    },
+  ];
 
   return (
     <div className="group fixed top-0 left-0 h-screen w-16 hover:w-64 bg-[#1d1d1d] text-white transition-all duration-300 overflow-hidden z-50">
@@ -59,9 +59,9 @@ const Navbar = () => {
         {/* Primary Navigation */}
         <div>
           {primaryItems.map((item, index) => {
-           const active = item.activeRoutes
-           ? item.activeRoutes.includes(pathname)
-           : pathname === item.route;
+            const active = item.activeRoutes
+              ? item.activeRoutes.includes(pathname)
+              : pathname === item.route;
             return (
               <Link href={item.route} key={`primary-${index}`}>
                 <div className="flex items-center h-16 transition-colors cursor-pointer overflow-hidden">
@@ -78,10 +78,15 @@ const Navbar = () => {
                     `}
                   >
                     {index === 0 ? (
-                      <div className="ml-[-3px] mr-[-5px] scale-75">{item?.icon}</div>
+                      <div className="ml-[-3px] mr-[-5px] scale-75">
+                        {item?.icon}
+                      </div>
                     ) : (
                       <Image
-                        src={logo || "https://storage.aroundme.global/avatar_default.png"}
+                        src={
+                          logo ||
+                          "https://storage.aroundme.global/avatar_default.png"
+                        }
                         alt="Muscle Blaze Logo"
                         width={30}
                         height={30}
@@ -92,7 +97,7 @@ const Navbar = () => {
                     <span
                       className={`ml-4 hidden group-hover:inline-block transition-opacity duration-300 whitespace-nowrap`}
                     >
-                      {item.title}
+                      {item.title }
                     </span>
                   </div>
                 </div>

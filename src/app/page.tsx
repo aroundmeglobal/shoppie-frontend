@@ -47,8 +47,6 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const setBrand = useSelectedBrandStore((state) => state.setBrand);
-  const sessionId = userSessionStore((state) => state.sessionId); // Access sessionId from the store
-  const setSessionId = userSessionStore((state) => state.setSessionId); // Access the setter for sessionId
 
   const {
     data: allBrands,
