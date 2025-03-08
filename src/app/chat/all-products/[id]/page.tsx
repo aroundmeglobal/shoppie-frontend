@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axiosInstance";
 import { percentageDifference } from "@/lib/price";
 import Link from "next/link";
+import { useQueries } from "@tanstack/react-query";
+import Spinner from "@/component/Spinner";
 
 interface PageProps {
   params: {
@@ -16,55 +18,70 @@ interface PageProps {
 export default function Page({ params }: PageProps) {
   const router = useRouter();
   const brandId = params.id;
-  const [brandDetails, setBrandDetails] = useState<any>(null);
-  const [socialDetails, setSocialDetails] = useState<any[]>([]);
-  const [productDetails, setProductDetails] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const getBrandDetails = async () => {
-      const response = await api.get(`/brands/${brandId}`);
-      const data = response.data;
-      setBrandDetails(data);
-      console.log(data);
-    };
-    const fetchSocialDetails = async () => {
-      try {
-        const response = await api.get(`/social/brand-social/${brandId}`);
-        const data = response.data;
-        setSocialDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    const fetchProductDetails = async () => {
-      try {
-        // Construct query params correctly
-        const response = await api.get("/files/", {
-          params: {
-            brand_id: brandId || "",
-          },
-        });
-        const data = response.data;
-        setProductDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const getBrandDetails = async () => {
+    const response = await api.get(`/brands/${brandId}`);
+    return response.data;
+  };
 
-    getBrandDetails();
-    fetchSocialDetails();
-    fetchProductDetails();
-  }, [params.id]);
+  const fetchSocialDetails = async () => {
+    const response = await api.get(`/social/brand-social/${brandId}`);
+    return response.data;
+  };
 
-  const filteredProducts = productDetails.filter((product) =>
-    product.product_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchProductDetails = async () => {
+    const response = await api.get("/files/", {
+      params: {
+        brand_id: brandId || "",
+      },
+    });
+    return response.data;
+  };
+
+  const [
+    { data: brandDetails, isLoading: isBrandLoading, error: brandError },
+    { data: socialDetails, isLoading: isSocialLoading, error: socialError },
+    { data: productDetails, isLoading: isProductLoading, error: productError },
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: ["brand-details"],
+        queryFn: getBrandDetails,
+        enabled: !!brandId,
+      },
+      {
+        queryKey: ["social-details"],
+        queryFn: fetchSocialDetails,
+        enabled: !!brandId,
+      },
+      {
+        queryKey: ["product-details"],
+        queryFn: fetchProductDetails,
+        enabled: !!brandId,
+      },
+    ],
+  });
 
   const onClose = () => {
     router.back();
   };
-  console.log(filteredProducts[0]);
+
+  if (isBrandLoading || isSocialLoading || isProductLoading) {
+    return <Spinner />;
+  }
+
+  if (brandError || socialError || productError) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        {brandError?.message || socialError?.message || productError?.message}
+      </div>
+    );
+  }
+
+  const filteredProducts = productDetails?.filter((product) =>
+    product.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
@@ -101,12 +118,12 @@ export default function Page({ params }: PageProps) {
         />
       </div>
       <div className="grid grid-cols-2 gap-6 m-4">
-        {filteredProducts.map((product: any) => (
+        {filteredProducts?.map((product: any) => (
           <Link
             href={{
               pathname: `/chat/product/${product.id}`,
               query: {
-                brand_id:brandId,
+                brand_id: brandId,
                 product_name: product.product_name,
                 product_description: product.product_description,
                 product_images: product.product_images[0],

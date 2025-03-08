@@ -143,7 +143,7 @@ export default function RegisterPage() {
       );
 
       const brand = await brandResponse.json();
-      console.log("Brand created:", brand);      
+      console.log("Brand created:", brand);
 
       // Store important data in the store
       setLogoInStore(logoData.public_url);
@@ -282,11 +282,15 @@ export default function RegisterPage() {
                     className="p-2 bg-transparent text-sm text-white focus:outline-none rounded-xl focus:ring-0 focus:border-[#4d4d4d] w-full border border-[#2d2d2d] bg-gray-700 pr-10 outline-none appearance-none"
                   >
                     <option value="">Select Business domain</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="IT">IT</option>
+                    <option value="Beauty & Self care">
+                      Beauty & Self care
+                    </option>
+                    <option value="Pet care">Pet care</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Health & wellness">Health & wellness</option>
+                    <option value="Food & beverages">Food & beverages</option>
                   </Field>
+                  x
                   <FaChevronDown
                     size={12}
                     className="text-white absolute right-2 top-1/2 transform -translate-y-1/2"

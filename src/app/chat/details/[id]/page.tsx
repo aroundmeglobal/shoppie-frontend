@@ -8,6 +8,7 @@ import { MdVerified } from "react-icons/md";
 import api from "@/lib/axiosInstance";
 import { percentageDifference } from "@/lib/price";
 import Link from "next/link";
+import { useQueries } from "@tanstack/react-query";
 
 interface PageProps {
   params: {
@@ -19,49 +20,53 @@ export default function Page({ params }: PageProps) {
   const router = useRouter();
   const brandId = params.id;
   const brand = useSelectedBrandStore((state) => state.brand);
-  const [brandDetails, setBrandDetails] = useState<any>(null);
-  const [socialDetails, setSocialDetails] = useState<any[]>([]);
-  const [productDetails, setProductDetails] = useState<any[]>([]);
 
   const handleBack = () => {
     router.back();
   };
 
-  useEffect(() => {
-    const getBrandDetails = async () => {
-      const response = await api.get(`/brands/${brandId}`);
-      const data = response.data;
-      setBrandDetails(data);
-      console.log(data);
-    };
-    const fetchSocialDetails = async () => {
-      try {
-        const response = await api.get(`/social/brand-social/${brandId}`);
-        const data = response.data;
-        setSocialDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    const fetchProductDetails = async () => {
-      try {
-        // Construct query params correctly
-        const response = await api.get("/files/", {
-          params: {
-            brand_id: brandId || "",
-          },
-        });
-        const data = response.data;
-        setProductDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const getBrandDetails = async () => {
+    const response = await api.get(`/brands/${brandId}`);
+    return response.data;
+  };
 
-    getBrandDetails();
-    fetchSocialDetails();
-    fetchProductDetails();
-  }, [params.id]);
+  const fetchSocialDetails = async () => {
+    const response = await api.get(`/social/brand-social/${brandId}`);
+    return response.data;
+  };
+
+  const fetchProductDetails = async () => {
+    const response = await api.get("/files/", {
+      params: {
+        brand_id: brandId || "",
+      },
+    });
+    return response.data;
+  };
+
+  const [
+    { data: brandDetails, isLoading: isBrandLoading, error: brandError },
+    { data: socialDetails, isLoading: isSocialLoading, error: socialError },
+    { data: productDetails, isLoading: isProductLoading, error: productError },
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: ["brand-details"],
+        queryFn: getBrandDetails,
+        enabled: !!brandId,
+      },
+      {
+        queryKey: ["social-details"],
+        queryFn: fetchSocialDetails,
+        enabled: !!brandId,
+      },
+      {
+        queryKey: ["product-details"],
+        queryFn: fetchProductDetails,
+        enabled: !!brandId,
+      },
+    ],
+  });
 
   const extractDomain = (url: string) => {
     try {
@@ -81,7 +86,7 @@ export default function Page({ params }: PageProps) {
     return "/aroundImg.png";
   };
 
-  const socialLinks = socialDetails.map((link: any) => ({
+  const socialLinks = socialDetails?.map((link: any) => ({
     name: link.type,
     url: link.link,
   }));
@@ -148,7 +153,7 @@ export default function Page({ params }: PageProps) {
           Socials
         </h1>
         <div className="rounded-xl mt-2 bg-[#1d1d1d] flex items-center p-[14px] min-h-[55px]">
-          {socialLinks.map((link, index) =>
+          {socialLinks?.map((link, index) =>
             link.url ? (
               <a
                 key={index}
@@ -177,7 +182,7 @@ export default function Page({ params }: PageProps) {
           </button>
         </div>
         <div className="grid grid-cols-2  gap-6 mt-4 ">
-          {productDetails.slice(0, 4).map((product: any) => (
+          {productDetails?.slice(0, 4).map((product: any) => (
             <Link
               key={product.id}
               href={{

@@ -6,12 +6,13 @@ import Image from "next/image";
 import { percentageDifference } from "@/lib/price";
 import api from "@/lib/axiosInstance";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import Spinner from "@/component/Spinner";
 
 const ProductPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [productDetails, setProductDetails] = useState<any[]>([]);
 
   // Extracting query parameters
   const brandId = searchParams.get("brand_id");
@@ -23,23 +24,24 @@ const ProductPage = () => {
   const tags = searchParams.get("tags");
   const purchaseLink = searchParams.get("purchase_link")?.split(","); // Convert to array
 
-  useEffect(() => {
-    const fetchProductDetails = async () => {
-      try {
-        const response = await api.get("/files/", {
-          params: {
-            brand_id: brandId || "",
-          },
-        });
-        const data = response.data;
-        setProductDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const fetchProductDetails = async () => {
+    const response = await api.get("/files/", {
+      params: {
+        brand_id: brandId || "",
+      },
+    });
+    return response.data;
+  };
 
-    fetchProductDetails();
-  }, []);
+  const {
+    data: productDetails,
+    isLoading: isProductLoading,
+    error: ProductError,
+  } = useQuery({
+    queryKey: ["products"],
+    queryFn: fetchProductDetails,
+    enabled: !!brandId,
+  });
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -62,6 +64,18 @@ const ProductPage = () => {
       return null;
     }
   };
+
+  if (isProductLoading) {
+    return <Spinner />;
+  }
+
+  if (ProductError) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        {ProductError?.message}
+      </div>
+    );
+  }
 
   return (
     <div>
