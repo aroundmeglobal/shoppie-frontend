@@ -11,6 +11,7 @@ import { IoMdArrowUp } from "react-icons/io";
 import { Dispatch, SetStateAction } from "react";
 import { Brand } from "@/app/page";
 import ReactMarkdown from "react-markdown";
+import userSessionStore from "@/store/userSessionStore";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -62,7 +63,6 @@ const ChatBubble = ({
   const [suggestionText, textAfter] = restOfText
     ? restOfText.split("@@SUGGESTIONS END@@")
     : ["", restOfText];
-
 
   return (
     <div
@@ -273,6 +273,10 @@ export default function ChatPage({
   const [showProductModal, setShowProductModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const sessionId = "673ba469-4e30-4e68-9813-a3f32a674a8b"
+  // userSessionStore((state) => state.sessionId);
+  // console.log("sessionId", sessionId);
+
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -295,7 +299,7 @@ export default function ChatPage({
     const fetchMessages = async () => {
       try {
         const chatData = await fetch(
-          `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
+          `https://anythingllm.aroundme.global/api/embed/${selectedBrand?.workspaces[0]?.embed_id}/${sessionId}`,
           {
             method: "GET",
             headers: {
@@ -303,6 +307,17 @@ export default function ChatPage({
             },
           }
         );
+        // const chatData = await fetch(
+        //   `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
+        //   {
+        //     method: "GET",
+        //     headers: {
+        //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+        //     },
+        //   }
+        // );
+
+        console.log(chatData);
 
         const messageData = await chatData.json();
 
@@ -339,26 +354,28 @@ export default function ChatPage({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
+        `https://anythingllm.aroundme.global/api/embed/${selectedBrand?.workspaces[0]?.embed_id}/stream-chat`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
-      
-            `,
-          },
+          // headers: {
+          //   Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+          //   `,
+          // },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
+            sessionId: sessionId,
             attachments: [],
           }),
         }
       );
       // const response = await fetch(
-      //   `${LLM_BASE_URL}/v1/workspace/369/stream-chat`,
+      //   `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
       //   {
       //     method: "POST",
       //     headers: {
-      //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
+      //       Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
+
+      //       `,
       //     },
       //     body: JSON.stringify({
       //       message: JSON.stringify(messageToSend),
@@ -366,7 +383,6 @@ export default function ChatPage({
       //     }),
       //   }
       // );
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -943,6 +959,8 @@ const ProductModal = ({
   onClose: () => void;
   handleProductClick: (product: any) => void;
 }) => {
+  console.log(selectedProduct);
+
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [productDetails, setProductDetails] = useState<any[]>([]);
   const [showAllProductModal, setShowAllProductModal] = useState(false);
@@ -1029,12 +1047,18 @@ const ProductModal = ({
           <div className="mt-[5px] text-[13px]">
             {!selectedProduct?.prices?.Original_price ? (
               <div>
-                <span className="line-through text-[#a4a4a4] mr-2">
-                  {selectedProduct.original_price}
+                <span className="text-[18px] font-bold">
+                  {selectedProduct?.discounted_price}
                 </span>
-                <span className="text-green-400">
-                  {selectedProduct.discounted_price}
+                <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
+                  {selectedProduct?.original_price}
                 </span>
+                {/* <span className=" text-[#15CF74] ml-2">
+                  {`${percentageDifference(
+                    selectedProduct?.original_price,
+                    selectedProduct?.discounted_price
+                  )}% Off`}
+                </span> */}
               </div>
             ) : (
               <div>
