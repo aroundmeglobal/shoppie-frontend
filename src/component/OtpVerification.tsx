@@ -40,15 +40,15 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
     try {
       setIsLoading(true);
       const Otp = otp.join("");
-      const response = await api.post(`/session/verify-otp`, {
+      const response = await api.post(`/brands/login`, {
         email,
         otp: Otp,
       });
-      console.log(response.data.session_token);
+      console.log(response.data.token);
       console.log(response);
       
-      if (response.data.session_token) {
-        Cookies.set("authToken", response.data.session_token, {
+      if (response.data.token) {
+        Cookies.set("authToken", response.data.token, {
           expires: 365,
           secure: true, // Ensure it's only sent over HTTPS
           sameSite: "Strict", // Prevent CSRF attacks
