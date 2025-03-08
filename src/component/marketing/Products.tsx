@@ -117,7 +117,7 @@ const Products = () => {
           original_price: product.product_prices?.Original_price || "N/A",
           discounted_price: product.product_prices?.Discounted_price || "N/A",
           tags: product.tags || [],
-          purchase_link: product.purchase_link[0] || "",
+          purchase_link: product.purchase_link || "",
         }}
       />
     );

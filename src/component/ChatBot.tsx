@@ -129,7 +129,7 @@ const ChatBubble = ({
                     return suggestionData.products.map((product: any) => (
                       <div
                         key={product.id}
-                        onClick={() => handleProductClick(product)} // Open product modal on click
+                        onClick={() => handleProductClick(product)}
                         className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
                       >
                         <Image
@@ -873,9 +873,14 @@ const AllProductModal = ({
   return (
     <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto ">
       <div className="flex justify-between md:justify-between items-center ">
-        <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white py-2.5">
-          <span role="img" aria-label="Back" onClick={onClose}>
+        <div className="flex items-start w-full mt-4 justify-between px-3 ">
+          <span
+            role="img"
+            aria-label="Back"
+            className="bg-[#393939] rounded-3xl"
+          >
             <Image
+              onClick={onClose}
               src={"/img/white-back-arrow.svg"}
               alt="Back"
               width={16}
@@ -883,7 +888,7 @@ const AllProductModal = ({
               style={{
                 width: "16px",
                 height: "16px",
-                marginLeft: "10px",
+                margin: "5px",
               }}
             />
           </span>
@@ -993,9 +998,6 @@ const ProductModal = ({
       setSelectedProductDetails(response[0]);
     }
   }, [productDetails]);
-  console.log(selectedProduct.title, "s");
-
-  console.log(productDetails, "pro");
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -1049,6 +1051,7 @@ const ProductModal = ({
           alt={selectedProduct?.title || selectedProduct?.product_name}
           width={80}
           height={80}
+          className="object-contain"
           style={{ width: "70%", height: "200px", borderRadius: 20 }}
         />
       </div>
@@ -1097,6 +1100,7 @@ const ProductModal = ({
         <div className="bg-[#1d1d1d] mx-4 rounded-xl flex items-center p-[14px] space-x-4">
           {selectedProductDetails?.purchase_link?.map((url, index) => {
             const faviconUrl = getFavicon(url);
+
             return (
               <a
                 target="blank"
@@ -1125,44 +1129,48 @@ const ProductModal = ({
           </button>
         </div>
         <div className="flex gap-6 mt-4 ml-4 mb-4 overflow-hidden overflow-x-auto">
-          {productDetails?.map((product: any) => (
-            <button
-              key={product.id}
-              className="bg-[#1c1c1c] rounded-xl overflow-hidden min-w-[200px]"
-              onClick={() => {
-                handleProductClick(product);
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <Image
-                  src={product.product_images[0]}
-                  alt={product.product_name}
-                  width={150}
-                  height={150}
-                  className="w-[100%]"
-                />
-                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full text-start">
-                  <h3 className="text-white  line-clamp-1">
-                    {product.product_name}
-                  </h3>
-                  <div className="mt-2">
-                    <span className="">
-                      {product.product_prices.Discounted_price}
-                    </span>
-                    <span className=" line-through text-[#a4a4a4] ml-2">
-                      {product.product_prices.Original_price}
-                    </span>
-                    <span className=" text-[#15CF74] ml-2">
-                      {`${percentageDifference(
-                        product.product_prices?.Original_price,
-                        product.product_prices?.Discounted_price
-                      )}% Off`}
-                    </span>
+          {productDetails?.map((product: any) => {
+            console.log(product, "product");
+
+            return (
+              <button
+                key={product.id}
+                className="bg-[#1c1c1c]  product-card flex-shrink-0 flex  rounded-xl overflow-hidden w-[200px]"
+                onClick={() => {
+                  handleProductClick(product);
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <Image
+                    src={product.product_images[0]}
+                    alt={product.product_name}
+                    width={100}
+                    height={48}
+                    className="w-[100%] h-[190px] object-contain bg-white"
+                  />
+                  <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full text-start">
+                    <h3 className="text-white  line-clamp-1">
+                      {product.product_name}
+                    </h3>
+                    <div className="mt-2">
+                      <span className="">
+                        {product.product_prices.Discounted_price}
+                      </span>
+                      <span className=" line-through text-[#a4a4a4] ml-2">
+                        {product.product_prices.Original_price}
+                      </span>
+                      <span className=" text-[#15CF74] ml-2">
+                        {`${percentageDifference(
+                          product.product_prices?.Original_price,
+                          product.product_prices?.Discounted_price
+                        )}% Off`}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </div>
       {/* Show All Products Modal */}
