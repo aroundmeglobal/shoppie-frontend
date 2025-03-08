@@ -11,6 +11,7 @@ import { RxCross2 } from "react-icons/rx";
 import { IoMdArrowUp } from "react-icons/io";
 import { Dispatch, SetStateAction } from "react";
 import { Brand } from "@/app/page";
+import ReactMarkdown from 'react-markdown';
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -52,7 +53,6 @@ const ChatBubble = ({
     "@@SUGGESTIONS START@@"
   ) ?? ["", ""];
 
-  // If restOfText is empty, ensure textAfter is assigned properly
   const [suggestionText, textAfter] = restOfText
     ? restOfText.split("@@SUGGESTIONS END@@")
     : ["", restOfText];
@@ -63,13 +63,41 @@ const ChatBubble = ({
         message.sender === "You" ? "justify-end" : "justify-start"
       }`}
     >
-      <div className={` text-white  overflow-hidden`}>
+      <div className={`text-white overflow-hidden`}>
         <div
           className={`${
             message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
           } max-w-[400px] rounded-[8px] p-[8px] `}
         >
-          <p>{textBefore}</p>
+          <ReactMarkdown
+            children={textBefore}
+            components={{
+              h1: ({ node, ...props }) => (
+                <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+              ),
+              p: ({ node, ...props }) => (
+                <p className="text-sm mb-2 leading-relaxed" {...props} />
+              ),
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc pl-5 mb-2" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="text-sm mb-1" {...props} />
+              ),
+              strong: ({ node, ...props }) => (
+                <strong className="font-bold" {...props} />
+              ),
+              em: ({ node, ...props }) => (
+                <em className="italic" {...props} />
+              ),
+            }}
+          />
         </div>
 
         <div className="overflow-hidden mt-4 ">
@@ -81,7 +109,7 @@ const ChatBubble = ({
                   if (
                     suggestionData.products &&
                     Array.isArray(suggestionData.products)
-                  ) {  
+                  ) {
                     return suggestionData.products.map((product: any) => (
                       <div
                         key={product.id}
@@ -162,51 +190,6 @@ const ChatBubble = ({
               })()}
             </div>
           ) : null}
-          {/* {message.suggestions && (
-            <div className="flex overflow-x-auto gap-4 pb-4">
-              {(() => {
-                try {
-                  const suggestionData = JSON.parse(message.suggestions);
-                  if (
-                    suggestionData.products &&
-                    Array.isArray(suggestionData.products)
-                  ) {
-                    return suggestionData.products.map((product: any) => (
-                      <div
-                        key={product.id}
-                        onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
-                      >
-                        <Image
-                          src={product.image_url}
-                          alt={product.title}
-                          width={100}
-                          height={48}
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                        <div className="ml-4 flex flex-col justify-between flex-grow">
-                          <h3 className="font-semibold line-clamp-2">
-                            {product.title}
-                          </h3>
-                          <p className="text-sm mt-3">
-                            <span className="line-through text-[grey]/90 mr-2">
-                              {product.original_price}
-                            </span>
-                            <span className="text-green-400">
-                              {product.discounted_price}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    ));
-                  }
-                } catch (error) {
-                  console.error("Error parsing suggestions JSON:", error);
-                }
-                return null;
-              })()}
-            </div>
-          )} */}
         </div>
 
         {textAfter && (
@@ -216,7 +199,35 @@ const ChatBubble = ({
             } max-w-[400px] rounded-[8px] p-[8px] `}
           >
             <div>
-              <p>{textAfter}</p>
+              <ReactMarkdown
+                children={textAfter}
+                components={{
+                  h1: ({ node, ...props }) => (
+                    <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+                  ),
+                  h2: ({ node, ...props }) => (
+                    <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+                  ),
+                  h3: ({ node, ...props }) => (
+                    <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+                  ),
+                  p: ({ node, ...props }) => (
+                    <p className="text-sm mb-2 leading-relaxed" {...props} />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc pl-5 mb-2" {...props} />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="text-sm mb-1" {...props} />
+                  ),
+                  strong: ({ node, ...props }) => (
+                    <strong className="font-bold" {...props} />
+                  ),
+                  em: ({ node, ...props }) => (
+                    <em className="italic" {...props} />
+                  ),
+                }}
+              />
             </div>
           </div>
         )}
@@ -226,6 +237,8 @@ const ChatBubble = ({
     </div>
   );
 };
+
+
 
 export default function ChatPage({
   selectedBrand,
