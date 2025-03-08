@@ -13,6 +13,7 @@ import { Brand } from "@/app/page";
 import ReactMarkdown from "react-markdown";
 import userSessionStore from "@/store/userSessionStore";
 import useUuid from "@/hooks/useLocalStorage";
+import { useQuery } from "@tanstack/react-query";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -129,27 +130,27 @@ const ChatBubble = ({
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                        className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
                       >
                         <Image
                           src={product.image_url}
                           alt={product.title}
                           width={100}
                           height={48}
-                          className="w-full h-48 object-cover rounded-xl"
+                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
                         />
-                        <div className="ml-4 flex flex-col justify-between flex-grow">
-                          <h3 className="font-semibold line-clamp-2">
+                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
+                          <h3 className="font-medium text-md line-clamp-2 ">
                             {product.title}
                           </h3>
-                          <p className="text-sm mt-3">
-                            <span className="line-through text-[grey]/90 mr-2">
-                              {product.original_price}
-                            </span>
-                            <span className="text-green-400">
+                          <div className="flex-col gap-1 flex">
+                            <h3 className="text-md font-semibold">
                               {product.discounted_price}
-                            </span>
-                          </p>
+                            </h3>
+                            <h3 className="line-through text-sm text-[grey]/90">
+                              {product.original_price}
+                            </h3>
+                          </div>
                         </div>
                       </div>
                     ));
@@ -173,27 +174,27 @@ const ChatBubble = ({
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                        className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
                       >
                         <Image
                           src={product.image_url}
                           alt={product.title}
                           width={100}
                           height={48}
-                          className="w-full h-48 object-cover rounded-xl"
+                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
                         />
-                        <div className="ml-4 flex flex-col justify-between flex-grow">
-                          <h3 className="font-semibold line-clamp-2">
+                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
+                          <h3 className="font-medium text-md line-clamp-2 ">
                             {product.title}
                           </h3>
-                          <p className="text-sm mt-3">
-                            <span className="line-through text-[grey]/90 mr-2">
-                              {product.original_price}
-                            </span>
-                            <span className="text-green-400">
+                          <div className="flex-col gap-1 flex">
+                            <h3 className="text-md font-semibold">
                               {product.discounted_price}
-                            </span>
-                          </p>
+                            </h3>
+                            <h3 className="line-through text-sm text-[grey]/90">
+                              {product.original_price}
+                            </h3>
+                          </div>
                         </div>
                       </div>
                     ));
@@ -338,7 +339,6 @@ export default function ChatPage({
   useEffect(() => {
     if (!sessionId) return;
     // setFetchingMessage(true);
-
 
     fetchMessages();
   }, [sessionId]);
@@ -526,7 +526,7 @@ export default function ChatPage({
 
   return (
     <div>
-      <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828] md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30">
+      <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828] md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30">
         {/* Header */}
 
         {/* Modals */}
@@ -715,7 +715,7 @@ const BrandModal = ({
   };
 
   return (
-    <div className="flex flex-col top-0 fixed w-[100vw] h-[100vh] bg-[#282828]  md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto">
+    <div className="flex flex-col top-0 fixed w-[100vw] h-[100vh] bg-[#282828]  md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto">
       {/* Brand Modal Header */}
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white">
@@ -871,7 +871,7 @@ const AllProductModal = ({
   );
 
   return (
-    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto ">
+    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto ">
       <div className="flex justify-between md:justify-between items-center ">
         <div className="text-[15px] font-bold flex flex-1 items-center gap-[15px] text-white py-2.5">
           <span role="img" aria-label="Back" onClick={onClose}>
@@ -967,27 +967,35 @@ const ProductModal = ({
   console.log(selectedProduct);
 
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [productDetails, setProductDetails] = useState<any[]>([]);
   const [showAllProductModal, setShowAllProductModal] = useState(false);
+  const [selectedProductDetails, setSelectedProductDetails] = useState();
+
+  const fetchProductDetails = async () => {
+    const response = await api.get("/files/", {
+      params: {
+        brand_id: selectedBrand?.brand_id || "",
+      },
+    });
+    return response.data;
+  };
+
+  const { data: productDetails } = useQuery({
+    queryKey: ["product-details"],
+    queryFn: fetchProductDetails,
+    enabled: !!selectedBrand,
+  });
 
   useEffect(() => {
-    const fetchProductDetails = async () => {
-      try {
-        // Construct query params correctly
-        const response = await api.get("/files/", {
-          params: {
-            brand_id: selectedBrand?.brand_id || "",
-          },
-        });
-        const data = response.data;
-        setProductDetails(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    if (productDetails) {
+      const response = productDetails?.filter(
+        (item) => item.product_name === selectedProduct.title
+      );
+      setSelectedProductDetails(response[0]);
+    }
+  }, [productDetails]);
+  console.log(selectedProduct.title, "s");
 
-    fetchProductDetails();
-  }, []);
+  console.log(productDetails, "pro");
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -1016,9 +1024,9 @@ const ProductModal = ({
   };
 
   return (
-    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[80%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[18%] shadow-md overflow-hidden z-30 overflow-y-auto">
-      <div className="flex items-start w-full mt-3">
-        <span role="img" aria-label="Back">
+    <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto">
+      <div className="flex items-start w-full mt-4 justify-between px-3 ">
+        <span role="img" aria-label="Back" className="bg-[#393939] rounded-3xl">
           <Image
             onClick={onClose}
             src={"/img/white-back-arrow.svg"}
@@ -1028,42 +1036,37 @@ const ProductModal = ({
             style={{
               width: "16px",
               height: "16px",
-              margin: "10px",
+              margin: "5px",
             }}
           />
         </span>
-        <div className="text-[15px] w-[80%] h-[250px] bg-[#1d1d1d] rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
-          <Image
-            src={
-              selectedProduct?.image_url || selectedProduct?.product_images[0]
-            }
-            alt={selectedProduct?.title || selectedProduct?.product_name}
-            width={80}
-            height={80}
-            style={{ width: "70%", height: "200px", borderRadius: 20 }}
-          />
-        </div>
+        <h1 className="-ml-10">Details</h1>
+        <h1></h1>
       </div>
-      <div className="rounded-md w-full px-6 py-2">
+      <div className="text-[15px] mt-2 mx-3  h-[250px] bg-white rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
+        <Image
+          src={selectedProduct?.image_url || selectedProduct?.product_images[0]}
+          alt={selectedProduct?.title || selectedProduct?.product_name}
+          width={80}
+          height={80}
+          style={{ width: "70%", height: "200px", borderRadius: 20 }}
+        />
+      </div>
+      {/* </div> */}
+      <div className="rounded-md w-full px-6 pt-2">
         <div className="mt-2 text-white ">
-          <h3 className="text-[18px] font-bold">
+          <h3 className="text-[18px] ">
             {selectedProduct?.title || selectedProduct?.product_name}
           </h3>
-          <div className="mt-[5px] text-[13px]">
+          <div className="mt-[7px] text-[13px]">
             {!selectedProduct?.prices?.Original_price ? (
-              <div>
-                <span className="text-[18px] font-bold">
-                  {selectedProduct?.discounted_price}
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-medium">
+                  {selectedProduct.discounted_price}
                 </span>
-                <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
-                  {selectedProduct?.original_price}
+                <span className="line-through text-md text-[#a4a4a4] mr-2">
+                  {selectedProduct.original_price}
                 </span>
-                {/* <span className=" text-[#15CF74] ml-2">
-                  {`${percentageDifference(
-                    selectedProduct?.original_price,
-                    selectedProduct?.discounted_price
-                  )}% Off`}
-                </span> */}
               </div>
             ) : (
               <div>
@@ -1082,25 +1085,17 @@ const ProductModal = ({
               </div>
             )}
           </div>
-          <div className="text-[13px] text-[white]/80 leading-2 mt-3">
-            {showFullDescription
-              ? selectedProduct?.product_description
-              : `${selectedProduct?.product_description?.slice(0, 100)}...`}
-            <button
-              onClick={toggleDescription}
-              className={`text-[#1E60FB] ml-[4px]`}
-            >
-              {showFullDescription ? "Show less" : "Show more"}
-            </button>
-          </div>
+          <BrandDescription
+            description={selectedProductDetails?.product_description}
+          />
         </div>
       </div>
-      <div className="w-full p-2">
-        <h1 className="text-[14px] font-semibold m-4">
+      <div className="w-full px-2">
+        <h1 className="text-[14px] font-medium mx-4 mt-4 mb-2">
           Buy this product through
         </h1>
-        <div className="bg-[#1d1d1d] m-4 rounded-xl flex items-center p-[14px] space-x-4">
-          {selectedProduct?.purchase_link?.map((url, index) => {
+        <div className="bg-[#1d1d1d] mx-4 rounded-xl flex items-center p-[14px] space-x-4">
+          {selectedProductDetails?.purchase_link?.map((url, index) => {
             const faviconUrl = getFavicon(url);
             return (
               <a
@@ -1143,14 +1138,14 @@ const ProductModal = ({
                   src={product.product_images[0]}
                   alt={product.product_name}
                   width={150}
-                  height={180}
+                  height={150}
                   className="w-[100%]"
                 />
-                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full text-start">
                   <h3 className="text-white  line-clamp-1">
                     {product.product_name}
                   </h3>
-                  <div>
+                  <div className="mt-2">
                     <span className="">
                       {product.product_prices.Discounted_price}
                     </span>
@@ -1195,4 +1190,27 @@ const percentageDifference = (
   const discounted = cleanPrice(discountedPrice);
 
   return Math.round(((original - discounted) / original) * 100);
+};
+
+const BrandDescription = ({ description }: { description: string }) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
+  const trimmedDescription =
+    description?.length > 150 ? description.slice(0, 150) + "..." : description;
+
+  return (
+    <div className="rounded-xl text-[13px] w-full  mt-4 ">
+      <div className="text-white">
+        <p>{showFullDescription ? description : trimmedDescription}</p>
+      </div>
+      {description?.length > 150 && (
+        <button
+          onClick={() => setShowFullDescription(!showFullDescription)}
+          className="text-[#1E60FB] text-[12px] mt-2"
+        >
+          {showFullDescription ? "Show Less" : "Show More"}
+        </button>
+      )}
+    </div>
+  );
 };
