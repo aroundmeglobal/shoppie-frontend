@@ -11,7 +11,7 @@ function Navbar() {
       <div className="flex gap-5 ">
         <button className="font-bold text-[10px] md:text-[16px]">sign up</button>
         <button className="bg-white text-black rounded-[80px] py-2 px-3 flex gap-2 text-[16px] items-center justify-center">
-          <Link href={"/create-account"} className="font-bold text-[10px] md:text-[16px]">Create your AI</Link>
+          <Link href={"/login"} className="font-bold text-[10px] md:text-[16px]">Create your AI</Link>
         </button>
       </div>
     </div>
