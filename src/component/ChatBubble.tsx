@@ -1,5 +1,5 @@
 import Image from "next/image";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   sender: string;
@@ -19,7 +19,6 @@ const TypingIndicator: React.FC = () => {
     </div>
   );
 };
-
 
 export const ChatBubble = ({
   message,
@@ -61,13 +60,22 @@ export const ChatBubble = ({
             children={textBefore}
             components={{
               h1: ({ node, ...props }) => (
-                <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+                <h1
+                  className="text-2xl font-bold mt-4 mb-2 text-white"
+                  {...props}
+                />
               ),
               h2: ({ node, ...props }) => (
-                <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+                <h2
+                  className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                  {...props}
+                />
               ),
               h3: ({ node, ...props }) => (
-                <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+                <h3
+                  className="text-lg font-semibold mt-2 mb-1 text-white/"
+                  {...props}
+                />
               ),
               p: ({ node, ...props }) => (
                 <p className="text-sm mb-2 leading-relaxed" {...props} />
@@ -81,9 +89,7 @@ export const ChatBubble = ({
               strong: ({ node, ...props }) => (
                 <strong className="font-bold" {...props} />
               ),
-              em: ({ node, ...props }) => (
-                <em className="italic" {...props} />
-              ),
+              em: ({ node, ...props }) => <em className="italic" {...props} />,
             }}
           />
         </div>
@@ -102,27 +108,27 @@ export const ChatBubble = ({
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-center w-[300px] bg-gborder p-4 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                        className="product-card flex-shrink-0 flex flex-col items-start w-[300px] bg-gborder pb-2 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
                       >
                         <Image
                           src={product.image_url}
                           alt={product.title}
                           width={100}
                           height={48}
-                          className="w-full h-48 object-cover rounded-xl"
+                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
                         />
-                        <div className="ml-4 flex flex-col justify-between flex-grow">
-                          <h3 className="font-semibold line-clamp-2">
+                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
+                          <h3 className="font-medium text-md line-clamp-2 ">
                             {product.title}
                           </h3>
-                          <p className="text-sm mt-3">
-                            <span className="line-through text-[grey]/90 mr-2">
-                              {product.original_price}
-                            </span>
-                            <span className="text-green-400">
+                          <div className="flex-col gap-1 flex">
+                            <h3 className="text-md font-semibold">
                               {product.discounted_price}
-                            </span>
-                          </p>
+                            </h3>
+                            <h3 className="line-through text-sm text-[grey]/90">
+                              {product.original_price}
+                            </h3>
+                          </div>
                         </div>
                       </div>
                     ));
@@ -191,13 +197,22 @@ export const ChatBubble = ({
                 children={textAfter}
                 components={{
                   h1: ({ node, ...props }) => (
-                    <h1 className="text-2xl font-bold mt-4 mb-2 text-white" {...props} />
+                    <h1
+                      className="text-2xl font-bold mt-4 mb-2 text-white"
+                      {...props}
+                    />
                   ),
                   h2: ({ node, ...props }) => (
-                    <h2 className="text-xl font-semibold mt-3 mb-1 text-white/70" {...props} />
+                    <h2
+                      className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                      {...props}
+                    />
                   ),
                   h3: ({ node, ...props }) => (
-                    <h3 className="text-lg font-semibold mt-2 mb-1 text-white/" {...props} />
+                    <h3
+                      className="text-lg font-semibold mt-2 mb-1 text-white/"
+                      {...props}
+                    />
                   ),
                   p: ({ node, ...props }) => (
                     <p className="text-sm mb-2 leading-relaxed" {...props} />

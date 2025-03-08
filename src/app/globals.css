@@ -257,3 +257,12 @@ input[type="number"] {
     transform: rotate(360deg);
   }
 }
+
+.hide-scroll-bar-indicator {
+  overflow-x: auto; /* Allow horizontal scrolling */
+  scrollbar-width: none; /* For Firefox */
+}
+
+.hide-scroll-bar-indicator::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Opera */
+}

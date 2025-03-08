@@ -20,7 +20,6 @@ export default function Page({ params }: PageProps) {
   const router = useRouter();
   const brandId = params.id;
   const brand = useSelectedBrandStore((state) => state.brand);
-
   const handleBack = () => {
     router.back();
   };
@@ -181,7 +180,7 @@ export default function Page({ params }: PageProps) {
             See All
           </button>
         </div>
-        <div className="grid grid-cols-2  gap-6 mt-4 ">
+        <div className="grid grid-cols-2  gap-6 mt-4  ">
           {productDetails?.slice(0, 4).map((product: any) => (
             <Link
               key={product.id}
@@ -199,9 +198,9 @@ export default function Page({ params }: PageProps) {
                 },
               }}
               passHref
-              className="bg-[#1c1c1c] rounded-xl overflow-hidden "
+              className="bg-[#1c1c1c] rounded-xl overflow-hidden  "
             >
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-start">
                 <Image
                   src={product.product_images[0]}
                   alt={product.title}
@@ -209,11 +208,11 @@ export default function Page({ params }: PageProps) {
                   height={180}
                   className="w-[100%]"
                 />
-                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+                <div className="px-3 text-[13px] bg-[#2d2d2d] flex flex-col gap-2 py-2 w-full">
                   <h3 className="text-white  line-clamp-1">
                     {product.product_name}
                   </h3>
-                  <div>
+                  <div className="">
                     <span className="">
                       {product.product_prices?.Discounted_price}
                     </span>

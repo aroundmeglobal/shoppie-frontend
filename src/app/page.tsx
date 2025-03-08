@@ -11,8 +11,6 @@ import { useRouter } from "next/navigation";
 import useSelectedBrandStore from "@/store/selectedBrand";
 import api from "@/lib/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
-import userSessionStore from "@/store/userSessionStore";
-import { v4 as uuidv4 } from "uuid";
 
 export interface Brand {
   brand_id: number;
@@ -24,6 +22,45 @@ export interface Brand {
   brand_website: string;
   workspaces: any[]; // Adjust the type of workspaces based on its structure
 }
+
+// const brands: Brand[] = [
+//   {
+//     name: "Muscle Blaze",
+//     imageUrl: "/muscleblaze.png", // Local image
+//     description:
+//       "Muscle Blaze is a leading sports nutrition brand offering premium supplements for athletes and fitness enthusiasts.",
+//     tags: ["Ecommerce", "Food", "Clothing"],
+//   },
+//   {
+//     name: "Nykaa",
+//     imageUrl: "/nykaa.png", // Local image
+//     description:
+//       "Nykaa is a popular beauty and wellness brand providing a wide range of cosmetics, skincare, and haircare products.",
+//     tags: ["Ecommerce", "Clothing"],
+//   },
+//   {
+//     name: "Cipla",
+//     imageUrl: "/cipla.png", // Local image
+//     description:
+//       "Cipla is a global pharmaceutical company focused on providing affordable medicine to improve health and well-being.",
+//     tags: ["Ecommerce", "Food"],
+//   },
+//   {
+//     name: "AroundMe",
+//     imageUrl: "/aroundImg.png", // Local image
+//     description:
+//       "AroundMe connects people nearby for spontaneous activities, discussions, and assistance with shared interests.",
+//     tags: ["Ecommerce", "Electronics"],
+//   },
+//   {
+//     name: "H&M",
+//     imageUrl: "/hm.png", // Local image
+//     description:
+//       "H&M is a multinational clothing retail brand offering trendy fashion at affordable prices for men, women, and children.",
+//     tags: ["Clothing"],
+//   },
+// ];
+
 const tags = [
   "All",
   "Beauty & Self care",
@@ -36,8 +73,6 @@ const tags = [
 export default function Home() {
   const fetchBrands = async () => {
     const res = await api.get(`${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/`);
-    console.log(res.data.brands);
-
     return res.data.brands;
   };
 
@@ -131,12 +166,12 @@ export default function Home() {
         </div>
 
         {/* Tags Section */}
-        <div className="mt-4 md:mt-8 flex text-[14px] md:text-[18px] px-4 md:justify-center  md:flex-wrap items-center gap-2 md:gap-4 w-full overflow-hidden overflow-x-auto ">
+        <div className="hide-scroll-bar-indicator mt-4 md:mt-8 flex text-[14px] md:text-[18px] px-4 md:justify-center md:flex-wrap items-center gap-2 md:gap-4 w-full overflow-hidden overflow-x-auto">
           {tags.map((tag, index) => (
             <button
               key={index}
               onClick={() => handleTagClick(tag)}
-              className={`px-6 py-2 rounded-2xl hover:bg-white hover:text-black focus:outline-none ${
+              className={`px-6 py-2 rounded-2xl whitespace-nowrap hover:bg-white hover:text-black focus:outline-none ${
                 selectedTag === tag
                   ? "bg-white text-black"
                   : "bg-[#121212] text-white"
