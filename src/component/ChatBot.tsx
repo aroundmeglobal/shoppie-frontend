@@ -129,7 +129,7 @@ const ChatBubble = ({
                     return suggestionData.products.map((product: any) => (
                       <div
                         key={product.id}
-                        onClick={() => handleProductClick(product)} // Open product modal on click
+                        onClick={() => handleProductClick(product)}
                         className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
                       >
                         <Image
