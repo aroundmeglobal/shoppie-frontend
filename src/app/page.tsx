@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import Image from "next/image";
 import { AiOutlineMessage } from "react-icons/ai";
-import BrandModel from "@/component/BrandModel";
 import { useRouter } from "next/navigation";
 import useSelectedBrandStore from "@/store/selectedBrand";
 import api from "@/lib/axiosInstance";
@@ -20,46 +19,8 @@ export interface Brand {
   brand_industry: string;
   brand_logo: string;
   brand_website: string;
-  workspaces: any[]; // Adjust the type of workspaces based on its structure
+  workspaces: any[];
 }
-
-// const brands: Brand[] = [
-//   {
-//     name: "Muscle Blaze",
-//     imageUrl: "/muscleblaze.png", // Local image
-//     description:
-//       "Muscle Blaze is a leading sports nutrition brand offering premium supplements for athletes and fitness enthusiasts.",
-//     tags: ["Ecommerce", "Food", "Clothing"],
-//   },
-//   {
-//     name: "Nykaa",
-//     imageUrl: "/nykaa.png", // Local image
-//     description:
-//       "Nykaa is a popular beauty and wellness brand providing a wide range of cosmetics, skincare, and haircare products.",
-//     tags: ["Ecommerce", "Clothing"],
-//   },
-//   {
-//     name: "Cipla",
-//     imageUrl: "/cipla.png", // Local image
-//     description:
-//       "Cipla is a global pharmaceutical company focused on providing affordable medicine to improve health and well-being.",
-//     tags: ["Ecommerce", "Food"],
-//   },
-//   {
-//     name: "AroundMe",
-//     imageUrl: "/aroundImg.png", // Local image
-//     description:
-//       "AroundMe connects people nearby for spontaneous activities, discussions, and assistance with shared interests.",
-//     tags: ["Ecommerce", "Electronics"],
-//   },
-//   {
-//     name: "H&M",
-//     imageUrl: "/hm.png", // Local image
-//     description:
-//       "H&M is a multinational clothing retail brand offering trendy fashion at affordable prices for men, women, and children.",
-//     tags: ["Clothing"],
-//   },
-// ];
 
 const tags = [
   "All",
