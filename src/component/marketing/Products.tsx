@@ -9,7 +9,72 @@ import useBrandStore from "@/store/useBrandStore";
 import { ClipLoader } from "react-spinners";
 import api from "@/lib/axiosInstance";
 
-// Define the product type based on your CSV structure.
+// -----------------
+// ErrorBoundary Component
+// -----------------
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  onDismiss: () => void;
+}
+
+interface ErrorBoundaryState {
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  handleDismiss = () => {
+    this.props.onDismiss();
+    this.setState({ error: null });
+  };
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+          <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-xl text-center max-w-xl mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-white">
+              CSV Parsing Error
+            </h2>
+            <div className="mb-6 text-left text-white">
+              <ul className="list-disc ml-5">
+                {this.state.error.message.split("\n").map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={this.handleDismiss}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// -----------------
+// Types for CSV Data
+// -----------------
 type Product = {
   product_name: string;
   product_images: string;
@@ -29,10 +94,20 @@ type OldProduct = {
   purchase_link: string;
 };
 
-// Component to display an individual product card.
+// -----------------
+// ProductCard Component
+// -----------------
 const ProductCard = ({ product }: { product: Product }) => {
-  const url = new URL(product?.purchase_link);
-  const domain = url.hostname;
+  let domain = "";
+  try {
+    const url = new URL(product?.purchase_link);
+    domain = url.hostname;
+  } catch (error) {
+    throw new Error(
+      `Invalid URL for product "${product.product_name}". Received: "${product.purchase_link}". Please check the CSV data.`
+    );
+  }
+
   return (
     <div className="border p-4 rounded-xl bg-[#161616] text-yellow-50 flex flex-col h-full">
       <Image
@@ -48,12 +123,10 @@ const ProductCard = ({ product }: { product: Product }) => {
       </p>
       <p className="mt-4">
         <span className="line-through mr-2 text-[whitesmoke] opacity-65">
-          ₹{product.original_price}
+          {product.original_price}
         </span>
-        <span className="text-green-400">₹{product.discounted_price}</span>
+        <span className="text-green-400">{product.discounted_price}</span>
       </p>
-
-      {/* Using Flexbox for Tags */}
       <div className="mt-2 flex flex-wrap gap-x-2 gap-y-2">
         {product.tags.map((tag, idx) => (
           <span
@@ -64,8 +137,6 @@ const ProductCard = ({ product }: { product: Product }) => {
           </span>
         ))}
       </div>
-
-      {/* Purchase Links */}
       <div className="mt-2 ml-1 flex gap-x-[8px] justify-start items-center">
         <a
           href={product.purchase_link}
@@ -85,10 +156,14 @@ const ProductCard = ({ product }: { product: Product }) => {
   );
 };
 
+// -----------------
+// Products Component
+// -----------------
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [csvError, setCsvError] = useState<string | null>(null);
   const brandName = useBrandStore((state) => state.brandName);
   const brandId = useBrandStore((state) => state.brandId);
   const [oldProducts, setOldProducts] = useState<OldProduct[]>([]);
@@ -103,25 +178,23 @@ const Products = () => {
     };
 
     fetchOldProducts();
-  }, []);
+  }, [brandId]);
 
-  const renderOldProducts = oldProducts.map((product, index) => {
-    return (
-      <ProductCard
-        key={index}
-        product={{
-          product_name: product.product_name || "Unknown Product",
-          product_description:
-            product.product_description || "No description available",
-          product_images: product.product_images[0] || "",
-          original_price: product.product_prices?.Original_price || "N/A",
-          discounted_price: product.product_prices?.Discounted_price || "N/A",
-          tags: product.tags || [],
-          purchase_link: product.purchase_link || "",
-        }}
-      />
-    );
-  });
+  const renderOldProducts = oldProducts.map((product, index) => (
+    <ProductCard
+      key={index}
+      product={{
+        product_name: product.product_name || "Unknown Product",
+        product_description:
+          product.product_description || "No description available",
+        product_images: product.product_images[0] || "",
+        original_price: product.product_prices?.Original_price || "N/A",
+        discounted_price: product.product_prices?.Discounted_price || "N/A",
+        tags: product.tags || [],
+        purchase_link: product.purchase_link || "",
+      }}
+    />
+  ));
 
   // Handler for CSV file upload.
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,34 +205,83 @@ const Products = () => {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          const data = results.data as any[];
-          const parsedProducts: Product[] = data.map((row) => {
-            return {
-              product_name: row.Product_name,
-              product_images: row.Product_images,
-              product_description: row.Product_description,
-              original_price: row.Original_price,
-              discounted_price: row.Discounted_price,
-              tags: row.Tags
-                ? row.Tags.split(",").map((tag: string) => tag.trim())
-                : [],
-              purchase_link: row.Purchase_link,
-            };
-          });
+          // Check CSV header for required fields.
+          const requiredFields = [
+            "Product_name",
+            "Product_images",
+            "Product_description",
+            "Original_price",
+            "Discounted_price",
+            "Tags",
+            "Purchase_link",
+          ];
+          if (results.meta && results.meta.fields) {
+            const missingFields = requiredFields.filter(
+              (field) => !results.meta!.fields.includes(field)
+            );
+            if (missingFields.length > 0) {
+              setCsvError(
+                `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+                  "\n"
+                )}`
+              );
+              return;
+            }
+          } else {
+            setCsvError("CSV header error: Unable to read header fields.");
+            return;
+          }
 
-          setProducts(parsedProducts);
+          // Wrap row validation and mapping in a try-catch block.
+          try {
+            const data = results.data as any[];
+            const parsedProducts: Product[] = data.map((row, index) => {
+              let missing = false;
+              for (const field of requiredFields) {
+                if (
+                  row[field] === undefined ||
+                  row[field] === null ||
+                  row[field].toString().trim() === ""
+                ) {
+                  missing = true;
+                  break;
+                }
+              }
+              if (missing) {
+                throw new Error(
+                  `Row ${index + 1} has missing fields. Please check the CSV data.`
+                );
+              }
+              return {
+                product_name: row.Product_name,
+                product_images: row.Product_images,
+                product_description: row.Product_description,
+                original_price: row.Original_price,
+                discounted_price: row.Discounted_price,
+                tags: row.Tags
+                  ? row.Tags.split(",").map((tag: string) => tag.trim())
+                  : [],
+                purchase_link: row.Purchase_link,
+              };
+            });
+            setProducts(parsedProducts);
+          } catch (error: any) {
+            setCsvError(error.message);
+          }
         },
         error: (error) => {
           console.error("Error parsing CSV:", error);
+          setCsvError(`Error parsing CSV: ${error.message}`);
         },
       });
-      setUploadedFile(e.target.files[0]);
+      setUploadedFile(file);
     }
   };
 
   const handleDiscard = () => {
     setUploadedFile(null);
     setProducts([]);
+    setCsvError(null);
   };
 
   const handleSubmit = async () => {
@@ -169,8 +291,6 @@ const Products = () => {
       setLoading(false);
       return;
     }
-
-    // upload to cdn
 
     console.log(uploadedFile);
 
@@ -204,8 +324,6 @@ const Products = () => {
 
     console.log("productData", productData.public_url);
 
-    //hit file upload api
-
     const body = {
       brand_id: brandId,
       file: `${productData.public_url}`,
@@ -216,8 +334,6 @@ const Products = () => {
     );
 
     console.log("file upload", responseFileUpload);
-
-    // hit brand update with empty json
 
     const brandBody = {};
     const responseUpdateBrand = await api.put(
@@ -232,32 +348,54 @@ const Products = () => {
 
   return (
     <div className="p-5 pt-0 overflow-y-auto h-full">
+      {/* CSV Error Overlay */}
+      {csvError && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+          <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-xl text-center max-w-xl mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-white">
+              CSV Parsing Error
+            </h2>
+            <div className="mb-6 text-left text-white">
+              <ul className="list-disc ml-5">
+                {csvError.split("\n").map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={handleDiscard}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50">
           <ClipLoader color="white" loading={loading} size={50} />
         </div>
       )}
+
       <div className="flex flex-col mt-3 px-28 gap-10 overflow-hidden">
-        {/* Box Container */}
         {!uploadedFile ? (
           <div className="rounded-xl p-6 bg-[#161616] shadow">
-            {/* Heading */}
             <h2 className="text-2xl font-bold mb-2">
               Add your products to showcase on profile
             </h2>
-            {/* Subheading */}
             <p className="mb-4 text-[#fff]/60">
               Let your customer explore and make informed decision
             </p>
-            {/* Buttons */}
             <div className="flex space-x-4 mt-16">
-              {/* Import CSV Button */}
               <button
-                onClick={() => document.getElementById("csvInput")?.click()}
+                onClick={() =>
+                  document.getElementById("csvInput")?.click()
+                }
                 className="flex items-center justify-between bg-white border text-gray-800 px-4 py-2 rounded-xl hover:bg-[#3d3d3d] hover:text-white focus:border-[#4d4d4d]"
               >
                 <span className="font-semibold">Import CSV</span>
-                {/* Upload icon at right */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 ml-2"
@@ -280,7 +418,6 @@ const Products = () => {
                 onChange={handleCSVUpload}
                 className="hidden"
               />
-              {/* Add Products Button */}
               <Link
                 href={"/brand/add-product"}
                 className="flex items-center justify-between border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
@@ -308,7 +445,7 @@ const Products = () => {
             <span className="text-white">{uploadedFile.name}</span>
             <div className="flex items-center gap-5 pt-2">
               <button
-                className={`mt-[-10px] cursor-pointer flex items-center justify-between flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]  hover:bg-[red]/30 hover:border-[red]/60`}
+                className="mt-[-10px] cursor-pointer flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d] hover:bg-[red]/30 hover:border-[red]/60"
                 onClick={handleDiscard}
               >
                 Discard
@@ -317,7 +454,7 @@ const Products = () => {
                 className={`py-2 px-4 mt-[-10px] rounded-2xl ${
                   uploadedFile
                     ? "cursor-pointer bg-[#00AFFE]"
-                    : `cursor-not-allowed flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d] `
+                    : "cursor-not-allowed flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
                 }`}
                 onClick={handleSubmit}
                 disabled={!uploadedFile}
@@ -328,18 +465,18 @@ const Products = () => {
           </div>
         )}
 
-        {/* Render CSV products if available */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products.map((product, index) => (
-            <ProductCard key={index} product={product} />
-          ))}
-        </div>
+        <ErrorBoundary onDismiss={handleDiscard}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {products.map((product, index) => (
+              <ProductCard key={index} product={product} />
+            ))}
+          </div>
+        </ErrorBoundary>
       </div>
 
-      {/* if products exist */}
       <div className="flex flex-col mt-3 px-28 gap-10 overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {renderOldProducts} {/* Display old products here */}
+          {renderOldProducts}
         </div>
       </div>
     </div>
