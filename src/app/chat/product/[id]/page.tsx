@@ -116,17 +116,11 @@ const ProductPage = () => {
         <div className="mt-2 text-white ">
           <h3 className="text-[18px] font-bold">{productName}</h3>
           <div className="mt-[5px] text-[13px]">
-            <div>
-              <span className="text-[18px] font-bold"> {discountedPrice}</span>
-              <span className="line-through text-[15px] font-medium text-[#a4a4a4] ml-2">
+            <div className="flex-col gap-1 flex">
+              <h3 className="text-[18px] font-medium">{discountedPrice}</h3>
+              <h3 className="line-through text-[15px] text-[grey]/90">
                 {originalPrice}
-              </span>
-              <span className=" text-[#15CF74] ml-2">
-                {`${percentageDifference(
-                  originalPrice || "",
-                  discountedPrice || ""
-                )}% Off`}
-              </span>
+              </h3>
             </div>
           </div>
           <BrandDescription description={productDescription || ""} />
@@ -200,20 +194,18 @@ const ProductPage = () => {
                   className="w-[100%] h-[190px] object-contain bg-white"
                 />
                 <div className="px-3 text-[13px] flex flex-col gap-2  bg-[#2d2d2d] py-3 w-full">
-                  <h3 className="text-white line-clamp-1">
+                  <h3 className="text-white line-clamp-2">
                     {product.product_name}
                   </h3>
-                  <div>
-                    <span>{product.product_prices.Discounted_price}</span>
-                    <span className="line-through text-[#a4a4a4] ml-2">
-                      {product.product_prices.Original_price}
-                    </span>
-                    <span className="text-[#15CF74] ml-2">
-                      {`${percentageDifference(
-                        product.product_prices?.Original_price,
-                        product.product_prices?.Discounted_price
-                      )}% Off`}
-                    </span>
+                  <div className="flex-col gap-1 flex">
+                    <h3 className="text-md font-semibold">
+                      {product?.discounted_price ??
+                        product?.product_prices?.Discounted_price}
+                    </h3>
+                    <h3 className="line-through text-sm text-[grey]/90">
+                      {product?.original_price ??
+                        product?.product_prices.Original_price}
+                    </h3>
                   </div>
                 </div>
               </div>

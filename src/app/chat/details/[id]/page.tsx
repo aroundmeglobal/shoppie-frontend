@@ -9,6 +9,7 @@ import api from "@/lib/axiosInstance";
 import { percentageDifference } from "@/lib/price";
 import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
+import Product from "@/component/ChatBot/Product";
 
 interface PageProps {
   params: {
@@ -122,13 +123,9 @@ export default function Page({ params }: PageProps) {
               <Image
                 src={brand?.brand_logo}
                 alt="Brand Logo"
-                width={20}
-                height={20}
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "40px",
-                }}
+                width={14}
+                height={14}
+                className="object-cover h-14 w-14 rounded-full"
               />
               <div className="flex items-center gap-2">
                 <div className="text-white text-xl">{brand?.brand_name}</div>
@@ -205,26 +202,23 @@ export default function Page({ params }: PageProps) {
                   src={product.product_images[0]}
                   alt={product.title}
                   width={150}
-                  height={180}
-                  className="w-[100%]"
+                  height={48}
+                  className="w-full h-[180px]"
                 />
                 <div className="px-3 text-[13px] bg-[#2d2d2d] flex flex-col gap-2 py-2 w-full">
-                  <h3 className="text-white  line-clamp-1">
+                  <h3 className="text-white  line-clamp-2">
                     {product.product_name}
                   </h3>
-                  <div className="">
-                    <span className="">
-                      {product.product_prices?.Discounted_price}
-                    </span>
-                    <span className=" line-through text-[#a4a4a4] ml-2">
-                      {product.product_prices?.Original_price}
-                    </span>
-                    <span className=" text-[#15CF74] ml-2">
-                      {`${percentageDifference(
-                        product.product_prices?.Original_price,
-                        product.product_prices?.Discounted_price
-                      )}% Off`}
-                    </span>
+
+                  <div className="flex-col gap-1 flex">
+                    <h3 className="text-md font-semibold">
+                      {product.discounted_price ??
+                        product.product_prices.Discounted_price}
+                    </h3>
+                    <h3 className="line-through text-sm text-[grey]/90">
+                      {product.original_price ??
+                        product.product_prices.Original_price}
+                    </h3>
                   </div>
                 </div>
               </div>

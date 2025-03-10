@@ -14,6 +14,8 @@ import ReactMarkdown from "react-markdown";
 import userSessionStore from "@/store/userSessionStore";
 import useUuid from "@/hooks/useLocalStorage";
 import { useQuery } from "@tanstack/react-query";
+import Product from "./ChatBot/Product";
+import ProductCardShimmer from "./ChatBot/ProductShimmer";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -45,12 +47,16 @@ const TypingIndicator: React.FC = () => {
 const ChatBubble = ({
   message,
   isTyping,
+  suggestedLoading,
   handleProductClick,
 }: {
   message: Message;
   isTyping: boolean;
+  suggestedLoading: boolean;
   handleProductClick: (product: any) => void;
 }) => {
+  console.log(message.text);
+
   const cleanMessageText = (text: string) => {
     if (text.startsWith('"') && text.endsWith('"')) {
       return text.slice(1, -1); // Remove leading and trailing quotes
@@ -66,6 +72,19 @@ const ChatBubble = ({
     ? restOfText.split("@@SUGGESTIONS END@@")
     : ["", restOfText];
 
+  const [textBeforeSuggestionQueries, restOfTextQueries] = cleanMessageText(
+    message.text
+  )?.split("@@PROMT START@@") ?? ["", ""];
+
+  const [suggestionQueries, textAfterQueries] = restOfTextQueries
+    ? restOfTextQueries.split("@@PROMT END@@")
+    : ["", restOfTextQueries];
+
+  console.log(suggestionQueries, "suggestion");
+
+  console.log(textAfterQueries, "12");
+
+  if (!message) return null;
   return (
     <div
       className={`mb-[10px] flex ${
@@ -73,48 +92,52 @@ const ChatBubble = ({
       }`}
     >
       <div className={`text-white overflow-hidden`}>
-        <div
-          className={`${
-            message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-          } max-w-[400px] rounded-[8px] p-[8px] `}
-        >
-          <ReactMarkdown
-            children={textBefore}
-            components={{
-              h1: ({ node, ...props }) => (
-                <h1
-                  className="text-2xl font-bold mt-4 mb-2 text-white"
-                  {...props}
-                />
-              ),
-              h2: ({ node, ...props }) => (
-                <h2
-                  className="text-xl font-semibold mt-3 mb-1 text-white/70"
-                  {...props}
-                />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3
-                  className="text-lg font-semibold mt-2 mb-1 text-white/"
-                  {...props}
-                />
-              ),
-              p: ({ node, ...props }) => (
-                <p className="text-sm mb-2 leading-relaxed" {...props} />
-              ),
-              ul: ({ node, ...props }) => (
-                <ul className="list-disc pl-5 mb-2" {...props} />
-              ),
-              li: ({ node, ...props }) => (
-                <li className="text-sm mb-1" {...props} />
-              ),
-              strong: ({ node, ...props }) => (
-                <strong className="font-bold" {...props} />
-              ),
-              em: ({ node, ...props }) => <em className="italic" {...props} />,
-            }}
-          />
-        </div>
+        {message.text && (
+          <div
+            className={`${
+              message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+            } max-w-[400px] rounded-[8px] p-[8px] `}
+          >
+            <ReactMarkdown
+              children={textBefore}
+              components={{
+                h1: ({ node, ...props }) => (
+                  <h1
+                    className="text-2xl font-bold mt-4 mb-2 text-white"
+                    {...props}
+                  />
+                ),
+                h2: ({ node, ...props }) => (
+                  <h2
+                    className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                    {...props}
+                  />
+                ),
+                h3: ({ node, ...props }) => (
+                  <h3
+                    className="text-lg font-semibold mt-2 mb-1 text-white/"
+                    {...props}
+                  />
+                ),
+                p: ({ node, ...props }) => (
+                  <p className="text-sm mb-2 leading-relaxed" {...props} />
+                ),
+                ul: ({ node, ...props }) => (
+                  <ul className="list-disc pl-5 mb-2" {...props} />
+                ),
+                li: ({ node, ...props }) => (
+                  <li className="text-sm mb-1" {...props} />
+                ),
+                strong: ({ node, ...props }) => (
+                  <strong className="font-bold" {...props} />
+                ),
+                em: ({ node, ...props }) => (
+                  <em className="italic" {...props} />
+                ),
+              }}
+            />
+          </div>
+        )}
 
         <div className="overflow-hidden mt-4 ">
           {suggestionText ? (
@@ -122,38 +145,24 @@ const ChatBubble = ({
               {(() => {
                 try {
                   const suggestionData = JSON.parse(suggestionText);
+
                   if (
                     suggestionData.products &&
                     Array.isArray(suggestionData.products)
                   ) {
-                    return suggestionData.products.map((product: any) => (
-                      <div
-                        key={product.id}
-                        onClick={() => handleProductClick(product)}
-                        className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
-                      >
-                        <Image
-                          src={product.image_url}
-                          alt={product.title}
-                          width={100}
-                          height={48}
-                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
-                        />
-                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
-                          <h3 className="font-medium text-md line-clamp-2 ">
-                            {product.title}
-                          </h3>
-                          <div className="flex-col gap-1 flex">
-                            <h3 className="text-md font-semibold">
-                              {product.discounted_price}
-                            </h3>
-                            <h3 className="line-through text-sm text-[grey]/90">
-                              {product.original_price}
-                            </h3>
-                          </div>
-                        </div>
-                      </div>
-                    ));
+                    return (
+                      <>
+                        {suggestionData.products.map((product: any) => (
+                          <button
+                            onClick={() => handleProductClick(product)}
+                            key={product?.id}
+                          >
+                            <Product product={product} />
+                          </button>
+                        ))}
+                        ;
+                      </>
+                    );
                   }
                 } catch (error) {
                   console.error("Error parsing suggestions JSON:", error);
@@ -171,32 +180,12 @@ const ChatBubble = ({
                     Array.isArray(suggestionData.products)
                   ) {
                     return suggestionData.products.map((product: any) => (
-                      <div
-                        key={product.id}
-                        onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-3 cursor-pointer pb-2"
+                      <button
+                        onClick={() => handleProductClick(product)}
+                        key={product?.id}
                       >
-                        <Image
-                          src={product.image_url}
-                          alt={product.title}
-                          width={100}
-                          height={48}
-                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
-                        />
-                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
-                          <h3 className="font-medium text-md line-clamp-2 ">
-                            {product.title}
-                          </h3>
-                          <div className="flex-col gap-1 flex">
-                            <h3 className="text-md font-semibold">
-                              {product.discounted_price}
-                            </h3>
-                            <h3 className="line-through text-sm text-[grey]/90">
-                              {product.original_price}
-                            </h3>
-                          </div>
-                        </div>
-                      </div>
+                        <Product product={product} />
+                      </button>
                     ));
                   }
                 } catch (error) {
@@ -258,6 +247,12 @@ const ChatBubble = ({
         )}
 
         {isTyping && <TypingIndicator />}
+        {/* {!suggestedLoading && (
+          <div className="grid grid-cols-2 gap-2">
+            <ProductCardShimmer />
+            <ProductCardShimmer />
+          </div>
+        )} */}
       </div>
     </div>
   );
@@ -275,7 +270,7 @@ export default function ChatPage({
   const [showProductModal, setShowProductModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const sessionId = useUuid();
   // userSessionStore((state) => state.sessionId);
   // console.log("sessionId", sessionId);
@@ -284,7 +279,7 @@ export default function ChatPage({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, selectedBrand]);
 
   const transformMessages = (data: Array<any>) => {
     return data.map((msg) => ({
@@ -320,10 +315,40 @@ export default function ChatPage({
       const messageData = await chatData.json();
 
       const history = messageData?.history;
-      if (Array.isArray(history)) {
+      if (Array.isArray(history) && history.length) {
         const transformedMessages = transformMessages(history);
+
         setMessages(transformedMessages);
       } else {
+        const greetingMessage = `Hey buddy! I am an AI shopping assistant from ${selectedBrand?.brand_name}, let me know how I can help you!`;
+
+        let currentText = "";
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: uuidv4(),
+            sender: "Bunny",
+            text: currentText,
+            message: currentText,
+            user_id: 2,
+          },
+        ]);
+
+        const interval = setInterval(() => {
+          // Stream the message one character at a time
+          if (currentText.length < greetingMessage.length) {
+            currentText += greetingMessage[currentText.length];
+            setMessages((prevMessages) => {
+              const updatedMessages = [...prevMessages];
+              updatedMessages[updatedMessages.length - 1].text = currentText;
+              updatedMessages[updatedMessages.length - 1].message = currentText;
+              return updatedMessages;
+            });
+          } else {
+            clearInterval(interval);
+          }
+        }, 20);
+
         console.error("No valid history found in messageData", messageData);
       }
       // setFetchingMessage(false);
@@ -337,9 +362,10 @@ export default function ChatPage({
   useEffect(() => {
     if (!sessionId) return;
     // setFetchingMessage(true);
+    setMessages([]);
 
     fetchMessages();
-  }, [sessionId]);
+  }, [sessionId, selectedBrand]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -426,6 +452,7 @@ export default function ChatPage({
                 isCapturingSuggestions = true;
                 suggestionBuffer = "";
                 botFullResponse += "@@SUGGESTIONS START@@";
+                setSuggestionsLoading(true);
               }
 
               if (isCapturingSuggestions) {
@@ -438,6 +465,7 @@ export default function ChatPage({
                     .replace(/@@SUGGESTIONS END@@/g, "")
                     .trim();
 
+                  setSuggestionsLoading(false);
                   // Update the last bot message with suggestions
                   setMessages((prevMessages) => {
                     const updatedMessages = [...prevMessages];
@@ -481,6 +509,7 @@ export default function ChatPage({
 
       // Once the while loop finishes (stream ends), set isBotTyping to false
       setIsTyping(false);
+      setSuggestionsLoading(false);
     } catch (error: any) {
       console.error("Error fetching from API:", error);
       setMessages((prev) => [
@@ -567,9 +596,9 @@ export default function ChatPage({
                 onClick={handleBrandIconClick}
                 src={selectedBrand?.brand_logo}
                 alt="Chat"
-                width={20}
-                height={20}
-                style={{ width: "50px", height: "50px", borderRadius: "50px" }}
+                width={12}
+                height={12}
+                className="rounded-full w-12 h-12 object-cover cursor-pointer"
               />
               <div
                 onClick={handleBrandIconClick}
@@ -582,14 +611,14 @@ export default function ChatPage({
               role="img"
               aria-label="Back"
               onClick={handleBack}
-              className="bg-[#5C5C5C]/50 mr-3 p-1 rounded-full"
+              className="cursor-pointer bg-[#5C5C5C]/50 mr-3 p-1 rounded-full"
             >
               <RxCross2 size={18} />
             </span>
           </div>
 
           {/* chat bubble */}
-          <div className="flex-grow overflow-y-auto p-[10px] bg-[#282828] ">
+          <div className="flex-grow overflow-y-auto p-[10px] bg-[#282828]  ">
             {messages.map((msg, index) => {
               const isLastBotMessage =
                 index === messages.length - 1 && msg.sender === "Bunny";
@@ -598,6 +627,7 @@ export default function ChatPage({
                   key={index}
                   message={msg}
                   isTyping={isLastBotMessage && isTyping}
+                  suggestedLoading={suggestionsLoading}
                   handleProductClick={handleProductClick}
                 />
               );
@@ -616,7 +646,11 @@ export default function ChatPage({
               placeholder="Ask me anything..."
               style={{ width: "100%", color: "white" }}
             />
-            <button className="cursor-pointer  bg-[#5A5A5A] p-1 rounded-xl ">
+            <button
+              className={`cursor-pointer  ${
+                inputValue.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
+              } p-1 rounded-xl `}
+            >
               <IoMdArrowUp size={17} onClick={handleSend} />
             </button>
           </div>
@@ -721,7 +755,7 @@ const BrandModal = ({
             role="img"
             aria-label="Back"
             onClick={onClose}
-            className=" mt-[-60px] "
+            className="cursor-pointer mt-[-60px] bg-[#393939] rounded-xl  m-2"
           >
             <Image
               src={"/img/white-back-arrow.svg"}
@@ -731,7 +765,7 @@ const BrandModal = ({
               style={{
                 width: "16px",
                 height: "16px",
-                marginLeft: "10px",
+                margin: "5px",
               }}
             />
           </span>
@@ -742,7 +776,7 @@ const BrandModal = ({
                 alt="Brand Logo"
                 width={20}
                 height={20}
-                style={{ width: "80px", height: "80px", borderRadius: "40px" }}
+                className="rounded-full w-20 h-20 object-cover"
               />
               <div className="flex items-center gap-2">
                 <div className="text-white text-xl">{brandDetails?.name}</div>
@@ -799,43 +833,49 @@ const BrandModal = ({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mt-4 ">
           {productDetails.slice(0, 4).map((product: any) => (
-            <div
+            // <div
+            //   key={product.id}
+            //   className="bg-[#1c1c1c] rounded-xl overflow-hidden "
+            //   onClick={() => {
+            //     handleProductClick(product);
+            //     // setSelectedProduct(product);
+            //   }}
+            // >
+            //   <div className="flex flex-col items-center">
+            //     <Image
+            //       src={product.product_images[0]}
+            //       alt={product.title}
+            //       width={150}
+            //       height={180}
+            //       className="w-[100%]"
+            //     />
+            //     <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
+            //       <h3 className="text-white  line-clamp-1">
+            //         {product.product_name}
+            //       </h3>
+            //       <div>
+            //         <span className="">
+            //           {product.product_prices?.Discounted_price}
+            //         </span>
+            //         <span className=" line-through text-[#a4a4a4] ml-2">
+            //           {product.product_prices?.Original_price}
+            //         </span>
+            //         <span className=" text-[#15CF74] ml-2">
+            //           {`${percentageDifference(
+            //             product.product_prices?.Original_price,
+            //             product.product_prices?.Discounted_price
+            //           )}% Off`}
+            //         </span>
+            //       </div>
+            //     </div>
+            //   </div>
+            // </div>
+            <button
+              onClick={() => handleProductClick(product)}
               key={product.id}
-              className="bg-[#1c1c1c] rounded-xl overflow-hidden "
-              onClick={() => {
-                handleProductClick(product);
-                // setSelectedProduct(product);
-              }}
             >
-              <div className="flex flex-col items-center">
-                <Image
-                  src={product.product_images[0]}
-                  alt={product.title}
-                  width={150}
-                  height={180}
-                  className="w-[100%]"
-                />
-                <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full">
-                  <h3 className="text-white  line-clamp-1">
-                    {product.product_name}
-                  </h3>
-                  <div>
-                    <span className="">
-                      {product.product_prices?.Discounted_price}
-                    </span>
-                    <span className=" line-through text-[#a4a4a4] ml-2">
-                      {product.product_prices?.Original_price}
-                    </span>
-                    <span className=" text-[#15CF74] ml-2">
-                      {`${percentageDifference(
-                        product.product_prices?.Original_price,
-                        product.product_prices?.Discounted_price
-                      )}% Off`}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Product product={product} />
+            </button>
           ))}
         </div>
       </div>
@@ -871,7 +911,7 @@ const AllProductModal = ({
   return (
     <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto ">
       <div className="flex justify-between md:justify-between items-center ">
-        <div className="flex items-start w-full mt-4 justify-between px-3 ">
+        <div className="cursor-pointer flex items-start w-full mt-4 justify-between px-3 ">
           <span
             role="img"
             aria-label="Back"
@@ -890,14 +930,11 @@ const AllProductModal = ({
               }}
             />
           </span>
-          <div className="flex flex-1 justify-center">
-            <div className=" ml-[-50px] text-[16px] flex flex-col gap-2 items-center">
-              All products
-            </div>
-          </div>
+          <h1 className="-ml-10">All Products</h1>
+          <h1></h1>
         </div>
       </div>
-      <div className="flex justify-center rounded-xl items-center m-4 p-[8px] px-[15px] bg-[#1d1d1d]">
+      <div className="flex justify-center rounded-xl items-center mx-4 mt-4 p-[8px] px-[15px] bg-[#1d1d1d]">
         <IoSearchOutline color="#afafaf" size={22} />
         <input
           type="text"
@@ -910,46 +947,49 @@ const AllProductModal = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 m-4">
         {filteredProducts.map((product: any) => (
-          <div
-            key={product.id}
-            className="bg-[#1c1c1c] rounded-xl overflow-hidden"
-            onClick={() => {
-              handleProductClick(product);
-            }}
-          >
-            <div className="flex flex-col items-center">
-              <Image
-                src={product.product_images[0]}
-                alt={product.product_name}
-                width={150}
-                height={150}
-                className="w-[100%]"
-              />
-              <div className="px-3 bg-[#2d2d2d] py-2 w-full">
-                <h3 className="text-white text-[13px] line-clamp-1">
-                  {product.product_name}
-                </h3>
-                <p className="text-[13px]">
-                  {product.product_prices?.Discounted_price && (
-                    <span className="font-bold">
-                      ₹{product.product_prices.Discounted_price}
-                    </span>
-                  )}
-                  {product.product_prices?.Original_price && (
-                    <span className="text-[13px] line-through text-[#a4a4a4] ml-2">
-                      ₹{product.product_prices.Original_price}
-                    </span>
-                  )}
-                  <span className=" text-[#15CF74] ml-2">
-                    {`${percentageDifference(
-                      product.product_prices?.Original_price,
-                      product.product_prices?.Discounted_price
-                    )}% Off`}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
+          // <div
+          //   key={product.id}
+          //   className="bg-[#1c1c1c] rounded-xl overflow-hidden"
+          //   onClick={() => {
+          //     handleProductClick(product);
+          //   }}
+          // >
+          //   <div className="flex flex-col items-center">
+          //     <Image
+          //       src={product.product_images[0]}
+          //       alt={product.product_name}
+          //       width={150}
+          //       height={150}
+          //       className="w-[100%]"
+          //     />
+          //     <div className="px-3 bg-[#2d2d2d] py-2 w-full">
+          //       <h3 className="text-white text-[13px] line-clamp-1">
+          //         {product.product_name}
+          //       </h3>
+          //       <p className="text-[13px]">
+          //         {product.product_prices?.Discounted_price && (
+          //           <span className="font-bold">
+          //             ₹{product.product_prices.Discounted_price}
+          //           </span>
+          //         )}
+          //         {product.product_prices?.Original_price && (
+          //           <span className="text-[13px] line-through text-[#a4a4a4] ml-2">
+          //             ₹{product.product_prices.Original_price}
+          //           </span>
+          //         )}
+          //         <span className=" text-[#15CF74] ml-2">
+          //           {`${percentageDifference(
+          //             product.product_prices?.Original_price,
+          //             product.product_prices?.Discounted_price
+          //           )}% Off`}
+          //         </span>
+          //       </p>
+          //     </div>
+          //   </div>
+          // </div>
+          <button onClick={() => handleProductClick(product)} key={product.id}>
+            <Product product={product} />
+          </button>
         ))}
       </div>
     </div>
@@ -1021,10 +1061,11 @@ const ProductModal = ({
       return null;
     }
   };
+  console.log(selectedProduct?.product_prices, "sele");
 
   return (
     <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto">
-      <div className="flex items-start w-full mt-4 justify-between px-3 ">
+      <div className="cursor-pointer flex items-start w-full mt-4 justify-between px-3 ">
         <span role="img" aria-label="Back" className="bg-[#393939] rounded-3xl">
           <Image
             onClick={onClose}
@@ -1062,10 +1103,12 @@ const ProductModal = ({
             {!selectedProduct?.prices?.Original_price ? (
               <div className="flex flex-col gap-1">
                 <span className="text-lg font-medium">
-                  {selectedProduct.discounted_price}
+                  {selectedProduct.discounted_price ??
+                    selectedProduct?.product_prices?.Discounted_price}
                 </span>
                 <span className="line-through text-md text-[#a4a4a4] mr-2">
-                  {selectedProduct.original_price}
+                  {selectedProduct.original_price ??
+                    selectedProduct?.product_prices?.Original_price}
                 </span>
               </div>
             ) : (
@@ -1135,40 +1178,10 @@ const ProductModal = ({
           {productDetails?.map((product: any) => {
             return (
               <button
+                onClick={() => handleProductClick(product)}
                 key={product.id}
-                className="bg-[#1c1c1c]  product-card flex-shrink-0 flex  rounded-xl overflow-hidden w-[200px]"
-                onClick={() => {
-                  handleProductClick(product);
-                }}
               >
-                <div className="flex flex-col items-center">
-                  <Image
-                    src={product.product_images[0]}
-                    alt={product.product_name}
-                    width={100}
-                    height={48}
-                    className="w-[100%] h-[190px] object-contain bg-white"
-                  />
-                  <div className="px-3 text-[13px] bg-[#2d2d2d] py-2 w-full text-start">
-                    <h3 className="text-white  line-clamp-1">
-                      {product.product_name}
-                    </h3>
-                    <div className="mt-2">
-                      <span className="">
-                        {product.product_prices.Discounted_price}
-                      </span>
-                      <span className=" line-through text-[#a4a4a4] ml-2">
-                        {product.product_prices.Original_price}
-                      </span>
-                      <span className=" text-[#15CF74] ml-2">
-                        {`${percentageDifference(
-                          product.product_prices?.Original_price,
-                          product.product_prices?.Discounted_price
-                        )}% Off`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <Product product={product} />
               </button>
             );
           })}

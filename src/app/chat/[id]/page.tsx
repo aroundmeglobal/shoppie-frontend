@@ -24,14 +24,13 @@ export default function ChatPage({ params }: PageProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const brand = useBrandStore((state) => state.brand);
 
-
   // Fetch initial chat history via React Query.
   const { data, error, isLoading } = useQuery({
     queryKey: ["workspaceHistory", params.id],
     queryFn: async () => {
       const messageData = await getWorkspaceHistory(params.id);
       const history = messageData?.history;
-      if (Array.isArray(history)) {
+      if (Array.isArray(history) && history.length) {
         return history.map((msg: any) => ({
           id: uuidv4(),
           message: msg.content, // message content
@@ -39,6 +38,35 @@ export default function ChatPage({ params }: PageProps) {
           user_id: msg.role === "user" ? 1 : 2,
           text: msg.content,
         }));
+      } else {
+        const greetingMessage = `Hey buddy! I am an AI shopping assistant from ${selectedBrand?.brand_name}, let me know how I can help you!`;
+
+        let currentText = "";
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: uuidv4(),
+            sender: "Bunny",
+            text: currentText,
+            message: currentText,
+            user_id: 2,
+          },
+        ]);
+
+        const interval = setInterval(() => {
+          // Stream the message one character at a time
+          if (currentText.length < greetingMessage.length) {
+            currentText += greetingMessage[currentText.length];
+            setMessages((prevMessages) => {
+              const updatedMessages = [...prevMessages];
+              updatedMessages[updatedMessages.length - 1].text = currentText;
+              updatedMessages[updatedMessages.length - 1].message = currentText;
+              return updatedMessages;
+            });
+          } else {
+            clearInterval(interval);
+          }
+        }, 20);
       }
       throw new Error("No valid history found");
     },
@@ -75,7 +103,6 @@ export default function ChatPage({ params }: PageProps) {
     ]);
 
     try {
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${params.id}/stream-chat`,
         {
@@ -217,9 +244,9 @@ export default function ChatPage({ params }: PageProps) {
     />
   );
 
-  const handleBrandIconClick =()=>{
-    router.push(`/chat/details/${params.id}`)
-  }
+  const handleBrandIconClick = () => {
+    router.push(`/chat/details/${params.id}`);
+  };
 
   return (
     <div>
@@ -241,20 +268,17 @@ export default function ChatPage({ params }: PageProps) {
               />
             </span>
             <Image
-                onClick={handleBrandIconClick}
+              onClick={handleBrandIconClick}
               src={
                 brand.brand_logo ||
                 "https://storage.aroundme.global/avatar_default.png"
               }
               alt="Chat"
-              width={40}
-              height={40}
-              style={{ width: "40px", height: "40px", borderRadius: "50px" }}
+              width={12}
+              height={12}
+              className="h-12 w-12 rounded-full object-cover"
             />
-            <div
-              onClick={handleBrandIconClick}
-              className="text-white text-lg"
-            >
+            <div onClick={handleBrandIconClick} className="text-white text-lg">
               {brand.brand_name}
             </div>
           </div>
