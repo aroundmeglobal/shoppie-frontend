@@ -1,5 +1,6 @@
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import Product from "./ChatBot/Product";
 
 type Message = {
   sender: string;
@@ -105,32 +106,12 @@ export const ChatBubble = ({
                     Array.isArray(suggestionData.products)
                   ) {
                     return suggestionData.products.map((product: any) => (
-                      <div
+                      <button
                         key={product.id}
-                        onClick={() => handleProductClick(product)} // Open product modal on click
-                        className="product-card flex-shrink-0 flex flex-col items-start w-[300px] bg-gborder pb-2 rounded-xl bg-[#1d1d1d] text-yellow-50 h-[320px] gap-5 cursor-pointer"
+                        onClick={() => handleProductClick(product)}
                       >
-                        <Image
-                          src={product.image_url}
-                          alt={product.title}
-                          width={100}
-                          height={48}
-                          className="w-full h-[190px] object-contain rounded-xl rounded-b-none bg-white"
-                        />
-                        <div className="ml-4 flex flex-col justify-between  gap-2 flex-grow ">
-                          <h3 className="font-medium text-md line-clamp-2 ">
-                            {product.title}
-                          </h3>
-                          <div className="flex-col gap-1 flex">
-                            <h3 className="text-md font-semibold">
-                              {product.discounted_price}
-                            </h3>
-                            <h3 className="line-through text-sm text-[grey]/90">
-                              {product.original_price}
-                            </h3>
-                          </div>
-                        </div>
-                      </div>
+                        <Product product={product} />
+                      </button>
                     ));
                   }
                 } catch (error) {

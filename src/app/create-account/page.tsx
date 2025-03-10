@@ -290,7 +290,7 @@ export default function RegisterPage() {
                     <option value="Health & wellness">Health & wellness</option>
                     <option value="Food & beverages">Food & beverages</option>
                   </Field>
-                  x
+
                   <FaChevronDown
                     size={12}
                     className="text-white absolute right-2 top-1/2 transform -translate-y-1/2"
@@ -322,7 +322,7 @@ export default function RegisterPage() {
               </div>
 
               {/* GST Certificate Upload */}
-              <div>
+              {/* <div>
                 <label className="block text-xs font-medium">
                   <span className="text-red-400">*</span> Incorporation
                   certificate / GST
@@ -353,7 +353,7 @@ export default function RegisterPage() {
                   component="div"
                   className="text-red-500 text-sm"
                 />
-              </div>
+              </div> */}
 
               {/* Contact Person Details */}
               <div>

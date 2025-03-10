@@ -89,6 +89,10 @@ const config = {
             transform: "translateY(-4px)",
           },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -96,6 +100,7 @@ const config = {
         bounceY: "bounceY 1s infinite",
         typing: "typing 1.5s infinite ease-in-out",
         "blink-up-down": "blink-up-down 1.5s infinite ease-in-out",
+        shimmer: "shimmer 1.5s infinite",
       },
       fontFamily: {
         sans: ["BR Firma", "sans-serif"],

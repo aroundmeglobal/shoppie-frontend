@@ -135,38 +135,28 @@ export default function Page({ params }: PageProps) {
             }}
             passHref
             key={product.id}
-            className="bg-[#1c1c1c] rounded-xl overflow-hidden"
+            className="bg-[#1c1c1c] rounded-xl overflow-hidden pb-2"
           >
             <div className="flex flex-col items-center">
               <Image
                 src={product.product_images[0]}
                 alt={product.product_name}
-                width={150}
-                height={150}
-                className="w-[100%]"
+                width={100}
+                height={48}
+                className="w-full h-[180px] object-contain rounded-xl rounded-b-none bg-white"
               />
-              <div className="px-3 bg-[#2d2d2d] py-2 w-full">
-                <h3 className="text-white text-[13px] line-clamp-1">
+              <div className="mx-3  flex flex-col justify-between  gap-2 flex-grow  text-start ">
+                <h3 className=" pt-2 font-medium text-[13px] line-clamp-2 md:line-clamp-2 ">
                   {product.product_name}
                 </h3>
-                <p className="text-[13px]">
-                  {product.product_prices?.Discounted_price && (
-                    <span className="font-bold">
-                      ₹{product.product_prices.Discounted_price}
-                    </span>
-                  )}
-                  {product.product_prices?.Original_price && (
-                    <span className="text-[13px] line-through text-[#a4a4a4] ml-2">
-                      ₹{product.product_prices.Original_price}
-                    </span>
-                  )}
-                  <span className=" text-[#15CF74] ml-2">
-                    {`${percentageDifference(
-                      product.product_prices?.Original_price,
-                      product.product_prices?.Discounted_price
-                    )}% Off`}
-                  </span>
-                </p>
+                <div className="flex-col gap-1 flex">
+                  <h3 className="text-md ">
+                    {product.product_prices.Discounted_price}
+                  </h3>
+                  <h3 className="line-through text-sm text-[grey]/90">
+                    {product.product_prices.Original_price}
+                  </h3>
+                </div>
               </div>
             </div>
           </Link>
