@@ -11,6 +11,7 @@ import useBrandStore from "@/store/selectedBrand";
 import useUuid from "@/hooks/useLocalStorage";
 import VoiceInputbar from "@/component/VoiceInputbar";
 import { BeatLoader, ClipLoader } from "react-spinners";
+import { ChatBubbleForMobile } from "@/component/ChatBubbleForMobile";
 
 interface PageProps {
   params: {
@@ -130,6 +131,8 @@ export default function ChatPage({ params }: PageProps) {
 
       let isCapturingSuggestions = false;
       let suggestionBuffer = "";
+      let isCapturingPrompts = false;
+      let promptBuffer = "";
       let botFullResponse = "";
 
       while (true) {
@@ -143,7 +146,7 @@ export default function ChatPage({ params }: PageProps) {
           const trimmedLine = line.trim();
 
           if (trimmedLine === "data: [DONE]") {
-            // End streaming.
+            // Mark the end of streaming
             setIsTyping(false);
             break;
           }
@@ -153,13 +156,56 @@ export default function ChatPage({ params }: PageProps) {
               const jsonData = JSON.parse(trimmedLine.substring(5));
               const responseText = jsonData.textResponse || "";
 
-              // Start capturing suggestions.
-              if (responseText === "@@" && !isCapturingSuggestions) {
+              // Start capturing suggestions
+              if (
+                responseText === "@@SUGGESTIONS START@@" &&
+                !isCapturingSuggestions
+              ) {
                 isCapturingSuggestions = true;
                 suggestionBuffer = "";
                 botFullResponse += "@@SUGGESTIONS START@@";
               }
 
+              // if (isCapturingSuggestions) {
+              //   suggestionBuffer += responseText;
+              //   if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
+              //     isCapturingSuggestions = false;
+              //     botFullResponse += "@@SUGGESTIONS END@@";
+              //     const cleanSuggestionText = suggestionBuffer
+              //       .replace(/@@SUGGESTIONS START@@/g, "")
+              //       .replace(/@@SUGGESTIONS END@@/g, "")
+              //       .trim();
+
+              //     setSuggestionsLoading(false);
+              //     // Update the last bot message with suggestions
+              //     setMessages((prevMessages) => {
+              //       const updatedMessages = [...prevMessages];
+              //       if (
+              //         updatedMessages.length > 0 &&
+              //         updatedMessages[updatedMessages.length - 1].sender ===
+              //           "Bunny"
+              //       ) {
+              //         updatedMessages[updatedMessages.length - 1].suggestions =
+              //           cleanSuggestionText;
+              //       }
+              //       return updatedMessages;
+              //     });
+              //   }
+              // } else {
+              //   botFullResponse += responseText;
+              //   setMessages((prevMessages) => {
+              //     const updatedMessages = [...prevMessages];
+              //     if (
+              //       updatedMessages.length > 0 &&
+              //       updatedMessages[updatedMessages.length - 1].sender ===
+              //         "Bunny"
+              //     ) {
+              //       updatedMessages[updatedMessages.length - 1].text =
+              //         botFullResponse;
+              //     }
+              //     return updatedMessages;
+              //   });
+              // }
               if (isCapturingSuggestions) {
                 suggestionBuffer += responseText;
                 if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
@@ -170,7 +216,7 @@ export default function ChatPage({ params }: PageProps) {
                     .replace(/@@SUGGESTIONS END@@/g, "")
                     .trim();
 
-                  // Update last bot message with suggestions.
+                  // Update the last bot message with suggestions
                   setMessages((prevMessages) => {
                     const updatedMessages = [...prevMessages];
                     if (
@@ -185,19 +231,57 @@ export default function ChatPage({ params }: PageProps) {
                   });
                 }
               } else {
-                botFullResponse += responseText;
-                setMessages((prevMessages) => {
-                  const updatedMessages = [...prevMessages];
-                  if (
-                    updatedMessages.length > 0 &&
-                    updatedMessages[updatedMessages.length - 1].sender ===
-                      "Bunny"
-                  ) {
-                    updatedMessages[updatedMessages.length - 1].text =
-                      botFullResponse;
+                console.log("Handleing Prompt");
+
+                // Handle prompts if markers are found
+                if (
+                  responseText === "@@PROMPTS START@@" &&
+                  !isCapturingPrompts
+                ) {
+                  isCapturingPrompts = true;
+                  promptBuffer = "";
+                  botFullResponse += "@@PROMPTS START@@";
+                }
+
+                if (isCapturingPrompts) {
+                  promptBuffer += responseText;
+                  if (promptBuffer.includes("@@PROMPTS END@@")) {
+                    isCapturingPrompts = false;
+                    botFullResponse += "@@PROMPTS END@@";
+                    const cleanPromptText = promptBuffer
+                      .replace(/@@PROMPTS START@@/g, "")
+                      .replace(/@@PROMPTS END@@/g, "")
+                      .trim();
+
+                    // Handle the captured prompt (e.g., displaying it as part of the response)
+                    setMessages((prevMessages) => {
+                      const updatedMessages = [...prevMessages];
+                      if (
+                        updatedMessages.length > 0 &&
+                        updatedMessages[updatedMessages.length - 1].sender ===
+                          "Bunny"
+                      ) {
+                        updatedMessages[updatedMessages.length - 1].prompts =
+                          cleanPromptText;
+                      }
+                      return updatedMessages;
+                    });
                   }
-                  return updatedMessages;
-                });
+                } else {
+                  botFullResponse += responseText;
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].text =
+                        botFullResponse;
+                    }
+                    return updatedMessages;
+                  });
+                }
               }
             } catch (jsonError) {
               console.error(
@@ -227,11 +311,12 @@ export default function ChatPage({ params }: PageProps) {
   };
 
   const renderMessage = (msg: any, index: number) => (
-    <ChatBubble
+    <ChatBubbleForMobile
+      brand_id={brand.brand_id}
       key={msg.id || index}
       message={msg}
       isTyping={false}
-      handleProductClick={() => {}}
+      handleSend={handleSend}
     />
   );
 
@@ -288,7 +373,7 @@ export default function ChatPage({ params }: PageProps) {
           {error && <div className="p-2 text-red-500">{error.message}</div>}
           {messages && messages.map(renderMessage)}
           {isTyping && (
-            <ChatBubble
+            <ChatBubbleForMobile
               message={{
                 id: uuidv4(),
                 message: "Bunny is typing...",
