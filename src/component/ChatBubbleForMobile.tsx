@@ -1,6 +1,9 @@
+"use client";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import Product from "./ChatBot/Product";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import Link from "next/link";
 
 type Message = {
   sender: string;
@@ -21,15 +24,15 @@ const TypingIndicator: React.FC = () => {
   );
 };
 
-export const ChatBubble = ({
+export const ChatBubbleForMobile = ({
   message,
+  brand_id,
   isTyping,
-  handleProductClick,
   handleSend,
 }: {
+  brand_id: string;
   message: Message;
   isTyping: boolean;
-  handleProductClick: (product: any) => void;
   handleSend: (text: string) => void;
 }) => {
   const cleanMessageText = (text: string) => {
@@ -131,12 +134,7 @@ export const ChatBubble = ({
                     return (
                       <>
                         {suggestionData.products.map((product: any) => (
-                          <button
-                            onClick={() => handleProductClick(product)}
-                            key={product?.id}
-                          >
-                            <Product product={product} />
-                          </button>
+                          <Product product={product} />
                         ))}
                         ;
                       </>
@@ -158,12 +156,7 @@ export const ChatBubble = ({
                     Array.isArray(suggestionData.products)
                   ) {
                     return suggestionData.products.map((product: any) => (
-                      <button
-                        onClick={() => handleProductClick(product)}
-                        key={product?.id}
-                      >
-                        <Product product={product} />
-                      </button>
+                      <Product product={product} />
                     ));
                   }
                 } catch (error) {
@@ -232,6 +225,8 @@ export const ChatBubble = ({
                 return (
                   <>
                     {suggestionData.map((suggestion: any) => {
+                      console.log(suggestion, "hooop");
+
                       return (
                         <button
                           onClick={() => handleSelectedSuggestion(suggestion)}

@@ -16,6 +16,7 @@ import useUuid from "@/hooks/useLocalStorage";
 import { useQuery } from "@tanstack/react-query";
 import Product from "./ChatBot/Product";
 import ProductCardShimmer from "./ChatBot/ProductShimmer";
+import { ChatBubble } from "./ChatBubble";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -29,6 +30,7 @@ type Message = {
   sender: string;
   text: string;
   suggestions?: string;
+  prompts?: any;
 };
 
 const TypingIndicator: React.FC = () => {
@@ -40,220 +42,6 @@ const TypingIndicator: React.FC = () => {
       <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0.3s]" />
       {/* Dot 3 */}
       <div className="w-2 h-2 rounded-full bg-[#9d9d9d] animate-blink-up-down [animation-delay:0.6s]" />
-    </div>
-  );
-};
-
-const ChatBubble = ({
-  message,
-  isTyping,
-  suggestedLoading,
-  handleProductClick,
-}: {
-  message: Message;
-  isTyping: boolean;
-  suggestedLoading: boolean;
-  handleProductClick: (product: any) => void;
-}) => {
-  console.log(message.text);
-
-  const cleanMessageText = (text: string) => {
-    if (text.startsWith('"') && text.endsWith('"')) {
-      return text.slice(1, -1); // Remove leading and trailing quotes
-    }
-    return text;
-  };
-
-  const [textBefore, restOfText] = cleanMessageText(message.text)?.split(
-    "@@SUGGESTIONS START@@"
-  ) ?? ["", ""];
-
-  const [suggestionText, textAfter] = restOfText
-    ? restOfText.split("@@SUGGESTIONS END@@")
-    : ["", restOfText];
-
-  const [textBeforeSuggestionQueries, restOfTextQueries] = cleanMessageText(
-    message.text
-  )?.split("@@PROMT START@@") ?? ["", ""];
-
-  const [suggestionQueries, textAfterQueries] = restOfTextQueries
-    ? restOfTextQueries.split("@@PROMT END@@")
-    : ["", restOfTextQueries];
-
-  console.log(suggestionQueries, "suggestion");
-
-  console.log(textAfterQueries, "12");
-
-  if (!message) return null;
-  return (
-    <div
-      className={`mb-[10px] flex ${
-        message.sender === "You" ? "justify-end" : "justify-start"
-      }`}
-    >
-      <div className={`text-white overflow-hidden`}>
-        {message.text && (
-          <div
-            className={`${
-              message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-            } max-w-[400px] rounded-[8px] p-[8px] `}
-          >
-            <ReactMarkdown
-              children={textBefore}
-              components={{
-                h1: ({ node, ...props }) => (
-                  <h1
-                    className="text-2xl font-bold mt-4 mb-2 text-white"
-                    {...props}
-                  />
-                ),
-                h2: ({ node, ...props }) => (
-                  <h2
-                    className="text-xl font-semibold mt-3 mb-1 text-white/70"
-                    {...props}
-                  />
-                ),
-                h3: ({ node, ...props }) => (
-                  <h3
-                    className="text-lg font-semibold mt-2 mb-1 text-white/"
-                    {...props}
-                  />
-                ),
-                p: ({ node, ...props }) => (
-                  <p className="text-sm mb-2 leading-relaxed" {...props} />
-                ),
-                ul: ({ node, ...props }) => (
-                  <ul className="list-disc pl-5 mb-2" {...props} />
-                ),
-                li: ({ node, ...props }) => (
-                  <li className="text-sm mb-1" {...props} />
-                ),
-                strong: ({ node, ...props }) => (
-                  <strong className="font-bold" {...props} />
-                ),
-                em: ({ node, ...props }) => (
-                  <em className="italic" {...props} />
-                ),
-              }}
-            />
-          </div>
-        )}
-
-        <div className="overflow-hidden mt-4 ">
-          {suggestionText ? (
-            <div className="flex overflow-x-auto gap-4 pb-4">
-              {(() => {
-                try {
-                  const suggestionData = JSON.parse(suggestionText);
-
-                  if (
-                    suggestionData.products &&
-                    Array.isArray(suggestionData.products)
-                  ) {
-                    return (
-                      <>
-                        {suggestionData.products.map((product: any) => (
-                          <button
-                            onClick={() => handleProductClick(product)}
-                            key={product?.id}
-                          >
-                            <Product product={product} />
-                          </button>
-                        ))}
-                        ;
-                      </>
-                    );
-                  }
-                } catch (error) {
-                  console.error("Error parsing suggestions JSON:", error);
-                }
-                return null;
-              })()}
-            </div>
-          ) : message.suggestions ? (
-            <div className="flex overflow-x-auto gap-4 pb-4">
-              {(() => {
-                try {
-                  const suggestionData = JSON.parse(message.suggestions);
-                  if (
-                    suggestionData.products &&
-                    Array.isArray(suggestionData.products)
-                  ) {
-                    return suggestionData.products.map((product: any) => (
-                      <button
-                        onClick={() => handleProductClick(product)}
-                        key={product?.id}
-                      >
-                        <Product product={product} />
-                      </button>
-                    ));
-                  }
-                } catch (error) {
-                  console.error("Error parsing suggestions JSON:", error);
-                }
-                return null;
-              })()}
-            </div>
-          ) : null}
-        </div>
-
-        {textAfter && (
-          <div
-            className={`${
-              message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-            } max-w-[400px] rounded-[8px] p-[8px] `}
-          >
-            <div>
-              <ReactMarkdown
-                children={textAfter}
-                components={{
-                  h1: ({ node, ...props }) => (
-                    <h1
-                      className="text-2xl font-bold mt-4 mb-2 text-white"
-                      {...props}
-                    />
-                  ),
-                  h2: ({ node, ...props }) => (
-                    <h2
-                      className="text-xl font-semibold mt-3 mb-1 text-white/70"
-                      {...props}
-                    />
-                  ),
-                  h3: ({ node, ...props }) => (
-                    <h3
-                      className="text-lg font-semibold mt-2 mb-1 text-white/"
-                      {...props}
-                    />
-                  ),
-                  p: ({ node, ...props }) => (
-                    <p className="text-sm mb-2 leading-relaxed" {...props} />
-                  ),
-                  ul: ({ node, ...props }) => (
-                    <ul className="list-disc pl-5 mb-2" {...props} />
-                  ),
-                  li: ({ node, ...props }) => (
-                    <li className="text-sm mb-1" {...props} />
-                  ),
-                  strong: ({ node, ...props }) => (
-                    <strong className="font-bold" {...props} />
-                  ),
-                  em: ({ node, ...props }) => (
-                    <em className="italic" {...props} />
-                  ),
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {isTyping && <TypingIndicator />}
-        {/* {!suggestedLoading && (
-          <div className="grid grid-cols-2 gap-2">
-            <ProductCardShimmer />
-            <ProductCardShimmer />
-          </div>
-        )} */}
-      </div>
     </div>
   );
 };
@@ -302,15 +90,6 @@ export default function ChatPage({
           },
         }
       );
-      // const chatData = await fetch(
-      //   `${LLM_BASE_URL}/v1/workspace/${selectedBrand?.workspaces[0].slug}/chats`,
-      //   {
-      //     method: "GET",
-      //     headers: {
-      //       Authorization: `Bearer ${LLM_AUTH_TOKEN}`,
-      //     },
-      //   }
-      // );
 
       const messageData = await chatData.json();
 
@@ -367,13 +146,24 @@ export default function ChatPage({
     fetchMessages();
   }, [sessionId, selectedBrand]);
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { sender: "You", text: inputValue.trim() },
-    ]);
-    const messageToSend = inputValue.trim();
+  const handleSend = async (text?: any) => {
+    if (!inputValue.trim() && !text) return;
+    let messageToSend = "";
+
+    if (text && !inputValue) {
+      setMessages((prev) => [...prev, { sender: "You", text: text.trim() }]);
+      messageToSend = text.trim();
+    } else if (inputValue) {
+      // This condition checks if inputValue exists
+      setMessages((prev) => [
+        ...prev,
+        { sender: "You", text: inputValue.trim() },
+      ]);
+      messageToSend = inputValue.trim();
+    }
+
+    // const messageToSend = text.trim() ?? inputValue.trim();
+
     setInputValue("");
 
     // Immediately add a blank bot message to the array
@@ -386,10 +176,6 @@ export default function ChatPage({
         `https://anythingllm.aroundme.global/api/embed/${selectedBrand?.workspaces[0]?.embed_id}/stream-chat`,
         {
           method: "POST",
-          // headers: {
-          //   Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
-          //   `,
-          // },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
             sessionId: sessionId,
@@ -397,21 +183,7 @@ export default function ChatPage({
           }),
         }
       );
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${selectedBrand?.workspaces[0].slug}/stream-chat`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
 
-      //       `,
-      //     },
-      //     body: JSON.stringify({
-      //       message: JSON.stringify(messageToSend),
-      //       attachments: [],
-      //     }),
-      //   }
-      // );
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -424,6 +196,8 @@ export default function ChatPage({
 
       let isCapturingSuggestions = false;
       let suggestionBuffer = "";
+      let isCapturingPrompts = false;
+      let promptBuffer = "";
       let botFullResponse = "";
 
       while (true) {
@@ -448,13 +222,56 @@ export default function ChatPage({
               const responseText = jsonData.textResponse || "";
 
               // Start capturing suggestions
-              if (responseText === "@@" && !isCapturingSuggestions) {
+              if (
+                responseText === "@@SUGGESTIONS START@@" &&
+                !isCapturingSuggestions
+              ) {
                 isCapturingSuggestions = true;
                 suggestionBuffer = "";
                 botFullResponse += "@@SUGGESTIONS START@@";
                 setSuggestionsLoading(true);
               }
 
+              // if (isCapturingSuggestions) {
+              //   suggestionBuffer += responseText;
+              //   if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
+              //     isCapturingSuggestions = false;
+              //     botFullResponse += "@@SUGGESTIONS END@@";
+              //     const cleanSuggestionText = suggestionBuffer
+              //       .replace(/@@SUGGESTIONS START@@/g, "")
+              //       .replace(/@@SUGGESTIONS END@@/g, "")
+              //       .trim();
+
+              //     setSuggestionsLoading(false);
+              //     // Update the last bot message with suggestions
+              //     setMessages((prevMessages) => {
+              //       const updatedMessages = [...prevMessages];
+              //       if (
+              //         updatedMessages.length > 0 &&
+              //         updatedMessages[updatedMessages.length - 1].sender ===
+              //           "Bunny"
+              //       ) {
+              //         updatedMessages[updatedMessages.length - 1].suggestions =
+              //           cleanSuggestionText;
+              //       }
+              //       return updatedMessages;
+              //     });
+              //   }
+              // } else {
+              //   botFullResponse += responseText;
+              //   setMessages((prevMessages) => {
+              //     const updatedMessages = [...prevMessages];
+              //     if (
+              //       updatedMessages.length > 0 &&
+              //       updatedMessages[updatedMessages.length - 1].sender ===
+              //         "Bunny"
+              //     ) {
+              //       updatedMessages[updatedMessages.length - 1].text =
+              //         botFullResponse;
+              //     }
+              //     return updatedMessages;
+              //   });
+              // }
               if (isCapturingSuggestions) {
                 suggestionBuffer += responseText;
                 if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
@@ -481,19 +298,57 @@ export default function ChatPage({
                   });
                 }
               } else {
-                botFullResponse += responseText;
-                setMessages((prevMessages) => {
-                  const updatedMessages = [...prevMessages];
-                  if (
-                    updatedMessages.length > 0 &&
-                    updatedMessages[updatedMessages.length - 1].sender ===
-                      "Bunny"
-                  ) {
-                    updatedMessages[updatedMessages.length - 1].text =
-                      botFullResponse;
+                console.log("Handleing Prompt");
+
+                // Handle prompts if markers are found
+                if (
+                  responseText === "@@PROMPTS START@@" &&
+                  !isCapturingPrompts
+                ) {
+                  isCapturingPrompts = true;
+                  promptBuffer = "";
+                  botFullResponse += "@@PROMPTS START@@";
+                }
+
+                if (isCapturingPrompts) {
+                  promptBuffer += responseText;
+                  if (promptBuffer.includes("@@PROMPTS END@@")) {
+                    isCapturingPrompts = false;
+                    botFullResponse += "@@PROMPTS END@@";
+                    const cleanPromptText = promptBuffer
+                      .replace(/@@PROMPTS START@@/g, "")
+                      .replace(/@@PROMPTS END@@/g, "")
+                      .trim();
+
+                    // Handle the captured prompt (e.g., displaying it as part of the response)
+                    setMessages((prevMessages) => {
+                      const updatedMessages = [...prevMessages];
+                      if (
+                        updatedMessages.length > 0 &&
+                        updatedMessages[updatedMessages.length - 1].sender ===
+                          "Bunny"
+                      ) {
+                        updatedMessages[updatedMessages.length - 1].prompts =
+                          cleanPromptText;
+                      }
+                      return updatedMessages;
+                    });
                   }
-                  return updatedMessages;
-                });
+                } else {
+                  botFullResponse += responseText;
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].text =
+                        botFullResponse;
+                    }
+                    return updatedMessages;
+                  });
+                }
               }
             } catch (jsonError) {
               console.error(
@@ -627,8 +482,8 @@ export default function ChatPage({
                   key={index}
                   message={msg}
                   isTyping={isLastBotMessage && isTyping}
-                  suggestedLoading={suggestionsLoading}
                   handleProductClick={handleProductClick}
+                  handleSend={handleSend}
                 />
               );
             })}
@@ -648,7 +503,7 @@ export default function ChatPage({
             />
             <button
               className={`cursor-pointer  ${
-                inputValue.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
+                inputValue?.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
               } p-1 rounded-xl `}
             >
               <IoMdArrowUp size={17} onClick={handleSend} />
@@ -1061,7 +916,6 @@ const ProductModal = ({
       return null;
     }
   };
-  console.log(selectedProduct?.product_prices, "sele");
 
   return (
     <div className="flex flex-col top-0 fixed w-full h-full bg-[#282828]   md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto">
