@@ -168,68 +168,73 @@ export default function VoiceInputbar({
   ]);
 
   return (
-    <div className="flex items-center bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px] px-3 py-1">
-      {isRecording && (
-        <FaTrash
-          size={18}
-          className=" cursor-pointer"
-          onClick={() => {
-            if (recognition) {
-              recognition.stop();
-            }
-            recorderControls.stopRecording();
-            setIsInternalRecording(false);
-            setIsRecording(false);
-            setFinalTranscript(""); // Clear transcribed speech
-            setInterimTranscript(""); // Clear interim speech
-            setTempVoiceId(null); // Reset temp voice ID
-            setMessages((prev) => prev.filter((msg) => msg.id !== tempVoiceId)); // Remove temp message from UI
-          }}
-        />
-      )}
-      {isRecording ? (
-        <div className="p-2 flex-1 flex items-center px-2 justify-start rounded-3xl border border-[#5e5e5e] gap-2">
-          {/* Recording Time */}
-          <p className="text-xs text-whitepx-2 py-1 rounded-md flex items-center">
-            {formatTime(recordingTime)}
-          </p>
+    <>
+      {error}
+      <div className="flex items-center bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px] px-3 py-1">
+        {isRecording && (
+          <FaTrash
+            size={18}
+            className=" cursor-pointer"
+            onClick={() => {
+              if (recognition) {
+                recognition.stop();
+              }
+              recorderControls.stopRecording();
+              setIsInternalRecording(false);
+              setIsRecording(false);
+              setFinalTranscript(""); // Clear transcribed speech
+              setInterimTranscript(""); // Clear interim speech
+              setTempVoiceId(null); // Reset temp voice ID
+              setMessages((prev) =>
+                prev.filter((msg) => msg.id !== tempVoiceId)
+              ); // Remove temp message from UI
+            }}
+          />
+        )}
+        {isRecording ? (
+          <div className="p-2 flex-1 flex items-center px-2 justify-start rounded-3xl border border-[#5e5e5e] gap-2">
+            {/* Recording Time */}
+            <p className="text-xs text-whitepx-2 py-1 rounded-md flex items-center">
+              {formatTime(recordingTime)}
+            </p>
 
-          {/* Voice Visualizer */}
-          <div className="flex-grow">
-            <VoiceVisualizer
-              controls={recorderControls}
-              height={20}
-              mainBarColor="#fff"
-              secondaryBarColor="#5e5e5e"
-              barWidth={4}
-              gap={1}
-              isControlPanelShown={false}
-              isDefaultUIShown={false}
-              onlyRecording={true}
-            />
+            {/* Voice Visualizer */}
+            <div className="flex-grow">
+              <VoiceVisualizer
+                controls={recorderControls}
+                height={20}
+                mainBarColor="#fff"
+                secondaryBarColor="#5e5e5e"
+                barWidth={4}
+                gap={1}
+                isControlPanelShown={false}
+                isDefaultUIShown={false}
+                onlyRecording={true}
+              />
+            </div>
           </div>
-        </div>
-      ) : (
-        <input
-          ref={inputRef}
-          className="flex-grow px-2 py-1 rounded-[8px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20 text-white"
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask me anything..."
-        />
-      )}
-      {isTyping || isRecording ? (
-        <button
-          className="cursor-pointer p-1 rounded-full  bg-blue-500"
-          onClick={handleSend}
-        >
-          <IoMdArrowUp size={18} />
-        </button>
-      ) : (
-        <FaMicrophone size={18} onClick={handleRecord} />
-      )}
-    </div>
+        ) : (
+          <input
+            ref={inputRef}
+            className="flex-grow px-2 py-1 rounded-[8px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20 text-white"
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me anything..."
+          />
+        )}
+        {isTyping || isRecording ? (
+          <button
+            className="cursor-pointer p-1 rounded-full  bg-blue-500"
+            onClick={handleSend}
+          >
+            <IoMdArrowUp size={18} />
+          </button>
+        ) : (
+          <FaMicrophone size={18} onClick={handleRecord} />
+        )}
+      </div>
+    </>
   );
 }
