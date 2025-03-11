@@ -2,6 +2,7 @@
   "name": "aroundme",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -38,6 +39,7 @@
     "react-spinners": "^0.15.0",
     "react-swipeable-views": "^0.14.0",
     "react-use-measure": "^2.1.1",
+    "react-voice-visualizer": "^2.0.5",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "sitemap": "^8.0.0",
