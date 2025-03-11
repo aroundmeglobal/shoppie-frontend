@@ -47,53 +47,57 @@ export const ChatBubble = ({
 
   return (
     <div
-      className={`mb-[10px] flex ${
+      className={`mb-[10px] flex maxW ${
         message.sender === "You" ? "justify-end" : "justify-start"
       }`}
     >
       <div className={`text-white overflow-hidden`}>
-        <div
-          className={`${
-            message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-          } max-w-[400px] rounded-[8px] p-[8px] `}
-        >
-          <ReactMarkdown
-            children={textBefore}
-            components={{
-              h1: ({ node, ...props }) => (
-                <h1
-                  className="text-2xl font-bold mt-4 mb-2 text-white"
-                  {...props}
-                />
-              ),
-              h2: ({ node, ...props }) => (
-                <h2
-                  className="text-xl font-semibold mt-3 mb-1 text-white/70"
-                  {...props}
-                />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3
-                  className="text-lg font-semibold mt-2 mb-1 text-white/"
-                  {...props}
-                />
-              ),
-              p: ({ node, ...props }) => (
-                <p className="text-sm mb-2 leading-relaxed" {...props} />
-              ),
-              ul: ({ node, ...props }) => (
-                <ul className="list-disc pl-5 mb-2" {...props} />
-              ),
-              li: ({ node, ...props }) => (
-                <li className="text-sm mb-1" {...props} />
-              ),
-              strong: ({ node, ...props }) => (
-                <strong className="font-bold" {...props} />
-              ),
-              em: ({ node, ...props }) => <em className="italic" {...props} />,
-            }}
-          />
-        </div>
+        {textBefore ? (
+          <div
+            className={`${
+              message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+            } max-w-[400px] rounded-[8px] p-[8px] `}
+          >
+            <ReactMarkdown
+              children={textBefore}
+              components={{
+                h1: ({ node, ...props }) => (
+                  <h1
+                    className="text-2xl font-bold mt-4 mb-2 text-white"
+                    {...props}
+                  />
+                ),
+                h2: ({ node, ...props }) => (
+                  <h2
+                    className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                    {...props}
+                  />
+                ),
+                h3: ({ node, ...props }) => (
+                  <h3
+                    className="text-lg font-semibold mt-2 mb-1 text-white/"
+                    {...props}
+                  />
+                ),
+                p: ({ node, ...props }) => (
+                  <p className="text-sm mb-2 leading-relaxed" {...props} />
+                ),
+                ul: ({ node, ...props }) => (
+                  <ul className="list-disc pl-5 mb-2" {...props} />
+                ),
+                li: ({ node, ...props }) => (
+                  <li className="text-sm mb-1" {...props} />
+                ),
+                strong: ({ node, ...props }) => (
+                  <strong className="font-bold" {...props} />
+                ),
+                em: ({ node, ...props }) => (
+                  <em className="italic" {...props} />
+                ),
+              }}
+            />
+          </div>
+        ) : null}
 
         <div className="overflow-hidden mt-4 ">
           {suggestionText ? (
@@ -215,9 +219,8 @@ export const ChatBubble = ({
             </div>
           </div>
         )}
-
-        {isTyping && <TypingIndicator />}
       </div>
+      {isTyping && <TypingIndicator />}
     </div>
   );
 };

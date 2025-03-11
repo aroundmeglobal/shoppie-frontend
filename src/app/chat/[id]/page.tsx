@@ -8,7 +8,9 @@ import { v4 as uuidv4 } from "uuid";
 import { ChatBubble } from "@/component/ChatBubble";
 import { getWorkspaceHistory } from "@/api/getWorkspaceHistory";
 import useBrandStore from "@/store/selectedBrand";
-import { IoMdArrowUp } from "react-icons/io";
+import useUuid from "@/hooks/useLocalStorage";
+import VoiceInputbar from "@/component/VoiceInputbar";
+import { BeatLoader, ClipLoader } from "react-spinners";
 
 interface PageProps {
   params: {
@@ -22,61 +24,58 @@ export default function ChatPage({ params }: PageProps) {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
+  const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [tempVoiceId, setTempVoiceId] = useState<string | null>(null);
   const brand = useBrandStore((state) => state.brand);
+  const sessionId = useUuid();
 
-  // Fetch initial chat history via React Query.
   const { data, error, isLoading } = useQuery({
     queryKey: ["workspaceHistory", params.id],
     queryFn: async () => {
-      const messageData = await getWorkspaceHistory(params.id);
+      const messageData = await getWorkspaceHistory({
+        embed_id: brand.workspaces[0].embed_id,
+        sessionId: sessionId || "",
+      });
       const history = messageData?.history;
-      if (Array.isArray(history) && history.length) {
-        return history.map((msg: any) => ({
-          id: uuidv4(),
-          message: msg.content, // message content
-          sender: msg.role === "user" ? "You" : "Bunny", // determine sender
-          user_id: msg.role === "user" ? 1 : 2,
-          text: msg.content,
-        }));
-      } else {
-        const greetingMessage = `Hey buddy! I am an AI shopping assistant from ${selectedBrand?.brand_name}, let me know how I can help you!`;
 
-        let currentText = "";
-        setMessages((prevMessages) => [
-          ...prevMessages,
+      if (Array.isArray(history) && history.length) {
+        return [
           {
             id: uuidv4(),
+            message: `Hey buddy! I am an AI shopping assistant from ${brand?.brand_name}, let me know how I can help you!`,
             sender: "Bunny",
-            text: currentText,
-            message: currentText,
             user_id: 2,
+            text: `Hey buddy! I am an AI shopping assistant from ${brand?.brand_name}, let me know how I can help you!`,
           },
-        ]);
-
-        const interval = setInterval(() => {
-          // Stream the message one character at a time
-          if (currentText.length < greetingMessage.length) {
-            currentText += greetingMessage[currentText.length];
-            setMessages((prevMessages) => {
-              const updatedMessages = [...prevMessages];
-              updatedMessages[updatedMessages.length - 1].text = currentText;
-              updatedMessages[updatedMessages.length - 1].message = currentText;
-              return updatedMessages;
-            });
-          } else {
-            clearInterval(interval);
-          }
-        }, 20);
+          ...history.map((msg: any) => ({
+            id: uuidv4(),
+            message: msg.content,
+            sender: msg.role === "user" ? "You" : "Bunny",
+            user_id: msg.role === "user" ? 1 : 2,
+            text: msg.content,
+          })),
+        ];
+      } else {
+        return [
+          {
+            id: uuidv4(),
+            message: `Hey buddy! I am an AI shopping assistant from ${brand?.brand_name}, let me know how I can help you!`,
+            sender: "Bunny",
+            user_id: 2,
+            text: `Hey buddy! I am an AI shopping assistant from ${brand?.brand_name}, let me know how I can help you!`,
+          },
+        ];
       }
-      throw new Error("No valid history found");
     },
   });
 
   useEffect(() => {
     if (data) {
       setMessages(data);
+    } else if (error) {
+      // Handle error if needed
     }
-  }, [data]);
+  }, [data, error]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,16 +85,21 @@ export default function ChatPage({ params }: PageProps) {
     router.push("/");
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
-    const messageToSend = inputValue.trim();
-    setMessages((prev) => [
-      ...prev,
-      { id: uuidv4(), sender: "You", text: messageToSend },
-    ]);
-    setInputValue("");
+  const handleSend = async (message?: string) => {
+    const messageToSend = message || inputValue.trim();
+    if (!messageToSend) return;
 
-    // Immediately add a blank bot message and start typing.
+    setMessages((prev) => {
+      if (tempVoiceId) {
+        return prev.map((msg) =>
+          msg.id === tempVoiceId ? { ...msg, text: messageToSend } : msg
+        );
+      }
+      return [...prev, { id: uuidv4(), sender: "You", text: messageToSend }];
+    });
+
+    setTempVoiceId(null);
+    setInputValue("");
     setIsTyping(true);
     setMessages((prev) => [
       ...prev,
@@ -104,21 +108,16 @@ export default function ChatPage({ params }: PageProps) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${params.id}/stream-chat`,
+        `https://anythingllm.aroundme.global/api/embed/${brand?.workspaces[0]?.embed_id}/stream-chat`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiMjY2ODFlYTlhOGVjNzcyYmI1MjRiZDg2ZjFhNzQ5ZGU6ZmNkMDUxOWZhY2I5YzEyNjI2MzJhYTVlNzM3YmJiYzIiLCJpYXQiOjE3NDA2MzkxMzcsImV4cCI6MTc0MzIzMTEzN30.RbZkvpoxhKBFQBBnnTNML66tG3s3LWHBXUiRLLAfzpM
-      
-            `,
-          },
           body: JSON.stringify({
             message: JSON.stringify(messageToSend),
+            sessionId: sessionId,
             attachments: [],
           }),
         }
       );
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -227,14 +226,6 @@ export default function ChatPage({ params }: PageProps) {
     }
   };
 
-  // Handle Enter key press.
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleSend();
-    }
-  };
-
-  // Render each message using your ChatBubble component.
   const renderMessage = (msg: any, index: number) => (
     <ChatBubble
       key={msg.id || index}
@@ -290,10 +281,8 @@ export default function ChatPage({ params }: PageProps) {
           style={{ height: "calc(100% - 150px)" }}
         >
           {isLoading && (
-            <div className="flex items-center p-2.5">
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
-              <span className="inline-block w-2 h-2 mx-0.5 bg-gray-300 rounded-full animate-typing"></span>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <ClipLoader color="#9d9d9d" />
             </div>
           )}
           {error && <div className="p-2 text-red-500">{error.message}</div>}
@@ -313,27 +302,15 @@ export default function ChatPage({ params }: PageProps) {
           )}
           <div ref={messagesEndRef} />
         </div>
-
-        {/* Input Bar fixed at the bottom */}
-        <div className="flex bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px]">
-          <input
-            autoFocus
-            className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask me anything..."
-            // style={{ width: "100%", color: "white" }}
-          />
-          <button
-            className={`cursor-pointer m-2 p-1 rounded-full ${
-              inputValue.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
-            }`}
-          >
-            <IoMdArrowUp size={18} onClick={handleSend} />
-          </button>
-        </div>
+        <VoiceInputbar
+          setMessages={setMessages}
+          onSend={handleSend}
+          setIsRecording={setIsVoiceRecording}
+          setTempVoiceId={setTempVoiceId}
+          tempVoiceId={tempVoiceId}
+          setInputValue={setInputValue}
+          inputValue={inputValue}
+        />
       </div>
     </div>
   );
