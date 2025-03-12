@@ -151,7 +151,7 @@ export default function ChatPage({
     let messageToSend = "";
 
     if (text && !inputValue) {
-      setMessages((prev) => [...prev, { sender: "You", text: text.trim() }]);
+      setMessages((prev) => [...prev, { sender: "You", text: text?.trim() }]);
       messageToSend = text.trim();
     } else if (inputValue) {
       // This condition checks if inputValue exists
@@ -484,6 +484,7 @@ export default function ChatPage({
                   isTyping={isLastBotMessage && isTyping}
                   handleProductClick={handleProductClick}
                   handleSend={handleSend}
+                  isLastBotMessage={isLastBotMessage}
                 />
               );
             })}
