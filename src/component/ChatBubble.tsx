@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import Product from "./ChatBot/Product";
 import { useState } from "react";
+import ProductCardShimmer from "./ChatBot/ProductShimmer";
 
 type Message = {
   sender: string;
@@ -26,11 +27,13 @@ export const ChatBubble = ({
   isTyping,
   handleProductClick,
   handleSend,
+  isLastBotMessage,
 }: {
   message: Message;
   isTyping: boolean;
   handleProductClick: (product: any) => void;
   handleSend: (text: string) => void;
+  isLastBotMessage: boolean;
 }) => {
   const cleanMessageText = (text: string) => {
     if (text.startsWith('"') && text.endsWith('"')) {
@@ -55,11 +58,8 @@ export const ChatBubble = ({
     ? restOfTextQueries.split("@@PROMPTS END@@")
     : ["", restOfTextQueries];
 
-  const [hideSuggestion, setHideSuggestion] = useState(false);
-
   const handleSelectedSuggestion = (text: string) => {
     handleSend(text);
-    setHideSuggestion(true);
   };
 
   if (!message) return null;
@@ -74,7 +74,7 @@ export const ChatBubble = ({
           <div
             className={`${
               message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-            } max-w-[400px] rounded-[8px] p-[8px] `}
+            } max-w-[400px] rounded-[8px] px-[8px] pt-2 pb-[0.1px]  `}
           >
             <ReactMarkdown
               children={textBefore}
@@ -222,20 +222,20 @@ export const ChatBubble = ({
             </div>
           </div>
         )} */}
-        {suggestionQueries && !hideSuggestion ? (
-          <div className="flex overflow-x-auto gap-4  pb-4 mt-4 whitespace-nowrap">
+        {suggestionQueries && isLastBotMessage ? (
+          <div className="flex flex-col gap-4   items-start ">
             {(() => {
               try {
                 let suggestionData = JSON.parse(suggestionQueries);
 
                 return (
                   <>
-                    {suggestionData.map((suggestion: any) => {
+                    {suggestionData.slice(0, 3).map((suggestion: any) => {
                       return (
                         <button
                           onClick={() => handleSelectedSuggestion(suggestion)}
                         >
-                          <div className="flex-shrink-0 w-auto text-sm p-2 rounded-xl flex items-center bg-[#1E60FB] text-white cursor-pointer">
+                          <div className="flex-shrink-0 w-auto text-sm p-2 rounded-xl flex text-start items-start bg-[#1E60FB] text-white cursor-pointer">
                             <h5>{suggestion}</h5>
                           </div>
                         </button>
