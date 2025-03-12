@@ -40,7 +40,7 @@ export default function RegisterPage() {
       "You must accept the terms and conditions"
     ),
     brandLogo: Yup.mixed().required("Brand logo is required"),
-    gstCertificate: Yup.mixed().required("GST certificate is required"),
+    // gstCertificate: Yup.mixed().required("GST certificate is required"),
   });
 
   const handleSubmit = async (values, { setSubmitting }) => {
@@ -60,7 +60,7 @@ export default function RegisterPage() {
 
       // Get file types
       const brandLogoType = brandLogo.type;
-      const gstCertificateType = gstCertificate.type;
+      // const gstCertificateType = gstCertificate.type;
 
       // Step 1: Generate upload URL for brand logo
       const logoResponse = await fetch(
@@ -80,25 +80,25 @@ export default function RegisterPage() {
 
       const logoData = await logoResponse.json();
 
-      // Step 2: Generate upload URL for incorporation certificate
-      const certificateResponse = await fetch(
-        "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-certificate`,
-            type: gstCertificateType,
-            asset_for: "user-image",
-          }),
-        }
-      );
+      // // Step 2: Generate upload URL for incorporation certificate
+      // const certificateResponse = await fetch(
+      //   "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-certificate`,
+      //       type: gstCertificateType,
+      //       asset_for: "user-image",
+      //     }),
+      //   }
+      // );
 
-      const certificateData = await certificateResponse.json();
+      // const certificateData = await certificateResponse.json();
 
-      // Step 3: Upload the brand logo
+      // // Step 3: Upload the brand logo
       await fetch(logoData.signed_url, {
         method: "PUT",
         headers: {
@@ -107,14 +107,14 @@ export default function RegisterPage() {
         body: brandLogo,
       });
 
-      // Step 4: Upload the GST certificate
-      await fetch(certificateData.signed_url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": gstCertificateType,
-        },
-        body: gstCertificate,
-      });
+      // // Step 4: Upload the GST certificate
+      // await fetch(certificateData.signed_url, {
+      //   method: "PUT",
+      //   headers: {
+      //     "Content-Type": gstCertificateType,
+      //   },
+      //   body: gstCertificate,
+      // });
 
       // Step 5: Create brand with the uploaded files
       const brandData = {
@@ -124,12 +124,10 @@ export default function RegisterPage() {
         industry: businessDomain,
         website: website || "",
         logo: logoData.public_url,
-        incoperation_certificate: certificateData.public_url,
+        // incoperation_certificate: certificateData.public_url,
         contact_person_name: contactName,
         contact_person_phone_number: contactPhone,
       };
-
-      console.log("Creating brand with data:", brandData);
 
       const brandResponse = await fetch(
         `https://shoppie-backend.aroundme.global/api/brands/`,
@@ -143,7 +141,6 @@ export default function RegisterPage() {
       );
 
       const brand = await brandResponse.json();
-      console.log("Brand created:", brand);
 
       // Store important data in the store
       setLogoInStore(logoData.public_url);
@@ -176,7 +173,7 @@ export default function RegisterPage() {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ setFieldValue, values, isSubmitting }) => (
+          {({ setFieldValue, values, isSubmitting, isValid }) => (
             <Form className="mt-6 space-y-4">
               {/* Brand Logo Upload */}
               <div className="mt-4 flex flex-col items-center">
@@ -411,7 +408,11 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-4 w-full rounded-xl bg-neutral-600 text-sm py-2 text-white font-semibold hover:bg-gray-500 transition"
+                className={`mt-4 w-full rounded-xl text-sm py-2 font-semibold transition ${
+                  isValid
+                    ? "bg-[#00affe] hover:bg-[#00affe]"
+                    : "bg-neutral-600 hover:bg-gray-500"
+                } text-white`}
               >
                 {isSubmitting ? "Creating account..." : "Create account"}
               </button>
