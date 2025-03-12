@@ -17,7 +17,7 @@ const Product = ({ product }: Types) => {
         alt={product.title ?? product.product_name}
         width={100}
         height={48}
-        className="w-full h-[180px] object-contain rounded-xl rounded-b-none bg-white"
+        className="w-full h-[180px]  object-contain rounded-xl rounded-b-none  bg-[#1d1d1d]"
       />
       <div className="mx-3  flex flex-col justify-between  gap-2 flex-grow  text-start ">
         <h3 className="font-medium text-[13px] line-clamp-2 md:line-clamp-2 ">
