@@ -148,7 +148,7 @@ export default function Home() {
           {filteredBrands?.map((brand, index) => (
             <div
               key={index}
-              className="rounded-3xl p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] "
+              className="rounded-3xl p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d]"
             >
               <button
                 onClick={() => handleBrandOverview(brand)}
@@ -166,9 +166,12 @@ export default function Home() {
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
                   {brand?.brand_name}
                 </h2>
-                <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
-                  {brand?.brand_description}
-                </p>
+                <div className="md:min-h-12  min-h-4">
+                  <p className="text-[#A4A4A4] text-sm line-clamp-2 px-4 mt-2">
+                    {brand?.brand_description}
+                  </p>
+                </div>
+                <div></div>
                 {/* <div className="flex items-center justify-center bg-[#171717]/90 mt-4 py-2 px-4 rounded-xl">
                   {[...Array(3)].map((_, idx) => (
                     <div
@@ -194,7 +197,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => handleBotClick(brand)}
-                className="flex items-center justify-center gap-2 bg-white w-full mt-4 py-2 px-4 rounded-xl font-semibold text-[#000]"
+                className="flex items-center justify-center gap-2 bg-white w-full md:mt-4 mt-3 py-2 px-4 rounded-xl font-semibold text-[#000]"
               >
                 <p>Chat with AI</p>
                 <div className="bg-[#A4A4A4]/20 p-2 rounded-full">
