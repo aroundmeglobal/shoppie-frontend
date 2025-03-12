@@ -138,7 +138,6 @@ export const ChatBubble = ({
                             <Product product={product} />
                           </button>
                         ))}
-                        ;
                       </>
                     );
                   }
