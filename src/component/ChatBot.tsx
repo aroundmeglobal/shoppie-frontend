@@ -937,7 +937,7 @@ const ProductModal = ({
         <h1 className="-ml-10">Details</h1>
         <h1></h1>
       </div>
-      <div className="text-[15px] mt-2 mx-3  h-[250px] bg-white rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
+      <div className="text-[15px] mt-2 mx-3  h-[250px]  bg-[#1d1d1d] rounded-xl font-bold flex flex-col gap-[15px] text-white p-2 items-center justify-center">
         <Image
           src={selectedProduct?.image_url || selectedProduct?.product_images[0]}
           alt={selectedProduct?.title || selectedProduct?.product_name}

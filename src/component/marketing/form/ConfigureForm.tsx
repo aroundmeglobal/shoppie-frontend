@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState, ChangeEvent, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -266,74 +266,76 @@ const Form: React.FC = () => {
           </div>
 
           {/* Upload Knowledge PDFs */}
-          <div className="mb-4">
-            <label
-              htmlFor="pdfs"
-              className="block text-sm font-semibold text-[#FAFAFA] "
-            >
-              Upload PDFs:
-            </label>
-            <div className="relative mt-1 mb-4">
-              <input
-                type="file"
-                id="pdfs"
-                name="pdfs"
-                accept="application/pdf"
-                multiple
-                onChange={handlePdfs}
-                className="absolute inset-0 opacity-0 z-50 cursor-pointer"
-                aria-label="Upload PDF files"
-              />
-              <div className="mt-1 text-sm flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl px-2 py-[5px] bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] ">
-                <span className="text-white text-base">Upload</span>
-                <FiUpload className="mr-1" />
+          {workspaceExist && (
+            <div className="mb-4">
+              <label
+                htmlFor="pdfs"
+                className="block text-sm font-semibold text-[#FAFAFA] "
+              >
+                Upload PDFs:
+              </label>
+              <div className="relative mt-1 mb-4">
+                <input
+                  type="file"
+                  id="pdfs"
+                  name="pdfs"
+                  accept="application/pdf"
+                  multiple
+                  onChange={handlePdfs}
+                  className="absolute inset-0 opacity-0 z-50 cursor-pointer"
+                  aria-label="Upload PDF files"
+                />
+                <div className="mt-1 text-sm flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl px-2 py-[5px] bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] ">
+                  <span className="text-white text-base">Upload</span>
+                  <FiUpload className="mr-1" />
+                </div>
               </div>
+
+              {formik.values.pdfs.length > 0 && (
+                <div className="flex flex-wrap ml-4 mr-2">
+                  {formik.values.pdfs.map((file, idx) => (
+                    <div key={idx} className="w-full">
+                      <div className="flex justify-between w-full mb-2">
+                        <div className="text-sm text-gray-300">
+                          <span>{file.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePdf(idx)}
+                          aria-label={`Delete file: ${file.name}`}
+                          className=" text-red-500"
+                        >
+                          <FiX size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {documents.length > 0 && (
+                <div className="flex flex-wrap ml-4 mr-2">
+                  {documents.map((doc, idx) => (
+                    <div key={idx} className="w-full">
+                      <div className="flex justify-between w-full mb-2">
+                        <div className="text-sm text-gray-300">
+                          <span>{doc.title}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          className=" text-red-500"
+                          aria-label={`Delete file: ${doc.id}`}
+                        >
+                          <FiX size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {formik.values.pdfs.length > 0 && (
-              <div className="flex flex-wrap ml-4 mr-2">
-                {formik.values.pdfs.map((file, idx) => (
-                  <div key={idx} className="w-full">
-                    <div className="flex justify-between w-full mb-2">
-                      <div className="text-sm text-gray-300">
-                        <span>{file.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePdf(idx)}
-                        aria-label={`Delete file: ${file.name}`}
-                        className=" text-red-500"
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {documents.length > 0 && (
-              <div className="flex flex-wrap ml-4 mr-2">
-                {documents.map((doc, idx) => (
-                  <div key={idx} className="w-full">
-                    <div className="flex justify-between w-full mb-2">
-                      <div className="text-sm text-gray-300">
-                        <span>{doc.title}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        className=" text-red-500"
-                        aria-label={`Delete file: ${doc.id}`}
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
 
           {/* FAQs Section */}
           {/* <FaqComponent
