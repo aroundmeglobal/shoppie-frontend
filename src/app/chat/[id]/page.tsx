@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
-import { ChatBubble } from "@/component/ChatBubble";
 import { getWorkspaceHistory } from "@/api/getWorkspaceHistory";
 import useBrandStore from "@/store/selectedBrand";
 import useUuid from "@/hooks/useLocalStorage";
@@ -21,14 +20,15 @@ interface PageProps {
 
 export default function ChatPage({ params }: PageProps) {
   const router = useRouter();
+  const brand = useBrandStore((state) => state.brand);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
   const [tempVoiceId, setTempVoiceId] = useState<string | null>(null);
-  const brand = useBrandStore((state) => state.brand);
   const sessionId = useUuid();
+  const [productForAsk, setProductForAsk] = useState(null);
 
   const { data, error, isLoading } = useQuery({
     queryKey: ["workspaceHistory", params.id],
@@ -79,7 +79,7 @@ export default function ChatPage({ params }: PageProps) {
   }, [data, error]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   const handleBack = () => {
@@ -90,15 +90,27 @@ export default function ChatPage({ params }: PageProps) {
     const messageToSend = message || inputValue.trim();
     if (!messageToSend) return;
 
-    setMessages((prev) => {
-      if (tempVoiceId) {
-        return prev.map((msg) =>
-          msg.id === tempVoiceId ? { ...msg, text: messageToSend } : msg
-        );
-      }
-      return [...prev, { id: uuidv4(), sender: "You", text: messageToSend }];
-    });
+    if (inputValue && productForAsk) {
+      const replied_product = JSON.stringify(productForAsk);
 
+      const replyText = `->REPLY START-> ${replied_product} ->REPLY END-> ${inputValue?.trim()}`;
+      setMessages((prev) => {
+        return [
+          ...prev,
+          { id: uuidv4(), sender: "You", text: replyText.trim() },
+        ];
+      });
+    } else {
+      setMessages((prev) => {
+        if (tempVoiceId) {
+          return prev.map((msg) =>
+            msg.id === tempVoiceId ? { ...msg, text: messageToSend } : msg
+          );
+        }
+        return [...prev, { id: uuidv4(), sender: "You", text: messageToSend }];
+      });
+    }
+    setProductForAsk(null);
     setTempVoiceId(null);
     setInputValue("");
     setIsTyping(true);
@@ -134,6 +146,7 @@ export default function ChatPage({ params }: PageProps) {
       let isCapturingPrompts = false;
       let promptBuffer = "";
       let botFullResponse = "";
+      let isCapturingReply = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -164,48 +177,38 @@ export default function ChatPage({ params }: PageProps) {
                 isCapturingSuggestions = true;
                 suggestionBuffer = "";
                 botFullResponse += "@@SUGGESTIONS START@@";
+              } else if (responseText === "->") {
+                isCapturingReply = true;
+                suggestionBuffer = "";
+                botFullResponse += "->REPLY START->";
               }
 
-              // if (isCapturingSuggestions) {
-              //   suggestionBuffer += responseText;
-              //   if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
-              //     isCapturingSuggestions = false;
-              //     botFullResponse += "@@SUGGESTIONS END@@";
-              //     const cleanSuggestionText = suggestionBuffer
-              //       .replace(/@@SUGGESTIONS START@@/g, "")
-              //       .replace(/@@SUGGESTIONS END@@/g, "")
-              //       .trim();
+              if (isCapturingReply) {
+                suggestionBuffer += responseText;
+                if (suggestionBuffer.includes("->REPLY END->")) {
+                  isCapturingSuggestions = false;
+                  botFullResponse += "->REPLY END->";
+                  const cleanSuggestionText = suggestionBuffer
+                    .replace(/->REPLY START->/g, "")
+                    .replace(/->REPLY END->/g, "")
+                    .trim();
 
-              //     setSuggestionsLoading(false);
-              //     // Update the last bot message with suggestions
-              //     setMessages((prevMessages) => {
-              //       const updatedMessages = [...prevMessages];
-              //       if (
-              //         updatedMessages.length > 0 &&
-              //         updatedMessages[updatedMessages.length - 1].sender ===
-              //           "Bunny"
-              //       ) {
-              //         updatedMessages[updatedMessages.length - 1].suggestions =
-              //           cleanSuggestionText;
-              //       }
-              //       return updatedMessages;
-              //     });
-              //   }
-              // } else {
-              //   botFullResponse += responseText;
-              //   setMessages((prevMessages) => {
-              //     const updatedMessages = [...prevMessages];
-              //     if (
-              //       updatedMessages.length > 0 &&
-              //       updatedMessages[updatedMessages.length - 1].sender ===
-              //         "Bunny"
-              //     ) {
-              //       updatedMessages[updatedMessages.length - 1].text =
-              //         botFullResponse;
-              //     }
-              //     return updatedMessages;
-              //   });
-              // }
+                  // Update the last bot message with suggestions
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].reply =
+                        cleanSuggestionText;
+                    }
+                    return updatedMessages;
+                  });
+                }
+              }
+
               if (isCapturingSuggestions) {
                 suggestionBuffer += responseText;
                 if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
@@ -231,8 +234,6 @@ export default function ChatPage({ params }: PageProps) {
                   });
                 }
               } else {
-                console.log("Handleing Prompt");
-
                 // Handle prompts if markers are found
                 if (
                   responseText === "@@PROMPTS START@@" &&
@@ -310,15 +311,21 @@ export default function ChatPage({ params }: PageProps) {
     }
   };
 
-  const renderMessage = (msg: any, index: number) => (
-    <ChatBubbleForMobile
-      brand_id={brand.brand_id}
-      key={msg.id || index}
-      message={msg}
-      isTyping={false}
-      handleSend={handleSend}
-    />
-  );
+  const renderMessage = (msg: any, index: number) => {
+    const isLastBotMessage =
+      index === messages.length - 1 && msg.sender === "Bunny";
+    return (
+      <ChatBubbleForMobile
+        brand_id={brand.brand_id}
+        key={msg.id || index}
+        message={msg}
+        isTyping={false}
+        handleSend={handleSend}
+        isLastBotMessage={isLastBotMessage}
+        setProductForAsk={setProductForAsk}
+      />
+    );
+  };
 
   const handleBrandIconClick = () => {
     router.push(`/chat/details/${params.id}`);
@@ -388,6 +395,8 @@ export default function ChatPage({ params }: PageProps) {
           <div ref={messagesEndRef} />
         </div>
         <VoiceInputbar
+          productForAsk={productForAsk}
+          setProductForAsk={setProductForAsk}
           setMessages={setMessages}
           onSend={handleSend}
           setIsRecording={setIsVoiceRecording}

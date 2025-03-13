@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaMicrophone, FaPaperPlane, FaTrash } from "react-icons/fa";
 import { IoMdArrowUp } from "react-icons/io";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
+import { RxCross2 } from "react-icons/rx";
 
 interface VoiceInputbarProps {
   setMessages: React.Dispatch<React.SetStateAction<any[]>>;
@@ -13,6 +14,8 @@ interface VoiceInputbarProps {
   tempVoiceId: string | null;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
   inputValue: string;
+  productForAsk: object;
+  setProductForAsk: (productForAsk: any) => void;
 }
 
 export default function VoiceInputbar({
@@ -23,6 +26,8 @@ export default function VoiceInputbar({
   tempVoiceId,
   setInputValue,
   inputValue,
+  productForAsk,
+  setProductForAsk,
 }: VoiceInputbarProps) {
   const [isRecording, setIsInternalRecording] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState("");
@@ -77,7 +82,7 @@ export default function VoiceInputbar({
     };
 
     recog.onstart = () => {
-      console.log("Speech recognition started");
+      // console.log("Speech recognition started");
       setIsInternalRecording(true);
       setIsRecording(true);
       setIsTyping(false);
@@ -85,7 +90,7 @@ export default function VoiceInputbar({
     };
 
     recog.onend = () => {
-      console.log("Speech recognition ended");
+      // console.log("Speech recognition ended");
       setIsInternalRecording(false);
       setIsRecording(false);
     };
@@ -170,7 +175,11 @@ export default function VoiceInputbar({
   return (
     <>
       {error}
-      <div className="flex items-center bg-[#1d1d1d] border-t gap-[10px] m-2 rounded-[12px] px-3 py-1">
+      <div
+        className={`flex items-center bg-[#1d1d1d] border-t gap-[10px] mx-2 pr-2 my-2  rounded-[12px]  transition-all duration-500
+       
+        `}
+      >
         {isRecording && (
           <FaTrash
             size={18}
@@ -194,7 +203,7 @@ export default function VoiceInputbar({
         {isRecording ? (
           <div className="p-2 flex-1 flex items-center px-2 justify-start rounded-3xl border border-[#5e5e5e] gap-2">
             {/* Recording Time */}
-            <p className="text-xs text-whitepx-2 py-1 rounded-md flex items-center">
+            <p className="text-xs text-white px-2 py-1 rounded-md flex items-center">
               {formatTime(recordingTime)}
             </p>
 
@@ -213,10 +222,57 @@ export default function VoiceInputbar({
               />
             </div>
           </div>
+        ) : productForAsk ? (
+          <div className="flex flex-col relative rounded-3xl -mr-2 ">
+            <div className="animate-slideUp flex items-center justify-between w-full p-4 bg-[#2a2a2a] rounded-t-xl">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-[#1d1d1d] flex-shrink-0 items-center justify-center flex rounded-xl">
+                  <img
+                    src={productForAsk?.image_url}
+                    alt={productForAsk?.title}
+                    className="w-12 h-12 rounded-xl object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold line-clamp-1">
+                    {productForAsk?.title}
+                  </h3>
+                  <p className="text-sm text-gray-400 line-clamp-2">
+                    {productForAsk?.product_description}
+                  </p>
+                </div>
+              </div>
+              <button
+                className="cursor-pointer bg-[#5C5C5C]/50 p-1 rounded-full absolute right-0 -top-2"
+                onClick={() => setProductForAsk(null)}
+              >
+                <RxCross2 size={18} />
+              </button>
+            </div>
+            <div className="flex w-full  rounded-xl bg-[#1d1d1d] gap-[10px] pr-2.5 items-center">
+              <input
+                ref={inputRef}
+                className="flex-grow px-2 py-1 m-2 rounded-[8px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20 text-white"
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
+              />
+              {isTyping && (
+                <button
+                  className="cursor-pointer p-1 rounded-full flex justify-end   bg-blue-500"
+                  onClick={handleSend}
+                >
+                  <IoMdArrowUp size={18} />
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <input
             ref={inputRef}
-            className="flex-grow px-2 py-1 rounded-[8px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20 text-white"
+            className="flex-grow px-2 py-1 m-2 rounded-[8px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20 text-white"
             type="text"
             value={inputValue}
             onChange={handleInputChange}
@@ -224,15 +280,16 @@ export default function VoiceInputbar({
             placeholder="Ask me anything..."
           />
         )}
-        {isTyping || isRecording ? (
+
+        {(isTyping && !productForAsk) || (isRecording && !productForAsk) ? (
           <button
-            className="cursor-pointer p-1 rounded-full  bg-blue-500"
+            className="cursor-pointer p-1 rounded-full  bg-blue-500 b-0"
             onClick={handleSend}
           >
             <IoMdArrowUp size={18} />
           </button>
         ) : (
-          <FaMicrophone size={18} onClick={handleRecord} />
+          !productForAsk && <FaMicrophone size={18} onClick={handleRecord} />
         )}
       </div>
     </>
