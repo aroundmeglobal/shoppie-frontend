@@ -1,11 +1,23 @@
 import Image from "next/image";
+import AskButton from "./askButton";
+import { useCallback } from "react";
 
 interface Types {
   product: any;
+  setProductForAsk: (product: any) => void;
+  fromChatBubble: boolean;
 }
 
-const Product = ({ product }: Types) => {
+const Product = ({
+  product,
+  setProductForAsk,
+  fromChatBubble = false,
+}: Types) => {
   if (!product) return;
+
+  const handleAsk = useCallback(() => {
+    setProductForAsk(product);
+  }, []);
 
   return (
     <div
@@ -19,18 +31,22 @@ const Product = ({ product }: Types) => {
         height={48}
         className="w-full h-[180px]  object-contain rounded-xl rounded-b-none  bg-[#1d1d1d]"
       />
-      <div className="mx-3  flex flex-col justify-between  gap-2 flex-grow  text-start ">
+      <div className="mx-3 w-[180px]   flex flex-col justify-between  gap-2 flex-grow  text-start ">
         <h3 className="font-medium text-[13px] line-clamp-2 md:line-clamp-2 ">
-          {product.title ?? product.product_name}
+          {product.title ?? product?.product_name}
         </h3>
-        <div className="flex-col gap-1 flex">
-          <h3 className="text-md font-semibold">
-            {product.discounted_price ??
-              product?.product_prices?.Discounted_price}
-          </h3>
-          <h3 className="line-through text-sm text-[grey]/90">
-            {product?.original_price ?? product.product_prices?.Original_price}
-          </h3>
+        <div className="flex justify-between ">
+          <div className="flex-col gap-1 flex">
+            <h3 className="text-md font-semibold">
+              {product?.discounted_price ??
+                product?.product_prices?.Discounted_price}
+            </h3>
+            <h3 className="line-through text-sm text-[grey]/90">
+              {product?.original_price ??
+                product?.product_prices?.Original_price}
+            </h3>
+          </div>
+          {fromChatBubble && <AskButton onClick={handleAsk} />}
         </div>
       </div>
     </div>
