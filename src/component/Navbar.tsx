@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -25,16 +25,16 @@ function Navbar() {
   };
 
   return (
-    <div className="z-[11] flex items-center justify-between w-full p-4 px-4  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-2">
-      <button>
+    <div className="z-[11] flex items-center justify-between w-full p-4 px-4  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-[1px]">
+      <div>
         <Image
           alt="shoppie"
-          src={"/img/SHOPPIE.svg"}
+          src={"/img/shoppie.png"}
           width={0}
           height={10}
           className="w-[100px] md:w-[150px]"
         />
-      </button>
+      </div>
       <div className="flex gap-5">
         <button
           onClick={onLogout}
