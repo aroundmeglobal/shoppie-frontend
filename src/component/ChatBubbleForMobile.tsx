@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import Product from "./ChatBot/Product";
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import fixDataFormat from "@/lib/fixDataFormat";
 
 type Message = {
   sender: string;
@@ -29,11 +30,15 @@ export const ChatBubbleForMobile = ({
   brand_id,
   isTyping,
   handleSend,
+  isLastBotMessage,
+  setProductForAsk,
 }: {
   brand_id: string;
   message: Message;
   isTyping: boolean;
+  isLastBotMessage: boolean;
   handleSend: (text: string) => void;
+  setProductForAsk: (product: any) => void;
 }) => {
   const cleanMessageText = (text: string) => {
     if (text.startsWith('"') && text.endsWith('"')) {
@@ -58,11 +63,16 @@ export const ChatBubbleForMobile = ({
     ? restOfTextQueries.split("@@PROMPTS END@@")
     : ["", restOfTextQueries];
 
-  const [hideSuggestion, setHideSuggestion] = useState(false);
+  const [beforeReplyProduct, restOfReplyProduct] = cleanMessageText(
+    message.text
+  )?.split("->REPLY START->") ?? ["", ""];
+
+  const [replyProduct, textAfterReplyProduct] = restOfReplyProduct
+    ? restOfReplyProduct.split("->REPLY END->")
+    : ["", restOfReplyProduct];
 
   const handleSelectedSuggestion = (text: string) => {
     handleSend(text);
-    setHideSuggestion(true);
   };
 
   if (!message) return null;
@@ -73,11 +83,11 @@ export const ChatBubbleForMobile = ({
       }`}
     >
       <div className={`text-white overflow-hidden`}>
-        {message.text && (
+        {message.text && !textBefore.includes("->REPLY START->") && (
           <div
             className={`${
               message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
-            } max-w-[400px] rounded-[8px] p-[8px] `}
+            } max-w-[400px] rounded-[8px] px-[8px] pt-2 pb-[0.1px]  `}
           >
             <ReactMarkdown
               children={textBefore}
@@ -133,10 +143,16 @@ export const ChatBubbleForMobile = ({
                   ) {
                     return (
                       <>
-                        {suggestionData.products.map((product: any) => (
-                          <Product product={product} />
-                        ))}
-                        ;
+                        {suggestionData.products.map(
+                          (product: any, index: number) => (
+                            <Product
+                              key={index}
+                              product={product}
+                              fromChatBubble={true}
+                              setProductForAsk={setProductForAsk}
+                            />
+                          )
+                        )}
                       </>
                     );
                   }
@@ -155,9 +171,16 @@ export const ChatBubbleForMobile = ({
                     suggestionData.products &&
                     Array.isArray(suggestionData.products)
                   ) {
-                    return suggestionData.products.map((product: any) => (
-                      <Product product={product} />
-                    ));
+                    return suggestionData.products.map(
+                      (product: any, index: number) => (
+                        <Product
+                          key={index}
+                          product={product}
+                          fromChatBubble={true}
+                          setProductForAsk={setProductForAsk}
+                        />
+                      )
+                    );
                   }
                 } catch (error) {
                   console.error("Error parsing suggestions JSON:", error);
@@ -167,6 +190,78 @@ export const ChatBubbleForMobile = ({
             </div>
           ) : null}
         </div>
+        {replyProduct ? (
+          <div className="flex overflow-x-auto gap-4 pb-4 justify-end">
+            {(() => {
+              try {
+                const RepliedProduct = fixDataFormat(replyProduct);
+
+                if (RepliedProduct) {
+                  return (
+                    <Product
+                      product={RepliedProduct}
+                      setProductForAsk={setProductForAsk}
+                      fromChatBubble={true}
+                    />
+                  );
+                }
+              } catch (error) {
+                console.error("Error parsing suggestions JSON:", error);
+              }
+              return null;
+            })()}
+          </div>
+        ) : null}
+        {textAfterReplyProduct && (
+          <div className="flex items-end justify-end">
+            <div
+              className={`${
+                message.sender === "You" ? "bg-[#1E60FB]" : "bg-[#1d1d1d]"
+              } max-w-[400px] w-auto rounded-[8px] px-[8px] pt-2 pb-[0.1px]  `}
+            >
+              <div>
+                <ReactMarkdown
+                  children={textAfterReplyProduct}
+                  components={{
+                    h1: ({ node, ...props }) => (
+                      <h1
+                        className="text-2xl font-bold mt-4 mb-2 text-white"
+                        {...props}
+                      />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2
+                        className="text-xl font-semibold mt-3 mb-1 text-white/70"
+                        {...props}
+                      />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3
+                        className="text-lg font-semibold mt-2 mb-1 text-white/"
+                        {...props}
+                      />
+                    ),
+                    p: ({ node, ...props }) => (
+                      <p className="text-sm mb-2 leading-relaxed" {...props} />
+                    ),
+                    ul: ({ node, ...props }) => (
+                      <ul className="list-disc pl-5 mb-2" {...props} />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li className="text-sm mb-1" {...props} />
+                    ),
+                    strong: ({ node, ...props }) => (
+                      <strong className="font-bold" {...props} />
+                    ),
+                    em: ({ node, ...props }) => (
+                      <em className="italic" {...props} />
+                    ),
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* {textAfter && (
           <div
@@ -216,34 +311,39 @@ export const ChatBubbleForMobile = ({
             </div>
           </div>
         )} */}
-        {suggestionQueries && !hideSuggestion ? (
-          <div className="flex overflow-x-auto gap-4  pb-4 mt-4 whitespace-nowrap">
-            {(() => {
-              try {
-                let suggestionData = JSON.parse(suggestionQueries);
+        {suggestionQueries && isLastBotMessage ? (
+          <div className="flex justify-end mt-4  ">
+            <div className="flex flex-col items-end gap-4   ">
+              {(() => {
+                try {
+                  let suggestionData = JSON.parse(suggestionQueries);
 
-                return (
-                  <>
-                    {suggestionData.map((suggestion: any) => {
-                      console.log(suggestion, "hooop");
-
-                      return (
-                        <button
-                          onClick={() => handleSelectedSuggestion(suggestion)}
-                        >
-                          <div className="flex-shrink-0 w-auto text-sm p-2 rounded-xl flex items-center bg-[#1E60FB] text-white cursor-pointer">
-                            <h5>{suggestion}</h5>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </>
-                );
-              } catch (error) {
-                console.error("Error parsing suggestions JSON:", error);
-              }
-              return null;
-            })()}
+                  return (
+                    <>
+                      {suggestionData
+                        .slice(0, 3)
+                        .map((suggestion: any, index: number) => {
+                          return (
+                            <button
+                              key={index}
+                              onClick={() =>
+                                handleSelectedSuggestion(suggestion)
+                              }
+                            >
+                              <div className="flex-shrink-0 w-auto px-3 text-[13px] p-2 rounded-full flex text-start items-start bg-[#1E60FB] text-white cursor-pointer">
+                                <h5>{suggestion}</h5>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </>
+                  );
+                } catch (error) {
+                  console.error("Error parsing suggestions JSON:", error);
+                }
+                return null;
+              })()}
+            </div>
           </div>
         ) : null}
 

@@ -31,6 +31,7 @@ type Message = {
   text: string;
   suggestions?: string;
   prompts?: any;
+  reply?: any;
 };
 
 const TypingIndicator: React.FC = () => {
@@ -59,13 +60,15 @@ export default function ChatPage({
   const [showBrandModal, setShowBrandModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [productForAsk, setProductForAsk] = useState(null);
+
   const sessionId = useUuid();
   // userSessionStore((state) => state.sessionId);
   // console.log("sessionId", sessionId);
 
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [messages, selectedBrand]);
 
@@ -150,7 +153,17 @@ export default function ChatPage({
     if (!inputValue.trim() && !text) return;
     let messageToSend = "";
 
-    if (text && !inputValue) {
+    if (inputValue && productForAsk) {
+      const replied_product = JSON.stringify(productForAsk);
+
+      const replyText = `->REPLY START-> ${replied_product} ->REPLY END-> ${inputValue?.trim()}`;
+      setMessages((prev) => [
+        ...prev,
+        { sender: "You", text: replyText.trim() },
+      ]);
+      messageToSend = replyText;
+      setProductForAsk(null);
+    } else if (text && !inputValue) {
       setMessages((prev) => [...prev, { sender: "You", text: text?.trim() }]);
       messageToSend = text.trim();
     } else if (inputValue) {
@@ -198,6 +211,7 @@ export default function ChatPage({
       let suggestionBuffer = "";
       let isCapturingPrompts = false;
       let promptBuffer = "";
+      let isCapturingReply = false;
       let botFullResponse = "";
 
       while (true) {
@@ -221,7 +235,6 @@ export default function ChatPage({
               const jsonData = JSON.parse(trimmedLine.substring(5));
               const responseText = jsonData.textResponse || "";
 
-              // Start capturing suggestions
               if (
                 responseText === "@@SUGGESTIONS START@@" &&
                 !isCapturingSuggestions
@@ -230,48 +243,39 @@ export default function ChatPage({
                 suggestionBuffer = "";
                 botFullResponse += "@@SUGGESTIONS START@@";
                 setSuggestionsLoading(true);
+              } else if (responseText === "->") {
+                isCapturingReply = true;
+                suggestionBuffer = "";
+                botFullResponse += "->REPLY START->";
               }
 
-              // if (isCapturingSuggestions) {
-              //   suggestionBuffer += responseText;
-              //   if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
-              //     isCapturingSuggestions = false;
-              //     botFullResponse += "@@SUGGESTIONS END@@";
-              //     const cleanSuggestionText = suggestionBuffer
-              //       .replace(/@@SUGGESTIONS START@@/g, "")
-              //       .replace(/@@SUGGESTIONS END@@/g, "")
-              //       .trim();
+              if (isCapturingReply) {
+                suggestionBuffer += responseText;
+                if (suggestionBuffer.includes("->REPLY END->")) {
+                  isCapturingSuggestions = false;
+                  botFullResponse += "->REPLY END->";
+                  const cleanSuggestionText = suggestionBuffer
+                    .replace(/->REPLY START->/g, "")
+                    .replace(/->REPLY END->/g, "")
+                    .trim();
 
-              //     setSuggestionsLoading(false);
-              //     // Update the last bot message with suggestions
-              //     setMessages((prevMessages) => {
-              //       const updatedMessages = [...prevMessages];
-              //       if (
-              //         updatedMessages.length > 0 &&
-              //         updatedMessages[updatedMessages.length - 1].sender ===
-              //           "Bunny"
-              //       ) {
-              //         updatedMessages[updatedMessages.length - 1].suggestions =
-              //           cleanSuggestionText;
-              //       }
-              //       return updatedMessages;
-              //     });
-              //   }
-              // } else {
-              //   botFullResponse += responseText;
-              //   setMessages((prevMessages) => {
-              //     const updatedMessages = [...prevMessages];
-              //     if (
-              //       updatedMessages.length > 0 &&
-              //       updatedMessages[updatedMessages.length - 1].sender ===
-              //         "Bunny"
-              //     ) {
-              //       updatedMessages[updatedMessages.length - 1].text =
-              //         botFullResponse;
-              //     }
-              //     return updatedMessages;
-              //   });
-              // }
+                  setSuggestionsLoading(false);
+                  // Update the last bot message with suggestions
+                  setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    if (
+                      updatedMessages.length > 0 &&
+                      updatedMessages[updatedMessages.length - 1].sender ===
+                        "Bunny"
+                    ) {
+                      updatedMessages[updatedMessages.length - 1].reply =
+                        cleanSuggestionText;
+                    }
+                    return updatedMessages;
+                  });
+                }
+              }
+
               if (isCapturingSuggestions) {
                 suggestionBuffer += responseText;
                 if (suggestionBuffer.includes("@@SUGGESTIONS END@@")) {
@@ -298,8 +302,6 @@ export default function ChatPage({
                   });
                 }
               } else {
-                console.log("Handleing Prompt");
-
                 // Handle prompts if markers are found
                 if (
                   responseText === "@@PROMPTS START@@" &&
@@ -485,14 +487,118 @@ export default function ChatPage({
                   handleProductClick={handleProductClick}
                   handleSend={handleSend}
                   isLastBotMessage={isLastBotMessage}
+                  setProductForAsk={setProductForAsk}
                 />
               );
             })}
             <div ref={messagesEndRef} />
           </div>
+          <div
+            className={`relative flex flex-col m-[10px] rounded-xl bg-[#1d1d1d] border-t-[0.1px]-[#1d1d1d] gap-[5px] rounded-t-2xl items-center transition-all duration-500
+               ${productForAsk ? "h-[200px]" : "h-[50px]"}`}
+          >
+            {/* Product Card */}
+            {productForAsk && (
+              <div className="animate-slideUp flex items-center justify-between w-full p-4 bg-[#2a2a2a] rounded-t-2xl ">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-[#1d1d1d] flex-shrink-0 items-center justify-center flex rounded-xl">
+                    <img
+                      src={productForAsk?.image_url}
+                      alt={productForAsk?.title}
+                      className="w-12 h-12 rounded-xl object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold line-clamp-1">
+                      {productForAsk?.title}
+                    </h3>
+                    <p className="text-sm text-gray-400 line-clamp-2">
+                      {productForAsk?.product_description}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="cursor-pointer bg-[#5C5C5C]/50  p-1 rounded-full absolute right-0 -top-2"
+                  onClick={() => setProductForAsk(null)}
+                >
+                  <RxCross2 size={18} />
+                </button>
+              </div>
+            )}
 
+            {/* Input Bar */}
+            <div className="flex w-full  rounded-xl bg-[#1d1d1d] gap-[10px] pr-2.5 items-center">
+              <input
+                className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
+                style={{ width: "100%", color: "white" }}
+              />
+              <button
+                className={`cursor-pointer ${
+                  inputValue?.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
+                } p-1 rounded-xl`}
+                onClick={handleSend}
+              >
+                <IoMdArrowUp size={17} />
+              </button>
+            </div>
+          </div>
+          {/* <div className="relative flex flex-col m-[10px] rounded-xl bg-[#1d1d1d] border-t-[0.1px]-[#1d1d1d] gap-[10px] rounded-t-2xl items-center">
+            
+            {productForAsk && (
+              <div className="animate-slideUp flex items-center justify-between w-full p-4 bg-[#2a2a2a] rounded-t-2xl ">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-[#1d1d1d] flex-shrink-0 items-center justify-center flex rounded-xl">
+                    <img
+                      src={productForAsk?.image_url}
+                      alt={productForAsk?.title}
+                      className="w-12 h-12 rounded-xl object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold line-clamp-1">
+                      {productForAsk?.title}
+                    </h3>
+                    <p className="text-sm text-gray-400 line-clamp-2">
+                      {productForAsk?.product_description}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="cursor-pointer bg-[#5C5C5C]/50  p-1 rounded-full absolute right-0 -top-2"
+                  onClick={() => setProductForAsk(null)}
+                >
+                  <RxCross2 size={18} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex w-full rounded-xl bg-[#1d1d1d] gap-[10px] pr-2.5 items-center">
+              <input
+                className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
+                style={{ width: "100%", color: "white" }}
+              />
+              <button
+                className={`cursor-pointer ${
+                  inputValue?.trim() ? "bg-blue-500" : "bg-[#5A5A5A]"
+                } p-1 rounded-xl`}
+                onClick={handleSend}
+              >
+                <IoMdArrowUp size={17} />
+              </button>
+            </div>
+          </div> */}
           {/* Input */}
-          <div className="flex m-[10px] rounded-xl bg-[#1d1d1d] border-t-[0.1px]-[#1d1d1d] gap-[10px] pr-2.5 items-center">
+          {/* <div className="flex m-[10px] rounded-xl bg-[#1d1d1d] border-t-[0.1px]-[#1d1d1d] gap-[10px] pr-2.5 items-center">
             <input
               className="flex-grow p-[10px] rounded-[10px] outline-none bg-[#1d1d1d] placeholder:text-[#fff]/20"
               type="text"
@@ -509,7 +615,7 @@ export default function ChatPage({
             >
               <IoMdArrowUp size={17} onClick={handleSend} />
             </button>
-          </div>
+          </div> */}
         </>
       </div>
     </div>
