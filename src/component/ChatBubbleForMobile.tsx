@@ -1,10 +1,9 @@
 "use client";
-import Image from "next/image";
+
 import ReactMarkdown from "react-markdown";
 import Product from "./ChatBot/Product";
-import { useCallback, useState } from "react";
-import Link from "next/link";
 import fixDataFormat from "@/lib/fixDataFormat";
+import { useRouter } from "next/navigation";
 
 type Message = {
   sender: string;
@@ -40,6 +39,8 @@ export const ChatBubbleForMobile = ({
   handleSend: (text: string) => void;
   setProductForAsk: (product: any) => void;
 }) => {
+  const router = useRouter();
+
   const cleanMessageText = (text: string) => {
     if (text.startsWith('"') && text.endsWith('"')) {
       return text.slice(1, -1); // Remove leading and trailing quotes
@@ -73,6 +74,19 @@ export const ChatBubbleForMobile = ({
 
   const handleSelectedSuggestion = (text: string) => {
     handleSend(text);
+  };
+
+  const handleNavigation = (product: any) => {
+    const url = `/chat/product/${
+      product.id
+    }?brand_id=${brand_id}&product_name=${product.title}&product_description=${
+      product?.product_description
+    }&product_images=${product.image_url}&original_price=${
+      product.original_price
+    }&discounted_price=${product.discounted_price}&tags=${product?.tags?.join(
+      ","
+    )}&purchase_link=${product.buy_link}`;
+    router.push(url);
   };
 
   if (!message) return null;
@@ -145,12 +159,17 @@ export const ChatBubbleForMobile = ({
                       <>
                         {suggestionData.products.map(
                           (product: any, index: number) => (
-                            <Product
+                            <button
                               key={index}
-                              product={product}
-                              fromChatBubble={true}
-                              setProductForAsk={setProductForAsk}
-                            />
+                              onClick={() => handleNavigation(product)}
+                            >
+                              <Product
+                                key={index}
+                                product={product}
+                                fromChatBubble={true}
+                                setProductForAsk={setProductForAsk}
+                              />
+                            </button>
                           )
                         )}
                       </>
@@ -173,12 +192,17 @@ export const ChatBubbleForMobile = ({
                   ) {
                     return suggestionData.products.map(
                       (product: any, index: number) => (
-                        <Product
+                        <button
                           key={index}
-                          product={product}
-                          fromChatBubble={true}
-                          setProductForAsk={setProductForAsk}
-                        />
+                          onClick={() => handleNavigation(product)}
+                        >
+                          <Product
+                            key={index}
+                            product={product}
+                            fromChatBubble={true}
+                            setProductForAsk={setProductForAsk}
+                          />
+                        </button>
                       )
                     );
                   }
