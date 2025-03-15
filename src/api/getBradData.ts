@@ -1,6 +1,6 @@
 // import api from "@/lib/axiosInstance";
 
-// export async function getBradData(brandId: string) {  
+// export async function getBradData(brandId: string) {
 //   const res = await api.get(
 //     `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/${brandId}`
 //   );
@@ -13,11 +13,11 @@ import api from "@/lib/axiosInstance";
 
 export async function getBradData(brandId: string) {
   try {
-    console.log(brandId);
-    
+    // console.log(brandId);
+
     // POST Request
     const contactRes = await api.get(
-      `${process.env.NEXT_PUBLIC_DEVBASEURL}/brand_contact/${brandId}`,
+      `${process.env.NEXT_PUBLIC_DEVBASEURL}/brand_contact/${brandId}`
     );
     if (contactRes.status !== 200) {
       throw new Error("Error requesting brand contact details data");
@@ -35,7 +35,6 @@ export async function getBradData(brandId: string) {
       contactData: contactRes.data,
       brandData: brandRes.data,
     };
-
   } catch (error) {
     console.error("Error:", error);
     throw new Error(error.message || "An error occurred while fetching data");

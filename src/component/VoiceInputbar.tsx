@@ -14,7 +14,7 @@ interface VoiceInputbarProps {
   tempVoiceId: string | null;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
   inputValue: string;
-  productForAsk: object;
+  productForAsk: object | any;
   setProductForAsk: (productForAsk: any) => void;
 }
 

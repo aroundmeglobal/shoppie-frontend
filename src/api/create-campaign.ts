@@ -1,4 +1,3 @@
-
 interface CampaignFormData {
   campaignName: string;
   campaignType: string;
@@ -11,10 +10,9 @@ interface CampaignFormData {
   region: string;
   faqs: string;
   customInstruction: string;
-};
+}
 
 const createCampaign = async (formData: CampaignFormData) => {
-
   const url = `https://fastapi.aroundme.tech/api/chitchats/create`;
 
   const body = {
@@ -29,14 +27,14 @@ const createCampaign = async (formData: CampaignFormData) => {
     is_sponsored: true,
   };
 
-  console.log(body);
+  // console.log(body);
 
   const options: RequestInit = {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include', // Ensure session cookie is sent with request
+    credentials: "include", // Ensure session cookie is sent with request
     body: JSON.stringify(body),
   };
 
@@ -45,14 +43,13 @@ const createCampaign = async (formData: CampaignFormData) => {
     const data = await response.json();
 
     if (response.ok) {
-      console.log('Campaign created successfully:', data);
+      console.log("Campaign created successfully:", data);
     } else {
-      console.error('Error creating campaign:', data);
+      console.error("Error creating campaign:", data);
     }
   } catch (error) {
-    console.error('Network error:', error);
+    console.error("Network error:", error);
   }
 };
-
 
 export default createCampaign;

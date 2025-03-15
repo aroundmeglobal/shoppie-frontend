@@ -16,8 +16,6 @@ const parseCSV = (text: string): Promise<{ data: any[] }> => {
 };
 
 const uploadProducts = async (slug: string, file: File): Promise<void> => {
-  console.log("file", file);
-
   try {
     // Read the CSV file
     const text = await file.text();
@@ -72,13 +70,11 @@ const uploadProducts = async (slug: string, file: File): Promise<void> => {
     }
 
     const textData = await uploadTextResponse.json();
-    console.log("New brand file upload:", textData);
 
     const filteredWorkspaces = await getFilteredWorkspaces(slug);
 
     for (const workspace of filteredWorkspaces) {
       try {
-        console.log(`Embedding document in workspace: ${workspace.slug}`);
         await embedDocInWorkspace(workspace.slug, [
           textData.documents[0].location,
         ]);

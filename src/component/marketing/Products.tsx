@@ -173,7 +173,6 @@ const Products = () => {
       const responseOldProducts = await api.get(
         `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/?brand_id=${brandId}`
       );
-      console.log("responseOldProducts", responseOldProducts.data);
       setOldProducts(responseOldProducts.data);
     };
 
@@ -249,7 +248,9 @@ const Products = () => {
               }
               if (missing) {
                 throw new Error(
-                  `Row ${index + 1} has missing fields. Please check the CSV data.`
+                  `Row ${
+                    index + 1
+                  } has missing fields. Please check the CSV data.`
                 );
               }
               return {
@@ -292,10 +293,7 @@ const Products = () => {
       return;
     }
 
-    console.log(uploadedFile);
-
     const uploadFileType = uploadedFile.type;
-    console.log("uploadFileType", uploadFileType);
 
     const productResponse = await fetch(
       `https://fastapi.aroundme.tech/api/upload/generate-upload-url`,
@@ -322,8 +320,6 @@ const Products = () => {
       body: uploadedFile,
     });
 
-    console.log("productData", productData.public_url);
-
     const body = {
       brand_id: brandId,
       file: `${productData.public_url}`,
@@ -333,15 +329,11 @@ const Products = () => {
       body
     );
 
-    console.log("file upload", responseFileUpload);
-
     const brandBody = {};
     const responseUpdateBrand = await api.put(
       `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
       brandBody
     );
-
-    console.log("brand updated", responseUpdateBrand);
 
     setLoading(false);
   };
@@ -390,9 +382,7 @@ const Products = () => {
             </p>
             <div className="flex space-x-4 mt-16">
               <button
-                onClick={() =>
-                  document.getElementById("csvInput")?.click()
-                }
+                onClick={() => document.getElementById("csvInput")?.click()}
                 className="flex items-center justify-between bg-white border text-gray-800 px-4 py-2 rounded-xl hover:bg-[#3d3d3d] hover:text-white focus:border-[#4d4d4d]"
               >
                 <span className="font-semibold">Import CSV</span>

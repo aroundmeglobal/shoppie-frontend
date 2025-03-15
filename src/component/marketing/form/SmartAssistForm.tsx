@@ -35,7 +35,7 @@ const CheckboxList: React.FC = () => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const selectedValues = selectedOptions.map((i) => options[i]);
-    console.log("Selected Options:", selectedValues);
+    // console.log("Selected Options:", selectedValues);
   };
 
   return (
@@ -54,9 +54,7 @@ const CheckboxList: React.FC = () => {
               checked={selectedOptions.includes(index)}
               onChange={(e) => handleCheckboxChange(e, index)}
               className={`appearance-none mr-2 w-4 h-4 border rounded focus:ring-0 focus:outline-none border-[#3d3d3d] ${
-                selectedOptions.includes(index)
-                  ? "bg-[blue]"
-                  : "bg-transparent"
+                selectedOptions.includes(index) ? "bg-[blue]" : "bg-transparent"
               }`}
             />
             <label

@@ -100,7 +100,6 @@ const EditProfile = () => {
 
         // const response = await api.get(`/brands/`);
         const data = brandDataResponse;
-        console.log("data", data);
 
         initialFetchedDataRef.current = data;
         isDataFetchedRef.current = true;
@@ -239,7 +238,6 @@ const EditProfile = () => {
 
     if (isLogoUpdated && media) {
       const fileExtension = media.type.split("/")[1];
-      console.log(fileExtension);
 
       // Generate a unique file name and upload
       const mediaFileName = `brand-logos/${uuidv4()}.${fileExtension}`;
@@ -270,8 +268,6 @@ const EditProfile = () => {
 
       mediaPublicUrl = `https://pub-b1946b9de83b4357be05860f410a0024.r2.dev/${mediaFileName}`;
     }
-
-    console.log(mediaPublicUrl);
 
     try {
       await api.put("/users/update-brand", {

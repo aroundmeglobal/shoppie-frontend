@@ -11,9 +11,6 @@ const Page = () => {
   const brandId = useBrandStore((state) => state.brandId);
   const workspaceExist = useBrandStore((state) => state.workspaceExists);
 
-  console.log(workspaceExist);
-
-
   return (
     <div>
       {/* Main content container */}
