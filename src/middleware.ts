@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 function hasToken(req: NextRequest): boolean {
   const { headers, cookies } = req;
   const token = cookies.get("authToken")?.value;
+
   return !!token;
 }
 
@@ -16,10 +17,12 @@ const protectedRoutes = [
   "/marketing",
   "/users(.*)",
   "/brand(.*)",
+  "/brand-status",
 ];
 
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
   const isAuthPage = path.startsWith("/login"); // Authentication pages
   const isProtectedRoute = protectedRoutes.includes(path); // Check if route is protected
 
