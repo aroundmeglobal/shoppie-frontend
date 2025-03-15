@@ -4,7 +4,7 @@ const embed = async (userId: string, locations: string[]) => {
   if (locations.length > 0) {
     try {
       const body = {
-        adds: locations.map(location => `${location}`),
+        adds: locations.map((location) => `${location}`),
       };
 
       const responseUpdateEmbeddings = await fetch(
@@ -25,15 +25,12 @@ const embed = async (userId: string, locations: string[]) => {
       }
 
       const embeddingData = await responseUpdateEmbeddings.json();
-      console.log("Embedding update successful:", embeddingData);
     } catch (error) {
       console.error("Error updating embeddings:", error);
       throw error;
     }
   }
 };
-
-
 
 const createWorkspace = async (
   pdfs: File[],
@@ -43,7 +40,7 @@ const createWorkspace = async (
   setIsLoading: (loading: boolean) => void
 ) => {
   try {
-    setIsLoading(true); 
+    setIsLoading(true);
 
     // Step 1: Create Workspace
     const body = {
@@ -80,7 +77,6 @@ const createWorkspace = async (
       }
 
       workspaceData = await responseCreateWorkspace.json();
-      console.log("Workspace created:", workspaceData);
     } catch (error) {
       console.error("Error in creating workspace:", error);
       throw error;
@@ -113,11 +109,10 @@ const createWorkspace = async (
         }
 
         const pdfData = await responseUploadPdfs.json();
-        console.log("PDF uploaded:", pdfData);
 
         const documentLocation = pdfData.documents[0].location;
         if (documentLocation) {
-          pdfLocations.push(documentLocation); 
+          pdfLocations.push(documentLocation);
         } else {
           console.error("Location not found in uploaded PDF data");
         }
@@ -128,21 +123,21 @@ const createWorkspace = async (
     }
 
     // // step 3: Update embedings for pdf
-  
+
     await embed(userId, pdfLocations);
 
     // step 4: upload faqs as rawtext
 
     let textContent = "";
     for (const faq of faqs) {
-      textContent += `${faq.question}\n\n${faq.answer}\n\n`; 
+      textContent += `${faq.question}\n\n${faq.answer}\n\n`;
     }
 
     const textBlob = new Blob([textContent], { type: "text/plain" });
-    
+
     const formData = new FormData();
-    formData.append("file", textBlob, "faqs.txt"); 
-    formData.append("folder", `${userId}`); 
+    formData.append("file", textBlob, "faqs.txt");
+    formData.append("folder", `${userId}`);
 
     const responseUploadText = await fetch(
       `${process.env.NEXT_PUBLIC_LLM_BASE_URL}v1/document/upload-folder`,
@@ -161,17 +156,20 @@ const createWorkspace = async (
     }
 
     const textData = await responseUploadText.json();
-    console.log("FAQ text file uploaded:", textData);
-
 
     //embding it in workspace
 
     await embed(userId, [textData.documents[0].location]);
 
-    return { success: true, message: "Data uploaded successfully, Your Personalized AI BOT is ready" };
-
+    return {
+      success: true,
+      message: "Data uploaded successfully, Your Personalized AI BOT is ready",
+    };
   } catch (error) {
-    return { success: false, message: "Error creating workspace. Please try again." };
+    return {
+      success: false,
+      message: "Error creating workspace. Please try again.",
+    };
   } finally {
     setIsLoading(false); // Stop the loading spinner
   }

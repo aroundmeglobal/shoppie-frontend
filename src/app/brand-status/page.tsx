@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import useBrandStore from "@/store/useBrandStore";
 import Link from "next/link";
@@ -12,8 +12,6 @@ interface StatusBoxProps {
 }
 
 const StatusBox: React.FC<StatusBoxProps> = ({ imageSrc, isCompleted }) => {
-  console.log(imageSrc);
-  
   return (
     <div className="flex w-[50vw] items-center justify-between p-4 bg-[grey]/5 rounded-2xl shadow-md mt-6">
       <div className="flex items-center">
@@ -43,10 +41,9 @@ const StatusBox: React.FC<StatusBoxProps> = ({ imageSrc, isCompleted }) => {
 
 function Page({}: Props) {
   // Dynamic brand name and status
-  const brandName = useBrandStore((state)=>state.brandName)
-  const brandLogo = useBrandStore((state)=>state.logo)
+  const brandName = useBrandStore((state) => state.brandName);
+  const brandLogo = useBrandStore((state) => state.logo);
   const [isStatusCompleted, setIsStatusCompleted] = useState(true);
-
 
   return (
     <div className="bg-gradient-to-br from-[#1E60FB]/15 to-[#000000]  bg-[length:100%_87%_0%] min-h-screen flex items-center justify-center">

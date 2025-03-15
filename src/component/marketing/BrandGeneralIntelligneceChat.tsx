@@ -143,7 +143,7 @@ const BrandGeneralIntelligneceChat = () => {
         const responseCreateWorkspace = await api.get(
           `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/${brandId}`
         );
-        console.log('workspace',responseCreateWorkspace.data.workspaces[0]);
+        // console.log("workspace", responseCreateWorkspace.data.workspaces[0]);
         setWorkpaceSlug(responseCreateWorkspace.data.workspaces[0].slug);
       } catch (error) {
         console.error("Error fetching workspace data:", error);
@@ -165,7 +165,7 @@ const BrandGeneralIntelligneceChat = () => {
     setMessages((prev) => [...prev, { sender: "Bunny", text: "" }]);
 
     try {
-      console.log("workspaceSlug", workspaceSlug);
+      // console.log("workspaceSlug", workspaceSlug);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_LLM_BASE_URL}/workspace/${workspaceSlug}/stream-chat`,
@@ -183,8 +183,7 @@ const BrandGeneralIntelligneceChat = () => {
         }
       );
       // ${process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN}
-      console.log('response', JSON.stringify(response));
-      
+      // console.log("response", JSON.stringify(response));
 
       if (!response.ok) {
         const errorText = await response.text();

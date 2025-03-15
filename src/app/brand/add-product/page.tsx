@@ -46,8 +46,7 @@ const Page = (props: Props) => {
       newFaviconUrls[
         index
       ] = `https://www.google.com/s2/favicons?domain=${domain}`;
-      console.log(domain);
-      
+      // console.log(domain);
     } catch (err) {
       newFaviconUrls[index] = ""; // Clear favicon if URL is invalid
     }
@@ -86,7 +85,7 @@ const Page = (props: Props) => {
   };
 
   const validPurchaseUrls =
-  purchaseUrls.length > 1 ? purchaseUrls.slice(0, -1) : purchaseUrls;
+    purchaseUrls.length > 1 ? purchaseUrls.slice(0, -1) : purchaseUrls;
 
   // Compute form validity.
   const isFormValid =
@@ -101,29 +100,26 @@ const Page = (props: Props) => {
   // Save handler (only called when form is valid).
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Form validation
     if (!isFormValid) return;
-  
+
     // Prepare the API payload
     const payload = {
       title,
       description,
-      mediaFiles: mediaFiles.map(file => URL.createObjectURL(file)), // Just using the object URLs for media
+      mediaFiles: mediaFiles.map((file) => URL.createObjectURL(file)), // Just using the object URLs for media
       prices: {
         price,
         offerPrice,
       },
-      tags: tag.split(',').map(tag => tag.trim()), // Split tags by commas
-      purchaseUrls: purchaseUrls.filter(url => url.trim() !== ''), // Filter out empty URLs
-      faviconUrls: faviconUrls.filter(url => url.trim() !== '') // Filter out empty favicons
+      tags: tag.split(",").map((tag) => tag.trim()), // Split tags by commas
+      purchaseUrls: purchaseUrls.filter((url) => url.trim() !== ""), // Filter out empty URLs
+      faviconUrls: faviconUrls.filter((url) => url.trim() !== ""), // Filter out empty favicons
     };
-  
-  
-   console.log(payload);
-   
+
+    // console.log(payload);
   };
-  
 
   // Discard handler: reset all fields and error (touched) states.
   const handleDiscard = () => {
@@ -392,14 +388,13 @@ const Page = (props: Props) => {
                   className={`mt-1 py-0 px-0 ${baseInputStyle} min-h-[5vh] flex items-center`}
                   onBlur={() => markTouched(setPurchaseUrlTouched)}
                 >
-                  
                   {faviconUrls[index] && (
                     <div className="bg-[#4d4d4d] px-4 py-3 rounded-l-xl">
-                    <img
-                      src={faviconUrls[index]}
-                      alt="Favicon"
-                      className="h-6 w-6"
-                    />
+                      <img
+                        src={faviconUrls[index]}
+                        alt="Favicon"
+                        className="h-6 w-6"
+                      />
                     </div>
                   )}
 
