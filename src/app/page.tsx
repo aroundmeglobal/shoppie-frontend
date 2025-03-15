@@ -53,8 +53,6 @@ export default function Home() {
     queryFn: fetchBrands,
   });
 
-  console.log(allBrands, "all");
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
@@ -86,7 +84,7 @@ export default function Home() {
 
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
-      console.log(brand);
+      // console.log(brand);
 
       setBrand(brand);
       router.push(`/chat/${brand?.workspaces[0].slug}`);
@@ -105,11 +103,11 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <main className="flex min-h-screen flex-col items-center justify-between  mx-auto  max-w-screen-2xl ">
+    <div className="">
+      <main className="bg-[url(/login-background.png)] bg-fixed bg-cover flex min-h-screen flex-col items-center justify-between  mx-auto  max-w-screen-2xl pb-20">
         <Navbar />
 
-        <div className="mt-5 md:mt-16 text-4xl md:text-6xl font-bold text-center leading-relaxed font-[AbhayLibre]">
+        <div className="mt-5 md:mt-16 text-4xl md:text-6xl font-bold text-center leading-relaxed ">
           <h1>Shop smarter, not harder!</h1>
         </div>
 
@@ -148,7 +146,7 @@ export default function Home() {
           {filteredBrands?.map((brand, index) => (
             <div
               key={index}
-              className="rounded-3xl p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d]"
+              className="rounded-3xl  p-2 md:p-6 shadow-xl flex flex-col items-center text-center border-[1px] border-[#1d1d1d] bg-[#161616] backdrop-blur-xl"
             >
               <button
                 onClick={() => handleBrandOverview(brand)}
@@ -160,7 +158,7 @@ export default function Home() {
                   height={120}
                   src={brand?.brand_logo}
                   alt={brand?.brand_name}
-                  className="object-cover md:h-28 md:w-28 h-20 w-20 rounded-full "
+                  className="object-cover md:h-28 md:w-28 h-20 w-20 rounded-full mb-2 "
                 />
                 {/* </div> */}
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
@@ -197,9 +195,9 @@ export default function Home() {
               </button>
               <button
                 onClick={() => handleBotClick(brand)}
-                className="flex items-center justify-center gap-2 bg-white w-full md:mt-4 mt-3 py-2 px-4 rounded-xl font-semibold text-[#000]"
+                className="flex items-center font-[BR Firma] justify-center gap-2 bg-white w-full md:mt-4 mt-3 py-2 px-4 rounded-xl font-semibold text-[#000]"
               >
-                <p>Chat with AI</p>
+                <h1>Chat with AI</h1>
                 <div className="bg-[#A4A4A4]/20 p-2 rounded-full">
                   <AiOutlineMessage />
                 </div>

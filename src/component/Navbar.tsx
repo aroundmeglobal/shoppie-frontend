@@ -25,7 +25,7 @@ function Navbar() {
   };
 
   return (
-    <div className="z-[11] flex items-center justify-between w-full p-4 px-4  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-[1px]">
+    <div className="z-[11] flex items-center justify-between w-full p-4 px-4   h-16  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-[1px]">
       <div>
         <Image
           alt="shoppie"
@@ -43,10 +43,7 @@ function Navbar() {
           {isLoggedIn ? "Log out" : ""}
         </button>
         <button className="bg-white text-black rounded-[80px] py-2 px-3 flex gap-2 text-[16px] items-center justify-center">
-          <button
-            onClick={onLogin}
-            className="font-bold text-[10px] md:text-[16px]"
-          >
+          <button onClick={onLogin} className=" text-[10px] md:text-[16px]">
             {isLoggedIn ? "Dashboard" : "Create your AI"}
           </button>
         </button>

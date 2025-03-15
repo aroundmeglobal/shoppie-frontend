@@ -93,6 +93,10 @@ const config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        slideUp: {
+          "0%": { transform: "translateY(calc(100% -5px))", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,9 +105,11 @@ const config = {
         typing: "typing 1.5s infinite ease-in-out",
         "blink-up-down": "blink-up-down 1.5s infinite ease-in-out",
         shimmer: "shimmer 1.5s infinite",
+        slideUp: "slideUp 0.2s ease-in",
       },
       fontFamily: {
-        sans: ["BR Firma", "sans-serif"],
+        // sans: ["BR Firma", "sans-serif"],
+        sans: ["Lexend"], // Apply Lexend globally
       },
     },
   },
