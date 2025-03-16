@@ -2,10 +2,10 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import useRemoveAuthToken from "@/hooks/useRemoveAuthToken";
+import toast from "react-hot-toast";
 
 function Navbar() {
   const router = useRouter();
@@ -13,6 +13,13 @@ function Navbar() {
   const removeAuthToken = useRemoveAuthToken();
 
   const onLogin = () => {
+    if (window.innerWidth < 768) {
+      toast.error("This feature is available only on desktop.", {
+        duration: 2000,
+        position: "top-center",
+      });
+      return;
+    }
     if (isLoggedIn) {
       router.push("/brand/profile");
     } else {
