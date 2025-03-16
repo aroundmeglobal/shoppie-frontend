@@ -156,7 +156,6 @@ export default function RegisterPage() {
 
       const brandResponse = await api.post(`/brands/`, brandData);
       const brand = await brandResponse.data;
-      console.log(brand.token, "token");
 
       if (brand.token) {
         Cookies.set("authToken", brand.token, {
