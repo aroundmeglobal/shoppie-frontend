@@ -1,5 +1,5 @@
 "use client";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import { MdOutlineFileUpload } from "react-icons/md";
 import { FaChevronDown } from "react-icons/fa";
@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const setLogoInStore = useBrandStore((state) => state.setLogo);
   const setBrandName = useBrandStore((state) => state.setBrandName);
   const setBrandId = useBrandStore((state) => state.setBrandId);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialValues = {
     email: email,
@@ -55,7 +55,12 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (
+    values: FormikValues,
+    {
+      setSubmitting: setSubmitting,
+    }: { setSubmitting: (isSubmitting: boolean) => void }
+  ) => {
     try {
       // Destructure values for easier access
       const {
@@ -173,9 +178,9 @@ export default function RegisterPage() {
       // Navigate to the brand status page
       // router.push("/brand-status");
       router.replace("/brand/profile");
+      setSubmitting(false);
     } catch (error) {
       console.error("Error during submission", error);
-    } finally {
       setSubmitting(false);
     }
   };
@@ -244,13 +249,15 @@ export default function RegisterPage() {
                       <span>Upload</span>
                       <MdOutlineFileUpload />
                     </button>
+                    <span className="text-xs text-[#5a5a5a] text-center">
+                      <span className="text-red-400">*</span> Upload your logo{" "}
+                      <br /> (JPG/PNG)
+                    </span>
                   </div>
                   <div className="space-y-4">
                     {/* Email */}
                     <div>
-                      <label className="block text-xs font-medium">
-                        <span className="text-red-400">*</span> Email
-                      </label>
+                      <label className="block text-xs font-medium">Email</label>
                       <Field
                         defaultValue={email}
                         type="email"

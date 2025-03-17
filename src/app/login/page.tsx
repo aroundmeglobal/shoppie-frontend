@@ -54,7 +54,6 @@ const Page = () => {
       //     }),
       //   }
       // );
-      console.log(response);
       if (response.status === 200) {
         toast.success("OTP sented to email");
         setEmailInStore(email);
@@ -89,6 +88,7 @@ const Page = () => {
       <OtpVerification
         email={email}
         onChangeEmail={() => setOtpScreen(false)}
+        handleGetOtp={handleGetOtp}
       />
     );
   }
@@ -118,7 +118,7 @@ const Page = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email"
-                className="mt-1 block w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] placeholder:text-[#5a5a5a] placeholder:text-sm"
+                className="mt-1 block w-full border border-[#2d2d2d] focus:bg-none rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] placeholder:text-[#5a5a5a] placeholder:text-sm"
               />
               {emailError && (
                 <p className="text-red-500 text-sm mt-1">{emailError}</p>
