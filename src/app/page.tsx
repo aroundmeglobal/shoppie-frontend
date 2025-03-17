@@ -159,7 +159,7 @@ export default function Home() {
                 <Image
                   width={120}
                   height={120}
-                  src={brand?.brand_logo}
+                  src={brand?.brand_logo || "https://storage.aroundme.global/avatar_default.png"}
                   alt={brand?.brand_name}
                   className="object-cover md:h-28 md:w-28 h-20 w-20 rounded-full mb-2 "
                 />

@@ -6,6 +6,84 @@
 @tailwind component;
 @tailwind utilities;
 
+:root {
+  /* Common styles */
+  --light-grey: #2f333c;
+  --link-color: #4479e2;
+  --link-color-shade: #4654a5;
+  --color-transition: background-color 0.5s;
+
+  /* Dark mode */
+  --background-dark: #15171b;
+  --secondary-background-dark: #1f2229a1;
+  --blue-background-dark: #1a2230;
+  --purple-background-dark: #1d2029;
+  --text-primary-dark: #ededed;
+  --text-secondary-dark: #98a1b6;
+  --card-background-dark: #191b20;
+  --code-color-dark: #343437;
+  --code-border-dark: #525151;
+  --code-string-dark: #4f4e5b;
+  --gradient-dark: 81, 45, 39;
+  --nav-color-dark: #1a2230;
+  --border-color-dark: #29282e;
+
+  /* Light mode */
+  --nav-color-light: #fff;
+  --background-light: #FFF;
+  /* --secondary-background-light: #f2f3f5; FAFAFA F5F5F5*/
+  --secondary-background-light: #F5F5F5;
+  --blue-background-light: #ebeff8;
+  --purple-background-light: #ebeff9;
+  --text-primary-light: #070b28;
+  --text-secondary-light: #4f576c;
+  --card-background-light: #fff;
+  --code-color-light: #ececed;
+  --code-border-light: #b5b2b2;
+  --code-string-light: #a5a2a2;
+  --gradient-light: 255, 221, 214;
+  --border-color-light: #e8e8e8;
+
+}
+
+
+
+.light {
+  /* Light mode styles */
+  --background: var(--background-light);
+  --secondary-background: var(--secondary-background-light);
+  --blue-background: var(--blue-background-light);
+  --purple-background: var(--purple-background-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --card-background: var(--card-background-light);
+  --code-color: var(--code-color-light);
+  --code-border: var(--code-border-light);
+  --code-string: var(--code-string-light);
+  --gradient: var(--gradient-light);
+  --nav-color: var(--nav-color-light);
+  --border-color: var(--border-color-light);
+
+}
+
+.dark {
+  /* Dark mode styles */
+  --background: var(--background-dark);
+  --secondary-background: var(--secondary-background-dark);
+  --blue-background: var(--blue-background-dark);
+  --purple-background: var(--purple-background-dark);
+  --text-primary: var(--text-primary-dark);
+  --text-secondary: var(--text-secondary-dark);
+  --card-background: var(--card-background-dark);
+  --code-color: var(--code-color-dark);
+  --code-border: var(--code-border-dark);
+  --code-string: var(--code-string-dark);
+  --gradient: var(--gradient-dark);
+  --nav-color: var(--nav-color-dark);
+  --border-color: var(--border-color-dark);
+}
+
+
 @layer base {
   :root {
     --background: #0d0d0d;
