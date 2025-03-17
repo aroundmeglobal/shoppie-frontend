@@ -3,39 +3,38 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-// import { FaHome, FaCog } from "react-icons/fa";
+import { FaHome, FaCog } from "react-icons/fa";
 import Configure from "../../../public/assets/svg/Configure";
-// import Campaigns from "../../../public/assets/svg/Campaigns";
-// import BillingAndPayments from "../../../public/assets/svg/BillingAndPayments";
-// import CreateCampaigns from "../../../public/assets/svg/CreateCampaigns";
-// import Help from "../../../public/assets/svg/Help";
-// import SmartAssist from "../../../public/assets/svg/SmartAssist";
+import Campaigns from "../../../public/assets/svg/Campaigns";
+import BillingAndPayments from "../../../public/assets/svg/BillingAndPayments";
+import CreateCampaigns from "../../../public/assets/svg/CreateCampaigns";
+import Help from "../../../public/assets/svg/Help";
+import SmartAssist from "../../../public/assets/svg/SmartAssist";
 import AroundMe from "../../../public/assets/svg/AroundMe";
-// import MuscleBlaz from "@/public/assets/muscle blaze logo.png";
+import MuscleBlaz from "@/public/assets/muscle blaze logo.png";
 import Image from "next/image";
 import useBrandStore from "@/store/useBrandStore";
 import Shoppiee from "../../../public/assets/svg/Shoppiee";
 
 // Define primary nav items along with their routes.
 
-
 // Define sub nav items with an explicit route for each.
 // For example, "Configure" uses "/marketing", and the rest follow the "/marketing/[slug]" pattern.
 const subcomponent = [
   { title: "Configure", icon: <Configure />, route: "/brand/configure" },
-  // { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
-  // { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
-  // {
-  //   title: "Billings and payments",
-  //   icon: <BillingAndPayments />,
-  //   route: "/brand/billings-and-payments",
-  // },
-  // {
-  //   title: "Smart assist",
-  //   icon: <SmartAssist />,
-  //   route: "/brand/smart-assist",
-  // },
-  // { title: "Help", icon: <Help />, route: "/brand/help" },
+  { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
+  { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
+  {
+    title: "Billings and payments",
+    icon: <BillingAndPayments />,
+    route: "/brand/billings-and-payments",
+  },
+  {
+    title: "Smart assist",
+    icon: <SmartAssist />,
+    route: "/brand/smart-assist",
+  },
+  { title: "Help", icon: <Help />, route: "/brand/help" },
 ];
 
 const Navbar = () => {
@@ -48,8 +47,8 @@ const Navbar = () => {
     {
       title: brandName,
       icon: <></>,
-      route: "/brand/profile", 
-      activeRoutes: ["/brand/profile", "/brand/add-product"], 
+      route: "/brand/profile",
+      activeRoutes: ["/brand/profile", "/brand/add-product"],
     },
   ];
 
@@ -63,7 +62,7 @@ const Navbar = () => {
               ? item.activeRoutes.includes(pathname)
               : pathname === item.route;
             return (
-              <Link href={item.route} key={`primary-${index}`}>
+              <Link href={item.route} key={`primary-${item.route}`}>
                 <div className="flex items-center h-16 transition-colors cursor-pointer overflow-hidden">
                   <div
                     className={`flex items-center p-2 rounded-[12px] transition-all cursor-pointer w-full max-h-[50px] hover:bg-[#133E9F]/80 
@@ -97,7 +96,7 @@ const Navbar = () => {
                     <span
                       className={`ml-4 hidden group-hover:inline-block transition-opacity duration-300 whitespace-nowrap`}
                     >
-                      {item.title }
+                      {item.title}
                     </span>
                   </div>
                 </div>
