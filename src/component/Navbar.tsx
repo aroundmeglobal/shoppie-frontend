@@ -2,13 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import useRemoveAuthToken from "@/hooks/useRemoveAuthToken";
 import toast from "react-hot-toast";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function Navbar() {
-  const router = useRouter();
+  const pathname = usePathname();
   const isLoggedIn = useAuth();
   const removeAuthToken = useRemoveAuthToken();
 
@@ -20,11 +21,8 @@ function Navbar() {
       });
       return;
     }
-    if (isLoggedIn) {
-      router.push("/brand/profile");
-    } else {
-      router.push("/login");
-    }
+    const targetUrl = isLoggedIn ? "/brand/profile" : "/login";
+    window.open(targetUrl, "_blank"); // Open login/profile in a new tab
   };
 
   const onLogout = () => {
@@ -32,29 +30,49 @@ function Navbar() {
   };
 
   return (
-    <div className="z-[11] flex items-center justify-between w-full p-4 px-4   h-16  max-w-screen-2xl sticky top-0  bg-[#0D0D0D] border-b-[#2B2B2B] border-b-[1px]">
-      <div>
+    <div className="z-[11] flex items-center justify-between w-full p-4 px-4   h-16  max-w-screen-2xl sticky top-0  bg-black border-b-[#2B2B2B] border-b-[0.1px] border-opacity-50">
+      <Link target="_blank" href={"https://goshoppie.com/"}>
         <Image
           alt="shoppie"
           src={"/img/shoppie.png"}
-          width={0}
+          width={10}
           height={10}
-          className="w-[100px] md:w-[150px]"
+          className="w-[100px] md:w-[150px] h-[29px] object-contain "
         />
-      </div>
-      <div className="flex gap-5">
-        <button
-          onClick={onLogout}
-          className="font-bold text-[10px] md:text-[16px]"
-        >
-          {isLoggedIn ? "Log out" : ""}
-        </button>
-        <button className="bg-white text-black rounded-[80px] py-2 px-3 flex gap-2 text-[16px] items-center justify-center">
+      </Link>
+      {pathname === "/" && (
+        <div className="flex gap-5 ">
+          <button
+            onClick={onLogout}
+            className="cursor-pointer font-bold text-[10px] md:text-[16px]"
+          >
+            {isLoggedIn ? "Log out" : ""}
+          </button>
+          {/* <a
+            onClick={onLogin}
+            className="cursor-pointer relative  flex items-center  justify-center px-2 py-[2px] text-white text-[15px]  leading-[25px] tracking-[-0.5px] bg-[#0055FF] rounded-[10px] border-[2.1px] border-white/15 shadow-[0px_8px_40px_rgba(0,85,255,0.5),0px_0px_10px_rgba(255,255,255,0)_inset,0px_0px_0px_1px_rgba(0,85,255,0.12)] transition-all duration-300 hover:shadow-[0px_8px_50px_rgba(0,85,255,0.6),0px_0px_12px_rgba(255,255,255,0)_inset,0px_0px_0px_1px_rgba(0,85,255,0.15)]"
+          >
+            {isLoggedIn ? "Dashboard" : "Create your AI"}
+          </a> */}
+          <a
+            onClick={onLogin}
+            className="cursor-pointer relative flex items-center justify-center px-2 py-[2px] 
+             text-white text-[15px] leading-[25px] tracking-[-0.5px] 
+             bg-[#0055FF] rounded-[10px] border-[2.1px] border-white/15 
+             shadow-[0px_8px_40px_rgba(0,85,255,0.5),0px_0px_10px_rgba(255,255,255,0)_inset,0px_0px_0px_1px_rgba(0,85,255,0.12)] 
+             transition-all duration-300 
+             "
+          >
+            {isLoggedIn ? "Dashboard" : "Create your AI"}
+          </a>
+
+          {/* <div className="bg-white text-black rounded-[80px] py-2 px-3 flex gap-2 text-[16px] items-center justify-center">
           <button onClick={onLogin} className=" text-[10px] md:text-[16px]">
             {isLoggedIn ? "Dashboard" : "Create your AI"}
           </button>
-        </button>
-      </div>
+        </div> */}
+        </div>
+      )}
     </div>
   );
 }
