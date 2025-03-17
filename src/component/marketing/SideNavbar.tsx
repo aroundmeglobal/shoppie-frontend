@@ -3,41 +3,48 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaHome, FaCog } from "react-icons/fa";
 import Configure from "../../../public/assets/svg/Configure";
-import Campaigns from "../../../public/assets/svg/Campaigns";
+// import Campaigns from "../../../public/assets/svg/Campaigns";
 import BillingAndPayments from "../../../public/assets/svg/BillingAndPayments";
-import CreateCampaigns from "../../../public/assets/svg/CreateCampaigns";
+// import CreateCampaigns from "../../../public/assets/svg/CreateCampaigns";
 import Help from "../../../public/assets/svg/Help";
 import SmartAssist from "../../../public/assets/svg/SmartAssist";
-import AroundMe from "../../../public/assets/svg/AroundMe";
-import MuscleBlaz from "@/public/assets/muscle blaze logo.png";
 import Image from "next/image";
 import useBrandStore from "@/store/useBrandStore";
 import Shoppiee from "../../../public/assets/svg/Shoppiee";
+import CodeSnippet from "../../../public/assets/svg/CodeSnippet";
+import Analytics from "../../../public/assets/svg/Analytics";
+import Product from "../../../public/assets/svg/Product";
 
 // Define primary nav items along with their routes.
 
 // Define sub nav items with an explicit route for each.
 // For example, "Configure" uses "/marketing", and the rest follow the "/marketing/[slug]" pattern.
 const subcomponent = [
+  { title: "Products", icon: <Product />, route: "/brand/product" },
   { title: "Configure", icon: <Configure />, route: "/brand/configure" },
-  { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
-  { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
+  { title: "Analytics", icon: <Analytics />, route: "/brand/analytics" },
+  // { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
+  // { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
+  {
+    title: "Code snippet",
+    icon: <CodeSnippet />,
+    route: "/brand/code-snippet",
+  },
   {
     title: "Billings and payments",
     icon: <BillingAndPayments />,
     route: "/brand/billings-and-payments",
   },
+  { title: "Help", icon: <Help />, route: "/brand/help" },
   {
     title: "Smart assist",
     icon: <SmartAssist />,
     route: "/brand/smart-assist",
   },
-  { title: "Help", icon: <Help />, route: "/brand/help" },
 ];
 
-const Navbar = () => {
+const SideNavbar = () => {
   const pathname = usePathname();
   const logo = useBrandStore((state) => state.logo);
   const brandName = useBrandStore((state) => state.brandName);
@@ -113,13 +120,13 @@ const Navbar = () => {
               <Link href={item.route} key={`sub-${index}`}>
                 <div className="flex items-center h-16 transition-colors cursor-pointer overflow-hidden">
                   <div
-                    className={`flex items-center p-3 rounded-[12px] transition-all cursor-pointer w-full ${
+                    className={`flex items-center p-3 py-2  rounded-[12px] transition-all cursor-pointer w-full ${
                       active
                         ? "bg-[#133E9F]/80"
                         : "bg-[#133E9F]/10 hover:bg-[#133E9F]/80"
                     }`}
                   >
-                    <div className="text-xl">{item.icon}</div>
+                    <div className="text-xl ml-[-2px]">{item.icon}</div>
                     <span className="ml-4 hidden group-hover:inline-block transition-opacity duration-300 whitespace-nowrap">
                       {item.title}
                     </span>
@@ -134,4 +141,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default SideNavbar;

@@ -1,5 +1,5 @@
 import "@/app/globals.css";
-import Navbar from "@/component/marketing/Navbar";
+import SideNavbar from "@/component/marketing/SideNavbar";
 import RedirectHandler from "@/component/RedirectHandler";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className={cn("min-h-screen bg-background antialiased ")}>
         <RedirectHandler />
-        <Navbar/>
+        <SideNavbar/>
         {children}
       </body>
     </html>

@@ -53,6 +53,9 @@ export default function Home() {
     queryFn: fetchBrands,
   });
 
+  console.log('brands',allBrands);
+  
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
