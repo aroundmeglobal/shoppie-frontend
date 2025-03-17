@@ -53,8 +53,7 @@ export default function Home() {
     queryFn: fetchBrands,
   });
 
-  console.log('brands',allBrands);
-  
+  console.log("brands", allBrands);
 
   useEffect(() => {
     const handleResize = () => {
@@ -87,8 +86,6 @@ export default function Home() {
 
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
-      // console.log(brand);
-
       setBrand(brand);
       router.push(`/chat/${brand?.workspaces[0].slug}`);
     } else {
@@ -156,13 +153,15 @@ export default function Home() {
                 className="flex flex-col items-center"
               >
                 {/* <div className="h-[80px] w-[80px] md:h-[120px] md:w-[120px] rounded-full overflow-hidden mb-2 "> */}
-                <Image
-                  width={120}
-                  height={120}
-                  src={brand?.brand_logo}
-                  alt={brand?.brand_name}
-                  className="object-cover md:h-28 md:w-28 h-20 w-20 rounded-full mb-2 "
-                />
+                {brand?.brand_logo && (
+                  <Image
+                    width={120}
+                    height={120}
+                    src={brand?.brand_logo ?? null}
+                    alt={brand?.brand_name}
+                    className="object-cover md:h-28 md:w-28 h-20 w-20 rounded-full mb-2 "
+                  />
+                )}
                 {/* </div> */}
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
                   {brand?.brand_name}
