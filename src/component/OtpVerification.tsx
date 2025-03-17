@@ -10,9 +10,14 @@ import Navbar from "./Navbar";
 interface Props {
   email: string;
   onChangeEmail: () => void;
+  handleGetOtp: () => void;
 }
 
-export default function OtpVerification({ email, onChangeEmail }: Props) {
+export default function OtpVerification({
+  email,
+  onChangeEmail,
+  handleGetOtp,
+}: Props) {
   const router = useRouter();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
@@ -61,16 +66,21 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
         // window.location.href = "/brand/profile";
         router.replace("/brand/profile");
       }
-    } catch (error) {
-      console.log(error, "error");
-
-      setEmail(email);
-
-      // window.location.href = "/create-account";
-      router.replace("/create-account");
-      toast.error(" OTP is invalid.Please try again.");
+    } catch (error: any) {
+      if (
+        error.response.data.detail === "Invalid otp" ||
+        error.response.data.detail === "Failed to Login"
+      ) {
+        toast.error(" OTP is invalid.Please try again.");
+      } else if (error.response.data.detail === "Brand not found") {
+        setEmail(email);
+        router.replace("/create-account");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
+      setOtp(["", "", "", "", "", ""]);
     }
   };
 
@@ -125,6 +135,8 @@ export default function OtpVerification({ email, onChangeEmail }: Props) {
               }`}
               onClick={() => {
                 if (!isResendDisabled) {
+                  setOtp(["", "", "", "", "", ""]);
+                  handleGetOtp();
                   setTimer(59);
                   setResendDisabled(true);
                 }

@@ -268,3 +268,12 @@ input[type="number"] {
 .hide-scroll-bar-indicator::-webkit-scrollbar {
   display: none; /* For Chrome, Safari, and Opera */
 }
+input {
+  &:-webkit-autofill,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active,
+  &:-webkit-autofill:hover {
+    transition: background-color 1000s ease-in-out 0s;
+    -webkit-text-fill-color: white !important;
+  }
+}
