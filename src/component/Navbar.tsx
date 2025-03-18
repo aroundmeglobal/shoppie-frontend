@@ -22,7 +22,7 @@ function Navbar() {
       return;
     }
     const targetUrl = isLoggedIn ? "/brand/profile" : "/login";
-    window.open(targetUrl, "_blank"); // Open login/profile in a new tab
+    window.open(targetUrl, "_blank");
   };
 
   const onLogout = () => {
@@ -30,7 +30,7 @@ function Navbar() {
   };
 
   return (
-    <div className="z-[11] flex items-center justify-between w-full p-4 px-4   h-16  max-w-screen-2xl sticky top-0  bg-black border-b-[#2B2B2B] border-b-[0.1px] border-opacity-50">
+    <div className="z-[11] flex items-center justify-between w-full p-4 px-4   h-16   sticky top-0  bg-black border-b-[#2B2B2B] border-b-[0.1px] border-opacity-50">
       <Link target="_blank" href={"https://goshoppie.com/"}>
         <Image
           alt="shoppie"
@@ -63,6 +63,7 @@ function Navbar() {
              transition-all duration-300 
              "
           >
+            {/* Create your AI */}
             {isLoggedIn ? "Dashboard" : "Create your AI"}
           </a>
 
