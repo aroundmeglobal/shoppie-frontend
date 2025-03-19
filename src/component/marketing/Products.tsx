@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import Image from "next/image";
 import uploadProducts from "@/lib/uploadProducts";
@@ -103,11 +103,12 @@ type OldProduct = {
 // -----------------
 const ProductCard = ({ product }: { product: Product }) => {
   let domain = "";
+
   try {
     const url = new URL(product?.purchase_link);
     domain = url.hostname;
   } catch (error) {
-    throw new Error(
+    toast.error(
       `Invalid URL for product "${product.product_name}". Received: "${product.purchase_link}". Please check the CSV data.`
     );
   }
@@ -174,29 +175,9 @@ const Products = () => {
   const [csvDetails, setCsvDetails] = useState(null);
   const { setSelectedCsv, selectedCsv } = useCsvStore();
   const [productExisting, setProductExisting] = useState(false);
+  const latestId = useRef();
 
-  useEffect(() => {
-    const fetchOldProducts = async () => {
-      const responseOldProducts = await api.get(
-        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/?brand_id=${brandId}`
-      );
-      setOldProducts(responseOldProducts.data);
-      setProductExisting(true);
-    };
-    const csvName = async () => {
-      const response = await api.get(
-        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/file-details?brand_id=${brandId}`
-      );
-      const data = response.data.filter(
-        (item) => item.file_type === "products"
-      );
-      setCsvDetails(data[0]);
-    };
-    if (brandId) {
-      fetchOldProducts();
-      csvName();
-    }
-  }, [brandId]);
+  const [refreshData, setRefreshData] = useState(false);
 
   const renderOldProducts = oldProducts.map((product, index) => (
     <ProductCard
@@ -307,172 +288,6 @@ const Products = () => {
     });
   };
 
-  // Function to parse CSV data and set the products state
-  // const parseCSVData = (csvData: string) => {
-  //   console.log(csvData, "csvdata");
-
-  //   Papa?.parse(csvData, {
-  //     header: true,
-  //     skipEmptyLines: true,
-  //     complete: (results) => {
-  //       // Check CSV header for required fields.
-  //       const requiredFields = [
-  //         "Product_name",
-  //         "Product_images",
-  //         "Product_description",
-  //         "Original_price",
-  //         "Discounted_price",
-  //         "Tags",
-  //         "Purchase_link",
-  //       ];
-  //       if (results.meta && results.meta.fields) {
-  //         const missingFields = requiredFields.filter(
-  //           (field) => !results.meta!.fields.includes(field)
-  //         );
-  //         if (missingFields.length > 0) {
-  //           setCsvError(
-  //             `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
-  //               "\n"
-  //             )}`
-  //           );
-  //           return;
-  //         }
-  //       } else {
-  //         setCsvError("CSV header error: Unable to read header fields.");
-  //         return;
-  //       }
-
-  //       // Wrap row validation and mapping in a try-catch block.
-  //       try {
-  //         const data = results.data as any[];
-  //         const parsedProducts: Product[] = data.map((row, index) => {
-  //           let missing = false;
-  //           for (const field of requiredFields) {
-  //             if (
-  //               row[field] === undefined ||
-  //               row[field] === null ||
-  //               row[field].toString().trim() === ""
-  //             ) {
-  //               missing = true;
-  //               break;
-  //             }
-  //           }
-  //           if (missing) {
-  //             throw new Error(
-  //               `Row ${
-  //                 index + 1
-  //               } has missing fields. Please check the CSV data.`
-  //             );
-  //           }
-  //           return {
-  //             product_name: row.Product_name,
-  //             product_images: row.Product_images,
-  //             product_description: row.Product_description,
-  //             original_price: row.Original_price,
-  //             discounted_price: row.Discounted_price,
-  //             tags: row.Tags
-  //               ? row.Tags.split(",").map((tag: string) => tag.trim())
-  //               : [],
-  //             purchase_link: row.Purchase_link,
-  //           };
-  //         });
-  //         setProducts(parsedProducts);
-  //         setUploadedFile(csvData);
-  //       } catch (error: any) {
-  //         setCsvError(error.message);
-  //       }
-  //     },
-  //     error: (error) => {
-  //       console.error("Error parsing CSV:", error);
-  //       setCsvError(`Error parsing CSV: ${error.message}`);
-  //     },
-  //   });
-  // };
-
-  // Handler for CSV file upload.
-  // const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (e.target.files && e.target.files[0]) {
-  //     const file = e.target.files[0];
-
-  //     Papa.parse(file, {
-  //       header: true,
-  //       skipEmptyLines: true,
-  //       complete: (results) => {
-  //         // Check CSV header for required fields.
-  //         const requiredFields = [
-  //           "Product_name",
-  //           "Product_images",
-  //           "Product_description",
-  //           "Original_price",
-  //           "Discounted_price",
-  //           "Tags",
-  //           "Purchase_link",
-  //         ];
-  //         if (results.meta && results.meta.fields) {
-  //           const missingFields = requiredFields.filter(
-  //             (field) => !results.meta!.fields.includes(field)
-  //           );
-  //           if (missingFields.length > 0) {
-  //             setCsvError(
-  //               `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
-  //                 "\n"
-  //               )}`
-  //             );
-  //             return;
-  //           }
-  //         } else {
-  //           setCsvError("CSV header error: Unable to read header fields.");
-  //           return;
-  //         }
-
-  //         // Wrap row validation and mapping in a try-catch block.
-  //         try {
-  //           const data = results.data as any[];
-  //           const parsedProducts: Product[] = data.map((row, index) => {
-  //             let missing = false;
-  //             for (const field of requiredFields) {
-  //               if (
-  //                 row[field] === undefined ||
-  //                 row[field] === null ||
-  //                 row[field].toString().trim() === ""
-  //               ) {
-  //                 missing = true;
-  //                 break;
-  //               }
-  //             }
-  //             if (missing) {
-  //               throw new Error(
-  //                 `Row ${
-  //                   index + 1
-  //                 } has missing fields. Please check the CSV data.`
-  //               );
-  //             }
-  //             return {
-  //               product_name: row.Product_name,
-  //               product_images: row.Product_images,
-  //               product_description: row.Product_description,
-  //               original_price: row.Original_price,
-  //               discounted_price: row.Discounted_price,
-  //               tags: row.Tags
-  //                 ? row.Tags.split(",").map((tag: string) => tag.trim())
-  //                 : [],
-  //               purchase_link: row.Purchase_link,
-  //             };
-  //           });
-  //           setProducts(parsedProducts);
-  //         } catch (error: any) {
-  //           setCsvError(error.message);
-  //         }
-  //       },
-  //       error: (error) => {
-  //         console.error("Error parsing CSV:", error);
-  //         setCsvError(`Error parsing CSV: ${error.message}`);
-  //       },
-  //     });
-  //     setUploadedFile(file);
-  //   }
-  // };
-
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -485,8 +300,6 @@ const Products = () => {
 
       reader.readAsText(file);
       setUploadedFile(file);
-      console.log(uploadedFile, "uplod");
-
       handleSubmit(file);
     }
   };
@@ -498,15 +311,15 @@ const Products = () => {
   };
 
   const handleRemoveCSV = () => {
-    console.log("=====");
-    console.log(csvDetails, "asfd");
-
-    if (productExisting && csvDetails) {
+    if ((productExisting && csvDetails) || latestId) {
       const deleteCsv = async () => {
         try {
           const response = await api.delete(
-            `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${csvDetails?.id}`
+            `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${
+              csvDetails?.id || latestId.current
+            }`
           );
+
           const brandBody = {};
           const responseUpdateBrand = await api.put(
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
@@ -572,6 +385,7 @@ const Products = () => {
         body
       );
 
+      latestId.current = responseFileUpload.data.id;
       const brandBody = {};
       const responseUpdateBrand = await api.put(
         `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
@@ -580,11 +394,37 @@ const Products = () => {
 
       toast.success("CSV added successfully");
       setLoading(false);
+      setRefreshData((prev) => !prev); // Trigger re-fetch after delete
     } catch (error) {
-      toast.error("something went wrong please try again later!");
+      // toast.error("something went wrong please try again later!");
       console.log(error, "error from uploading csv from products page");
     }
   };
+
+  useEffect(() => {
+    const fetchOldProducts = async () => {
+      const responseOldProducts = await api.get(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/?brand_id=${brandId}`
+      );
+      if (responseOldProducts.data.length) {
+        setOldProducts(responseOldProducts.data);
+        setProductExisting(true);
+      }
+    };
+    const csvName = async () => {
+      const response = await api.get(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/file-details?brand_id=${brandId}`
+      );
+      const data = response.data.filter(
+        (item) => item.file_type === "products"
+      );
+      setCsvDetails(data[0]);
+    };
+    if (brandId) {
+      fetchOldProducts();
+      csvName();
+    }
+  }, [brandId]);
 
   return (
     <div className="p-5 pt-0 overflow-y-auto h-full">
