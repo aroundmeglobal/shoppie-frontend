@@ -711,7 +711,7 @@ const BrandModal = ({
   };
 
   const handleCopyLink = () => {
-    const linkToCopy = `http://localhost:3000/${brandDetails?.id}`;
+    const linkToCopy = `https://marketplace.goshoppie.com/${brandDetails?.id}`;
     navigator.clipboard
       .writeText(linkToCopy)
       .then(() => {
