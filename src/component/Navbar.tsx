@@ -6,13 +6,13 @@ import useAuth from "@/hooks/useAuth";
 import useRemoveAuthToken from "@/hooks/useRemoveAuthToken";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 function Navbar() {
   const pathname = usePathname();
   const isLoggedIn = useAuth();
   const removeAuthToken = useRemoveAuthToken();
-
+  const params = useParams();
   const onLogin = () => {
     if (window.innerWidth < 768) {
       toast.error("This feature is available only on desktop.", {
@@ -40,7 +40,7 @@ function Navbar() {
           className="w-[100px] md:w-[150px] h-[29px] object-contain "
         />
       </Link>
-      {pathname === "/" && (
+      {(pathname === "/" || pathname === `/${params?.id}`) && (
         <div className="flex gap-5 ">
           {/* <button
             onClick={onLogout}
