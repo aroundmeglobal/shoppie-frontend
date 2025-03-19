@@ -15,7 +15,9 @@ import Shoppiee from "../../../public/assets/svg/Shoppiee";
 import CodeSnippet from "../../../public/assets/svg/CodeSnippet";
 import Analytics from "../../../public/assets/svg/Analytics";
 import Product from "../../../public/assets/svg/Product";
-
+import { TbLogout2 } from "react-icons/tb";
+import useRemoveAuthToken from "@/hooks/useRemoveAuthToken";
+import { useRouter } from "next/navigation";
 // Define primary nav items along with their routes.
 
 // Define sub nav items with an explicit route for each.
@@ -23,7 +25,6 @@ import Product from "../../../public/assets/svg/Product";
 const subcomponent = [
   { title: "Products", icon: <Product />, route: "/brand/product" },
   { title: "Configure", icon: <Configure />, route: "/brand/configure" },
-  { title: "Analytics", icon: <Analytics />, route: "/brand/analytics" },
   // { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
   // { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
   {
@@ -31,6 +32,7 @@ const subcomponent = [
     icon: <CodeSnippet />,
     route: "/brand/code-snippet",
   },
+  { title: "Analytics", icon: <Analytics />, route: "/brand/analytics" },
   {
     title: "Billings and payments",
     icon: <BillingAndPayments />,
@@ -42,13 +44,19 @@ const subcomponent = [
     icon: <SmartAssist />,
     route: "/brand/smart-assist",
   },
+  {
+    title: "Logout",
+    icon: <TbLogout2 size={30} />,
+    route: "/",
+  },
 ];
 
 const SideNavbar = () => {
   const pathname = usePathname();
   const logo = useBrandStore((state) => state.logo);
   const brandName = useBrandStore((state) => state.brandName);
-
+  const removeToken = useRemoveAuthToken();
+  const router = useRouter();
   const primaryItems = [
     { title: "Shoppie", icon: <Shoppiee />, route: "/" },
     {
@@ -58,6 +66,12 @@ const SideNavbar = () => {
       activeRoutes: ["/brand/profile", "/brand/add-product"],
     },
   ];
+
+  const onLogout = () => {
+    console.log("clicked");
+    removeToken();
+    router.replace("/");
+  };
 
   return (
     <div className="group fixed top-0 left-0 h-screen w-16 hover:w-64 bg-[#1d1d1d] text-white transition-all duration-300 overflow-hidden z-50">
@@ -116,6 +130,28 @@ const SideNavbar = () => {
         <div>
           {subcomponent.map((item, index) => {
             const active = pathname === item.route;
+            if (item.title === "Logout") {
+              return (
+                <div
+                  className="flex items-center h-16 transition-colors cursor-pointer overflow-hidden"
+                  key={`sub-${index}`}
+                  onClick={onLogout}
+                >
+                  <div
+                    className={`flex items-center p-3 py-2  rounded-[12px] transition-all cursor-pointer w-full ${
+                      active
+                        ? "bg-[#133E9F]/80"
+                        : "bg-[#133E9F]/10 hover:bg-[#133E9F]/80"
+                    }`}
+                  >
+                    <div className="text-xl ml-[-2px]">{item.icon}</div>
+                    <span className="ml-4 hidden group-hover:inline-block transition-opacity duration-300 whitespace-nowrap">
+                      {item.title}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
             return (
               <Link href={item.route} key={`sub-${index}`}>
                 <div className="flex items-center h-16 transition-colors cursor-pointer overflow-hidden">

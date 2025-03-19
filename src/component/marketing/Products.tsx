@@ -8,6 +8,10 @@ import uploadProducts from "@/lib/uploadProducts";
 import useBrandStore from "@/store/useBrandStore";
 import { ClipLoader } from "react-spinners";
 import api from "@/lib/axiosInstance";
+import { handleDownloadCSV } from "@/lib/downloadCSV";
+import UploadedFileComponent from "./form/UploadedFileComponent";
+import useCsvStore from "@/store/useCsvStore";
+import toast from "react-hot-toast";
 
 // -----------------
 // ErrorBoundary Component
@@ -167,6 +171,9 @@ const Products = () => {
   const brandName = useBrandStore((state) => state.brandName);
   const brandId = useBrandStore((state) => state.brandId);
   const [oldProducts, setOldProducts] = useState<OldProduct[]>([]);
+  const [csvDetails, setCsvDetails] = useState(null);
+  const { setSelectedCsv, selectedCsv } = useCsvStore();
+  const [productExisting, setProductExisting] = useState(false);
 
   useEffect(() => {
     const fetchOldProducts = async () => {
@@ -174,9 +181,21 @@ const Products = () => {
         `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/?brand_id=${brandId}`
       );
       setOldProducts(responseOldProducts.data);
+      setProductExisting(true);
     };
-
-    fetchOldProducts();
+    const csvName = async () => {
+      const response = await api.get(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/file-details?brand_id=${brandId}`
+      );
+      const data = response.data.filter(
+        (item) => item.file_type === "products"
+      );
+      setCsvDetails(data[0]);
+    };
+    if (brandId) {
+      fetchOldProducts();
+      csvName();
+    }
   }, [brandId]);
 
   const renderOldProducts = oldProducts.map((product, index) => (
@@ -195,87 +214,280 @@ const Products = () => {
     />
   ));
 
+  useEffect(() => {
+    if (selectedCsv) {
+      setUploadedFile(selectedCsv);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const csvData = event.target?.result as string; // Read CSV data as string
+
+        parseCSVData(csvData); // Call parsing function
+      };
+      reader.readAsText(selectedCsv); // Read file as text
+    }
+  }, [selectedCsv]);
+
+  const parseCSVData = (csvData: string) => {
+    Papa.parse(csvData, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const requiredFields = [
+          "Product_name",
+          "Product_images",
+          "Product_description",
+          "Original_price",
+          "Discounted_price",
+          "Tags",
+          "Purchase_link",
+        ];
+
+        if (results.meta && results.meta.fields) {
+          const missingFields = requiredFields.filter(
+            (field) => !results.meta.fields.includes(field)
+          );
+          if (missingFields.length > 0) {
+            setCsvError(
+              `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+                "\n"
+              )}`
+            );
+            return;
+          }
+        } else {
+          setCsvError("CSV header error: Unable to read header fields.");
+          return;
+        }
+
+        try {
+          const data = results.data as any[];
+          const parsedProducts = data.map((row, index) => {
+            let missing = false;
+            for (const field of requiredFields) {
+              if (
+                row[field] === undefined ||
+                row[field] === null ||
+                row[field].toString().trim() === ""
+              ) {
+                missing = true;
+                break;
+              }
+            }
+            if (missing) {
+              throw new Error(
+                `Row ${
+                  index + 1
+                } has missing fields. Please check the CSV data.`
+              );
+            }
+            return {
+              product_name: row.Product_name,
+              product_images: row.Product_images,
+              product_description: row.Product_description,
+              original_price: row.Original_price,
+              discounted_price: row.Discounted_price,
+              tags: row.Tags
+                ? row.Tags.split(",").map((tag) => tag.trim())
+                : [],
+              purchase_link: row.Purchase_link,
+            };
+          });
+
+          // Update Zustand store with parsed products
+          setProducts(parsedProducts);
+        } catch (error: any) {
+          setCsvError(error.message);
+        }
+      },
+      error: (error) => {
+        console.error("Error parsing CSV:", error);
+        setCsvError(`Error parsing CSV: ${error.message}`);
+      },
+    });
+  };
+
+  // Function to parse CSV data and set the products state
+  // const parseCSVData = (csvData: string) => {
+  //   console.log(csvData, "csvdata");
+
+  //   Papa?.parse(csvData, {
+  //     header: true,
+  //     skipEmptyLines: true,
+  //     complete: (results) => {
+  //       // Check CSV header for required fields.
+  //       const requiredFields = [
+  //         "Product_name",
+  //         "Product_images",
+  //         "Product_description",
+  //         "Original_price",
+  //         "Discounted_price",
+  //         "Tags",
+  //         "Purchase_link",
+  //       ];
+  //       if (results.meta && results.meta.fields) {
+  //         const missingFields = requiredFields.filter(
+  //           (field) => !results.meta!.fields.includes(field)
+  //         );
+  //         if (missingFields.length > 0) {
+  //           setCsvError(
+  //             `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+  //               "\n"
+  //             )}`
+  //           );
+  //           return;
+  //         }
+  //       } else {
+  //         setCsvError("CSV header error: Unable to read header fields.");
+  //         return;
+  //       }
+
+  //       // Wrap row validation and mapping in a try-catch block.
+  //       try {
+  //         const data = results.data as any[];
+  //         const parsedProducts: Product[] = data.map((row, index) => {
+  //           let missing = false;
+  //           for (const field of requiredFields) {
+  //             if (
+  //               row[field] === undefined ||
+  //               row[field] === null ||
+  //               row[field].toString().trim() === ""
+  //             ) {
+  //               missing = true;
+  //               break;
+  //             }
+  //           }
+  //           if (missing) {
+  //             throw new Error(
+  //               `Row ${
+  //                 index + 1
+  //               } has missing fields. Please check the CSV data.`
+  //             );
+  //           }
+  //           return {
+  //             product_name: row.Product_name,
+  //             product_images: row.Product_images,
+  //             product_description: row.Product_description,
+  //             original_price: row.Original_price,
+  //             discounted_price: row.Discounted_price,
+  //             tags: row.Tags
+  //               ? row.Tags.split(",").map((tag: string) => tag.trim())
+  //               : [],
+  //             purchase_link: row.Purchase_link,
+  //           };
+  //         });
+  //         setProducts(parsedProducts);
+  //         setUploadedFile(csvData);
+  //       } catch (error: any) {
+  //         setCsvError(error.message);
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error("Error parsing CSV:", error);
+  //       setCsvError(`Error parsing CSV: ${error.message}`);
+  //     },
+  //   });
+  // };
+
   // Handler for CSV file upload.
+  // const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+
+  //     Papa.parse(file, {
+  //       header: true,
+  //       skipEmptyLines: true,
+  //       complete: (results) => {
+  //         // Check CSV header for required fields.
+  //         const requiredFields = [
+  //           "Product_name",
+  //           "Product_images",
+  //           "Product_description",
+  //           "Original_price",
+  //           "Discounted_price",
+  //           "Tags",
+  //           "Purchase_link",
+  //         ];
+  //         if (results.meta && results.meta.fields) {
+  //           const missingFields = requiredFields.filter(
+  //             (field) => !results.meta!.fields.includes(field)
+  //           );
+  //           if (missingFields.length > 0) {
+  //             setCsvError(
+  //               `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+  //                 "\n"
+  //               )}`
+  //             );
+  //             return;
+  //           }
+  //         } else {
+  //           setCsvError("CSV header error: Unable to read header fields.");
+  //           return;
+  //         }
+
+  //         // Wrap row validation and mapping in a try-catch block.
+  //         try {
+  //           const data = results.data as any[];
+  //           const parsedProducts: Product[] = data.map((row, index) => {
+  //             let missing = false;
+  //             for (const field of requiredFields) {
+  //               if (
+  //                 row[field] === undefined ||
+  //                 row[field] === null ||
+  //                 row[field].toString().trim() === ""
+  //               ) {
+  //                 missing = true;
+  //                 break;
+  //               }
+  //             }
+  //             if (missing) {
+  //               throw new Error(
+  //                 `Row ${
+  //                   index + 1
+  //                 } has missing fields. Please check the CSV data.`
+  //               );
+  //             }
+  //             return {
+  //               product_name: row.Product_name,
+  //               product_images: row.Product_images,
+  //               product_description: row.Product_description,
+  //               original_price: row.Original_price,
+  //               discounted_price: row.Discounted_price,
+  //               tags: row.Tags
+  //                 ? row.Tags.split(",").map((tag: string) => tag.trim())
+  //                 : [],
+  //               purchase_link: row.Purchase_link,
+  //             };
+  //           });
+  //           setProducts(parsedProducts);
+  //         } catch (error: any) {
+  //           setCsvError(error.message);
+  //         }
+  //       },
+  //       error: (error) => {
+  //         console.error("Error parsing CSV:", error);
+  //         setCsvError(`Error parsing CSV: ${error.message}`);
+  //       },
+  //     });
+  //     setUploadedFile(file);
+  //   }
+  // };
+
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const reader = new FileReader();
 
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          // Check CSV header for required fields.
-          const requiredFields = [
-            "Product_name",
-            "Product_images",
-            "Product_description",
-            "Original_price",
-            "Discounted_price",
-            "Tags",
-            "Purchase_link",
-          ];
-          if (results.meta && results.meta.fields) {
-            const missingFields = requiredFields.filter(
-              (field) => !results.meta!.fields.includes(field)
-            );
-            if (missingFields.length > 0) {
-              setCsvError(
-                `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
-                  "\n"
-                )}`
-              );
-              return;
-            }
-          } else {
-            setCsvError("CSV header error: Unable to read header fields.");
-            return;
-          }
+      reader.onload = (event: ProgressEvent<FileReader>) => {
+        const csvData = event.target?.result as string;
+        parseCSVData(csvData);
+      };
 
-          // Wrap row validation and mapping in a try-catch block.
-          try {
-            const data = results.data as any[];
-            const parsedProducts: Product[] = data.map((row, index) => {
-              let missing = false;
-              for (const field of requiredFields) {
-                if (
-                  row[field] === undefined ||
-                  row[field] === null ||
-                  row[field].toString().trim() === ""
-                ) {
-                  missing = true;
-                  break;
-                }
-              }
-              if (missing) {
-                throw new Error(
-                  `Row ${
-                    index + 1
-                  } has missing fields. Please check the CSV data.`
-                );
-              }
-              return {
-                product_name: row.Product_name,
-                product_images: row.Product_images,
-                product_description: row.Product_description,
-                original_price: row.Original_price,
-                discounted_price: row.Discounted_price,
-                tags: row.Tags
-                  ? row.Tags.split(",").map((tag: string) => tag.trim())
-                  : [],
-                purchase_link: row.Purchase_link,
-              };
-            });
-            setProducts(parsedProducts);
-          } catch (error: any) {
-            setCsvError(error.message);
-          }
-        },
-        error: (error) => {
-          console.error("Error parsing CSV:", error);
-          setCsvError(`Error parsing CSV: ${error.message}`);
-        },
-      });
+      reader.readAsText(file);
       setUploadedFile(file);
+      console.log(uploadedFile, "uplod");
+
+      handleSubmit(file);
     }
   };
 
@@ -285,57 +497,93 @@ const Products = () => {
     setCsvError(null);
   };
 
-  const handleSubmit = async () => {
+  const handleRemoveCSV = () => {
+    console.log("=====");
+    console.log(csvDetails, "asfd");
+
+    if (productExisting && csvDetails) {
+      const deleteCsv = async () => {
+        try {
+          const response = await api.delete(
+            `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${csvDetails?.id}`
+          );
+          const brandBody = {};
+          const responseUpdateBrand = await api.put(
+            `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+            brandBody
+          );
+          toast.success("Removed CSV. Please upload new CSV!");
+        } catch (error) {
+          console.log(error, "error while deleting csv");
+        }
+      };
+
+      deleteCsv();
+    }
+    setProducts([]);
+    setCsvError(null);
+    setOldProducts([]);
+    setSelectedCsv(null);
+  };
+
+  const handleSubmit = async (uploadedFile: any) => {
     setLoading(true);
+
     if (!uploadedFile) {
       alert("Please upload a CSV file first!");
       setLoading(false);
       return;
     }
 
-    const uploadFileType = uploadedFile.type;
+    try {
+      const productResponse = await fetch(
+        `https://shoppie-backend.aroundme.global/api/upload/generate-upload-url`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-product/${
+              uploadedFile?.name
+            }`,
+            contentType: `${uploadedFile?.type}`,
+            folder: "user-products",
+          }),
+        }
+      );
 
-    const productResponse = await fetch(
-      `https://fastapi.aroundme.tech/api/upload/generate-upload-url`,
-      {
-        method: "POST",
+      const productData = await productResponse.json();
+
+      await fetch(productData.signed_url, {
+        method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": uploadedFile.type,
         },
-        body: JSON.stringify({
-          name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-product`,
-          type: `${uploadedFile.type}`,
-          asset_for: "user-products",
-        }),
-      }
-    );
+        body: uploadedFile,
+      });
 
-    const productData = await productResponse.json();
+      const body = {
+        brand_id: brandId,
+        file: `${productData.public_url}`,
+      };
+      const responseFileUpload = await api.post(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
+        body
+      );
 
-    await fetch(productData.signed_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": uploadedFile.type,
-      },
-      body: uploadedFile,
-    });
+      const brandBody = {};
+      const responseUpdateBrand = await api.put(
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+        brandBody
+      );
 
-    const body = {
-      brand_id: brandId,
-      file: `${productData.public_url}`,
-    };
-    const responseFileUpload = await api.post(
-      `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
-      body
-    );
-
-    const brandBody = {};
-    const responseUpdateBrand = await api.put(
-      `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
-      brandBody
-    );
-
-    setLoading(false);
+      toast.success("CSV added successfully");
+      setLoading(false);
+    } catch (error) {
+      toast.error("something went wrong please try again later!");
+      console.log(error, "error from uploading csv from products page");
+    }
   };
 
   return (
@@ -372,88 +620,111 @@ const Products = () => {
       )}
 
       <div className="flex flex-col mt-3 px-28 gap-10 overflow-hidden">
-        {!uploadedFile ? (
-          <div className="rounded-xl p-6 bg-[#161616] shadow">
-            <h2 className="text-2xl font-bold mb-2">
-              Add your products to showcase on profile
-            </h2>
-            <p className="mb-4 text-[#fff]/60">
-              Let your customer explore and make informed decision
-            </p>
-            <div className="flex space-x-4 mt-16">
-              <button
-                onClick={() => document.getElementById("csvInput")?.click()}
-                className="flex items-center justify-between bg-white border text-gray-800 px-4 py-2 rounded-xl hover:bg-[#3d3d3d] hover:text-white focus:border-[#4d4d4d]"
-              >
-                <span className="font-semibold">Import CSV</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 ml-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+        {/* {!uploadedFile ? ( */}
+        <div className="rounded-xl p-6 bg-[#161616] shadow">
+          <h2 className="text-2xl font-bold mb-2">
+            Add your products to AI and let people discover them.
+          </h2>
+          <p className="mb-4 text-[#fff]/60">
+            First, download the sample CSV, then import your products to
+            showcase them effortlessly.
+          </p>
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center font-meidum   justify-between bg-white border text-gray-800 px-4 py-2 rounded-xl hover:bg-[#3d3d3d] hover:text-white focus:border-[#4d4d4d]"
+          >
+            Download Sample CSV
+          </button>
+          <div className="border-dashed border-[#2d2d2d]  border-[2px] w-full  mt-5 rounded-xl p-5">
+            {!products?.length && !oldProducts?.length ? (
+              <div className="flex  flex-col items-center justify-center text-white  rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById("csvInput")?.click()}
+                  className=" border-2 border-[#2d2d2d] text-white font-medium py-2 px-4 rounded-xl flex items-center"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4-4 4M12 4v12"
-                  />
-                </svg>
-              </button>
-              <input
-                type="file"
-                id="csvInput"
-                accept=".csv"
-                onChange={handleCSVUpload}
-                className="hidden"
+                  Upload CSV
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 ml-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4-4 4M12 4v12"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="file"
+                  id="csvInput"
+                  accept=".csv"
+                  onChange={handleCSVUpload}
+                  className="hidden"
+                />
+                <p className="text-sm text-gray-400 mt-2">
+                  Upload your product list.
+                </p>
+              </div>
+            ) : (
+              <UploadedFileComponent
+                file={uploadedFile || csvDetails}
+                deletePdf={handleRemoveCSV}
+                idx={""}
               />
-              <Link
-                href={"/brand/add-product"}
-                className="flex items-center justify-between border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
-              >
-                <span>Add Products</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 ml-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </Link>
-            </div>
+              // <div className="flex justify-between items-center bg-[#161616] p-4 rounded-xl">
+              //   <span className="text-white">{uploadedFile.name}</span>
+              //   <div className="flex items-center gap-5 pt-2">
+              //     <button
+              //       className="mt-[-10px] cursor-pointer flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d] hover:bg-[red]/30 hover:border-[red]/60"
+              //       onClick={handleDiscard}
+              //     >
+              //       Discard
+              //     </button>
+              //     <button
+              //       className={`py-2 px-4 mt-[-10px] rounded-2xl ${
+              //         uploadedFile
+              //           ? "cursor-pointer bg-[#00AFFE]"
+              //           : "cursor-not-allowed flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
+              //       }`}
+              //       onClick={handleSubmit}
+              //       disabled={!uploadedFile}
+              //     >
+              //       Save
+              //     </button>
+              //   </div>
+              // </div>
+            )}
           </div>
-        ) : (
-          <div className="flex justify-between items-center bg-[#161616] p-4 rounded-xl">
-            <span className="text-white">{uploadedFile.name}</span>
-            <div className="flex items-center gap-5 pt-2">
-              <button
-                className="mt-[-10px] cursor-pointer flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d] hover:bg-[red]/30 hover:border-[red]/60"
-                onClick={handleDiscard}
-              >
-                Discard
-              </button>
-              <button
-                className={`py-2 px-4 mt-[-10px] rounded-2xl ${
-                  uploadedFile
-                    ? "cursor-pointer bg-[#00AFFE]"
-                    : "cursor-not-allowed flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
-                }`}
-                onClick={handleSubmit}
-                disabled={!uploadedFile}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
+        {/* // ) : (
+        //   <div className="flex justify-between items-center bg-[#161616] p-4 rounded-xl">
+        //     <span className="text-white">{uploadedFile.name}</span>
+        //     <div className="flex items-center gap-5 pt-2">
+        //       <button
+        //         className="mt-[-10px] cursor-pointer flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d] hover:bg-[red]/30 hover:border-[red]/60"
+        //         onClick={handleDiscard}
+        //       >
+        //         Discard
+        //       </button>
+        //       <button
+        //         className={`py-2 px-4 mt-[-10px] rounded-2xl ${
+        //           uploadedFile
+        //             ? "cursor-pointer bg-[#00AFFE]"
+        //             : "cursor-not-allowed flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl py-2 px-4 bg-[#1d1d1d] text-yellow-50 focus:outline-none focus:ring-0 focus:border-[#4d4d4d] hover:bg-[#4d4d4d]"
+        //         }`}
+        //         onClick={handleSubmit}
+        //         disabled={!uploadedFile}
+        //       >
+        //         Save
+        //       </button>
+        //     </div>
+        //   </div>
+        // )} */}
 
         <ErrorBoundary onDismiss={handleDiscard}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
