@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import Product from "./ChatBot/Product";
 import ProductCardShimmer from "./ChatBot/ProductShimmer";
 import { ChatBubble } from "./ChatBubble";
+import toast from "react-hot-toast";
+import { IoCopyOutline } from "react-icons/io5";
 
 const LLM_BASE_URL = process.env.NEXT_PUBLIC_LLM_BASE_URL;
 const LLM_AUTH_TOKEN = process.env.NEXT_PUBLIC_LLM_AUTH_TOKEN;
@@ -708,6 +710,18 @@ const BrandModal = ({
     setShowAllProductModal(true);
   };
 
+  const handleCopyLink = () => {
+    const linkToCopy = `http://localhost:3000/${brandDetails?.id}`;
+    navigator.clipboard
+      .writeText(linkToCopy)
+      .then(() => {
+        toast.success("Link copied");
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+      });
+  };
+
   return (
     <div className="flex flex-col top-0 fixed w-[100vw] h-[100vh] bg-[#282828]  md:w-[450px] md:h-[85%] md:rounded-3xl md:bottom-[0px] md:right-[20px] md:top-[13%] shadow-md overflow-hidden z-30 overflow-y-auto">
       {/* Brand Modal Header */}
@@ -743,6 +757,9 @@ const BrandModal = ({
               <div className="flex items-center gap-2">
                 <div className="text-white text-xl">{brandDetails?.name}</div>
                 <MdVerified color="#1E60FB" size={18} />
+                <button onClick={handleCopyLink}>
+                  <IoCopyOutline />
+                </button>
               </div>
             </div>
           </div>

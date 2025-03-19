@@ -8,7 +8,7 @@ interface RootLayoutProps {
 }
 
 export const metadata = {
-  title: "AroundMe | Connect with People Nearby Instantly",
+  title: "Shoppie",
   description:
     "Discover new friends and connect with people in your area in real-time with the AroundMe app. Download now to start building local connections and sharing interests!",
 };
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className={cn("min-h-screen bg-background antialiased ")}>
         <RedirectHandler />
-        <SideNavbar/>
+        <SideNavbar />
         {children}
       </body>
     </html>

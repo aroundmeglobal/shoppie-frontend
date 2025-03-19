@@ -1,28 +1,17 @@
 import Image from "next/image";
-import AskButton from "./askButton";
 import { useCallback } from "react";
 
 interface Types {
   product: any;
-  setProductForAsk: (product: any) => void;
-  fromChatBubble: boolean;
 }
 
-const Product = ({
-  product,
-  setProductForAsk,
-  fromChatBubble = false,
-}: Types) => {
+const ProductCardForForm = ({ product }: Types) => {
   if (!product) return;
-
-  const handleAsk = useCallback(() => {
-    setProductForAsk(product);
-  }, []);
 
   return (
     <div
       key={product.id}
-      className="product-card flex-shrink-0 flex flex-col items-start w-[200px] bg-gborder  rounded-xl bg-[#1d1d1d] text-yellow-50 h-[300px] gap-3 cursor-pointer pb-2"
+      className="product-card flex-shrink-0 overflow-hidden flex flex-col items-start w-[180px] bg-gborder  rounded-xl bg-[#2d2d2d] text-yellow-50 h-[250px] gap-3 cursor-pointer pb-2"
     >
       {Array.isArray(product?.product_images) ? (
         <Image
@@ -30,7 +19,7 @@ const Product = ({
           alt={product.title ?? product.product_name}
           width={100}
           height={48}
-          className="w-full h-[180px]  object-contain rounded-xl rounded-b-none  bg-[#1d1d1d]"
+          className="w-full h-[150px]  object-cover rounded-xl rounded-b-none  bg-[#1d1d1d]"
         />
       ) : (
         <Image
@@ -41,8 +30,8 @@ const Product = ({
           className="w-full h-[180px]  object-contain rounded-xl rounded-b-none  bg-[#1d1d1d]"
         />
       )}
-      <div className="mx-3 w-[180px]   flex flex-col justify-between  gap-2 flex-grow  text-start ">
-        <h3 className="font-medium text-[13px] line-clamp-2 md:line-clamp-2 ">
+      <div className="mx-3 w-[180px] overflow-hidden   flex flex-col justify-between  gap-2 flex-grow  text-start ">
+        <h3 className="font-medium text-[13px] line-clamp-2 md:line-clamp-1 ">
           {product.title ?? product?.product_name}
         </h3>
         <div className="flex justify-between ">
@@ -56,11 +45,10 @@ const Product = ({
                 product?.product_prices?.Original_price}
             </h3>
           </div>
-          {fromChatBubble && <AskButton onClick={handleAsk} />}
         </div>
       </div>
     </div>
   );
 };
 
-export default Product;
+export default ProductCardForForm;

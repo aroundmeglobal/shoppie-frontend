@@ -29,13 +29,12 @@ const configureWorkspace = async (
   if (submissionData.pdfs && submissionData.pdfs.length > 0) {
     for (const uploadedFile of submissionData.pdfs) {
       try {
-
         const uploadFileType = uploadedFile.type;
 
         // Request to generate signed URL
 
         const pdfResonse = await fetch(
-          `https://fastapi.aroundme.tech/api/upload/generate-upload-url`,
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
           {
             method: "POST",
             headers: {
@@ -44,9 +43,9 @@ const configureWorkspace = async (
             body: JSON.stringify({
               name: `${submissionData.brandName
                 .replace(/\s+/g, "-")
-                .toLowerCase()}${uploadedFile.name}`,
-              type: uploadFileType,
-              asset_for: "user-pdf",
+                .toLowerCase()}/${uploadedFile.name}`,
+              contentType: uploadFileType,
+              folder: "user-pdf",
             }),
           }
         );
@@ -76,7 +75,6 @@ const configureWorkspace = async (
           file: `${pdfData.public_url}`,
         };
 
-
         const responseFileUpload = await api.post(
           `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-knowledge`,
           body
@@ -87,7 +85,6 @@ const configureWorkspace = async (
           `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${submissionData.brandId}`,
           brandBody
         );
-
       } catch (error) {
         console.error("Error during file upload:", error);
       }
@@ -121,7 +118,6 @@ const configureWorkspace = async (
         `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${submissionData.brandId}`,
         body
       );
-
     }
   }
 };

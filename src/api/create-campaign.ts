@@ -13,7 +13,7 @@ interface CampaignFormData {
 }
 
 const createCampaign = async (formData: CampaignFormData) => {
-  const url = `https://fastapi.aroundme.tech/api/chitchats/create`;
+  const url = `${process.env.NEXT_PUBLIC_DEVBASEURL}/chitchats/create`;
 
   const body = {
     title: formData.titles,

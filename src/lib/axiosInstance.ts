@@ -1,9 +1,9 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const BASE_URL = 
-// process.env.NEXT_PUBLIC_DEVBASEURL;
-"https://shoppie-backend.aroundme.global/api";
+const BASE_URL =
+  // process.env.NEXT_PUBLIC_DEVBASEURL;
+  "https://shoppie-backend.aroundme.global/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -41,7 +41,10 @@ api.interceptors.response.use(
         console.error("Server error! Try again later.", error.response);
       }
     } else {
-      console.error("Network error! Please check your internet connection.");
+      console.error(
+        error,
+        "Network error! Please check your internet connection."
+      );
     }
 
     return Promise.reject(error);
