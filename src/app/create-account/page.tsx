@@ -81,7 +81,7 @@ export default function RegisterPage() {
 
       // Step 1: Generate upload URL for brand logo
       const logoResponse = await fetch(
-        "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
+        `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
         {
           method: "POST",
           headers: {
@@ -89,31 +89,16 @@ export default function RegisterPage() {
           },
           body: JSON.stringify({
             name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-logo`,
-            type: brandLogoType,
-            asset_for: "user-image",
+            contentType: brandLogoType,
+            folder: "user-image",
           }),
         }
       );
 
       const logoData = await logoResponse.json();
 
-      // // Step 2: Generate upload URL for incorporation certificate
-      // const certificateResponse = await fetch(
-      //   "https://fastapi.aroundme.tech/api/upload/generate-upload-url",
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       name: `${brandName.replace(/\s+/g, "-").toLowerCase()}-certificate`,
-      //       type: gstCertificateType,
-      //       asset_for: "user-image",
-      //     }),
-      //   }
-      // );
 
-      // const certificateData = await certificateResponse.json();
+
 
       // // Step 3: Upload the brand logo
       await fetch(logoData.signed_url, {
@@ -259,7 +244,8 @@ export default function RegisterPage() {
                     <div>
                       <label className="block text-xs font-medium">Email</label>
                       <Field
-                        defaultValue={email}
+                        // defaultValue={email}
+
                         type="email"
                         name="email"
                         placeholder="Enter your email"
