@@ -9,22 +9,22 @@ function hasToken(req: NextRequest): boolean {
   return !!token;
 }
 
-// Define protected routes
 const protectedRoutes = [
-  "/dashboard",
-  "/chat-page",
-  "/delete-account",
-  "/marketing",
-  "/users(.*)",
-  "/brand(.*)",
-  "/brand-status",
+  /^\/dashboard$/,
+  /^\/chat-page$/,
+  /^\/delete-account$/,
+  /^\/marketing$/,
+  /^\/users(\/.*)?$/,
+  /^\/brand(\/.*)?$/,
+  /^\/brand-status$/,
+  /^\/brand\/configure$/,
 ];
 
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   const isAuthPage = path.startsWith("/login"); // Authentication pages
-  const isProtectedRoute = protectedRoutes.includes(path); // Check if route is protected
+  const isProtectedRoute = protectedRoutes.some((route) => route.test(path)); // Check if route is protected
 
   if (isAuthPage && hasToken(req)) {
     // If user is logged in and visits the auth page, redirect to dashboard
