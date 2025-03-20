@@ -315,9 +315,12 @@ const Form: React.FC = () => {
               `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
               body
             );
-          } else {
-            if (values.pdfs && values.pdfs.length > 0) {
-              for (const uploadedFile of values.pdfs) {
+            latestCsvId.current = responseFileUpload.data.id;
+          } else if (values.pdfs) {
+            const newPdfsToUpload = values.pdfs.filter((pdf) => !pdf.id);
+
+            if (newPdfsToUpload && newPdfsToUpload.length > 0) {
+              for (const uploadedFile of newPdfsToUpload) {
                 try {
                   const uploadFileType = uploadedFile.type;
 
@@ -358,6 +361,8 @@ const Form: React.FC = () => {
                     );
                     console.log("Product data URL:", pdfData.public_url);
                   } else {
+                    resetForm({ values });
+                    setIsLoading(false);
                     throw new Error(
                       `Error uploading file: ${uploadedFile.name}`
                     );
@@ -374,12 +379,24 @@ const Form: React.FC = () => {
                     `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-knowledge`,
                     body
                   );
-
-                  latestCsvId.current = responseFileUpload.data.id;
                 } catch (error) {
+                  resetForm({ values });
+                  setIsLoading(false);
+                  toast.error("Error during file upload, Please try again !");
                   console.error("Error during file upload:", error);
                 }
               }
+            }
+          } else if (brandDescriptionChanged) {
+            if (values.brandDescription) {
+              const body = {
+                description: values.brandDescription,
+              };
+
+              const responseUpdateBrandDescription = await api.put(
+                `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+                body
+              );
             }
           }
           const brandBody = {};
@@ -387,7 +404,8 @@ const Form: React.FC = () => {
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
             brandBody
           );
-
+          resetForm({ values });
+          setProductExisting(true);
           setWorkspaceExist(true);
         }
       }
