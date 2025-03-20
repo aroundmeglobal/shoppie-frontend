@@ -32,6 +32,11 @@ const subcomponent = [
     icon: <CodeSnippet />,
     route: "/brand/code-snippet",
   },
+  {
+    title: "Bot configure",
+    icon: <CodeSnippet />,
+    route: "/brand/configure-bot",
+  },
   { title: "Analytics", icon: <Analytics />, route: "/brand/analytics" },
   {
     title: "Billings and payments",
