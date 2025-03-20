@@ -528,11 +528,19 @@ const Form: React.FC = () => {
               }
             }
           }
+
           const brandBody = {};
           const responseUpdateBrand = await api.put(
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
             brandBody
           );
+          if (values.brandDescription !== brandDescription) {
+            setBrandDescription(values.brandDescription);
+            setBrandDomain(values.brandDescription);
+          }
+          if (values.faqs !== brandFaqs) setFaqs(values.faqs);
+          if (values.customInstruction !== brandCustomInstruction)
+            setCustomInstruction(values.customInstruction);
           resetForm({ values });
           setProductExisting(true);
           setWorkspaceExist(true);
