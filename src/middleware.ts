@@ -9,16 +9,7 @@ function hasToken(req: NextRequest): boolean {
   return !!token;
 }
 
-const protectedRoutes = [
-  /^\/dashboard$/,
-  /^\/chat-page$/,
-  /^\/delete-account$/,
-  /^\/marketing$/,
-  /^\/users(\/.*)?$/,
-  /^\/brand(\/.*)?$/,
-  /^\/brand-status$/,
-  /^\/brand\/configure$/,
-];
+const protectedRoutes = [/^\/brand(\/.*)?$/, /^\/brand-status$/];
 
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
