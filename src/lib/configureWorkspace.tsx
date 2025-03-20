@@ -23,11 +23,19 @@ type SubmissionData = {
 };
 
 const configureWorkspace = async (
-  submissionData: SubmissionData
+  submissionData: SubmissionData,
+  brandDescriptionChanged: any,
+  customInstructionChanged: any,
+  pdfChanged: boolean
 ): Promise<any> => {
+  // return;
   // Check if pdfs exist in the submission data and loop through each file for upload
-  if (submissionData.pdfs && submissionData.pdfs.length > 0) {
-    for (const uploadedFile of submissionData.pdfs) {
+  const newPdfsToUpload = submissionData.pdfs.filter((pdf) => !pdf.id);
+
+  // return;
+
+  if (newPdfsToUpload && newPdfsToUpload.length > 0 && pdfChanged) {
+    for (const uploadedFile of newPdfsToUpload) {
       try {
         const uploadFileType = uploadedFile.type;
 
@@ -87,11 +95,12 @@ const configureWorkspace = async (
         );
       } catch (error) {
         console.error("Error during file upload:", error);
+        throw new Error(`Server is down.Please try again!`);
       }
     }
   }
 
-  if (submissionData.customInstruction || submissionData.brandDescription) {
+  if (brandDescriptionChanged || customInstructionChanged) {
     const responseCreateWorkspace = await api.get(
       `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/${submissionData.brandId}`
     );

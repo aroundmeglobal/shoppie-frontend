@@ -325,13 +325,21 @@ const Products = () => {
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
             brandBody
           );
-          toast.success("Removed CSV. Please upload new CSV!");
         } catch (error) {
           console.log(error, "error while deleting csv");
         }
       };
 
-      deleteCsv();
+      toast.promise(deleteCsv(), {
+        loading: "Deleting CSV...",
+        success: () => {
+          setProducts([]);
+          setCsvError(null);
+          setSelectedCsv(null);
+          return <b>Removed csv.Please upload a new csv!</b>;
+        },
+        error: <b>Could not delete the CSV. Please try again!</b>,
+      });
     }
     setProducts([]);
     setCsvError(null);
@@ -396,7 +404,9 @@ const Products = () => {
       setLoading(false);
       setRefreshData((prev) => !prev); // Trigger re-fetch after delete
     } catch (error) {
-      // toast.error("something went wrong please try again later!");
+      setLoading(false);
+
+      toast.error("something went wrong please try again later!");
       console.log(error, "error from uploading csv from products page");
     }
   };

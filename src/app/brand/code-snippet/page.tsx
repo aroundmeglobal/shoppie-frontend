@@ -46,9 +46,12 @@ const Page = () => {
         </h1>
         <div className="w-full h-[85%] gap-5 mt-8 flex  justify-center  no-scrollbar">
           <div className="w-[60%] h-full overflow-y-auto overflow-hidden bg-[#161616] rounded-[12px] p-6 no-scrollbar">
-            <h2 className="text-white text-xl font-semibold mb-4">
-              Copy the script and paste it into your main code — that's it! See
-              the magic ✨
+            <h2 className="text-white text-2xl font-semibold mb-4 ">
+              Copy and Paste
+            </h2>
+            <h2 className="text-white text-md  mb-4">
+              Simply copy the script below and paste it into your main code at
+              the specified location. Watch the magic unfold effortlessly! ✨
             </h2>
 
             <Code codes={pageCodeSnippets} />

@@ -90,6 +90,7 @@ const EditProfile = () => {
   const { data: brandDataResponse, error } = useQuery({
     queryKey: ["brands-data"],
     queryFn: () => getBradData(brandId),
+    enabled: !!brandId,
   });
 
   useEffect(() => {
