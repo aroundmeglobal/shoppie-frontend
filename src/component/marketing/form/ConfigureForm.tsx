@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { FiUpload, FiX } from "react-icons/fi"; // Import FiX for delete icon
@@ -35,6 +35,7 @@ const Form: React.FC = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [deletedDocuments, setDeletedDocuments] = useState<any[]>([]);
   const [loading, setIsLoading] = useState(false);
+  const [deletingPdf, setDeletingPdf] = useState(false);
 
   const setBrandDescription = useBrandStore(
     (state) => state.setBrandDescription
@@ -55,6 +56,7 @@ const Form: React.FC = () => {
   const [pdfExisting, setPdfExisting] = useState(false);
 
   const [csvName, setCsvName] = useState(null);
+  const latestCsvId = useRef();
 
   const [initialValues, setInitialValues] = useState({
     pdfs: [] as File[],
@@ -114,42 +116,37 @@ const Form: React.FC = () => {
     }
   }, [brandId, brandDescription]);
 
-  // useEffect(() => {
-  //   setInitialValues({
-  //     pdfs: [] as File[],
-  //     brandDescription: brandDescription,
-  //     faqs: brandFaqs,
-  //     customInstruction: brandCustomInstruction,
-  //     csv: null as File | null,
-  //   });
-  // }, [brandDescription]);
-
   const formik = useFormik({
     initialValues: initialValues,
     enableReinitialize: true,
     validationSchema: Yup.object({
       brandDescription: Yup.string().required("Brand description is required"),
       customInstruction: Yup.string(),
-      // csv: Yup.mixed().required("CSV file is required"),
       pdfs: Yup.array().test(
         "fileSize",
-        "The total file size should be less than 10 MB",
+        "Each file should be less than 10 MB", // Changed message
         (files) => {
           if (files && files.length > 0) {
-            const totalSize = files.reduce(
-              (acc: number, file: File) => acc + file.size,
-              0
-            );
-            return totalSize <= 10 * 1024 * 1024;
+            for (const file of files) {
+              if (file.size > 2 * 1024 * 1024) {
+                return false; // If any file is over 10MB, return false
+              }
+            }
           }
-          return true;
+          return true; // All files are within the limit
         }
       ),
       // You can add additional validations for FAQs if needed
     }),
-    onSubmit: async (values) => {
-      console.log("working");
 
+    onSubmit: async (values, { resetForm }) => {
+      const brandDescriptionChanged =
+        values.brandDescription !== brandDescription;
+      const customInstructionChanged =
+        values.customInstruction !== initialValues.customInstruction;
+      const pdfChanged = values.pdfs !== initialValues.pdfs;
+
+      // return
       if (!uploadedFile && !values.pdfs) {
         toast.error("csv or knowledge pdf is mandatory");
         setIsLoading(false);
@@ -216,6 +213,8 @@ const Form: React.FC = () => {
               body
             );
 
+            latestCsvId.current = responseFileUpload.data.id;
+
             const brandBody = {};
             const responseUpdateBrand = await api.put(
               `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
@@ -224,7 +223,12 @@ const Form: React.FC = () => {
 
             setSelectedCsv(null);
           }
-          const response = await configureWorkspace(submissionData);
+          const response = await configureWorkspace(
+            submissionData,
+            brandDescriptionChanged,
+            customInstructionChanged,
+            pdfChanged
+          );
           console.log("Workspace configured successfully:", response);
           if (values.brandDescription !== brandDescription) {
             setBrandDescription(values.brandDescription);
@@ -234,9 +238,15 @@ const Form: React.FC = () => {
           if (values.customInstruction !== brandCustomInstruction)
             setCustomInstruction(values.customInstruction);
           toast.success("Workspace configured successfully!");
+          resetForm({ values });
+          setIsLoading(false);
+          setProductExisting(true);
         } catch (error) {
           console.error("Error configuring workspace:", error);
           toast.error("Error configuring workspace. Please try again.");
+          resetForm({ values });
+
+          setIsLoading(false);
         } finally {
           setIsLoading(false);
         }
@@ -254,8 +264,6 @@ const Form: React.FC = () => {
           top_n: 4,
           brand_id: brandId,
         };
-
-        console.log("body", body);
 
         const responseCreateWorkspace = await api.post(
           `${process.env.NEXT_PUBLIC_DEVBASEURL}/workspaces/`,
@@ -367,11 +375,7 @@ const Form: React.FC = () => {
                     body
                   );
 
-                  const brandBody = {};
-                  const responseUpdateBrand = await api.put(
-                    `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
-                    brandBody
-                  );
+                  latestCsvId.current = responseFileUpload.data.id;
                 } catch (error) {
                   console.error("Error during file upload:", error);
                 }
@@ -391,41 +395,59 @@ const Form: React.FC = () => {
     },
   });
 
-  // useEffect(() => {
-  //   formik.setFieldValue("brandDescription", brandDescription);
-  // }, [brandDescription]);
-
   const handlePdfs = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      const updatedFiles = [...formik.values.pdfs, ...newFiles];
-      const totalSize = updatedFiles.reduce((acc, file) => acc + file.size, 0);
-      if (totalSize > 10 * 1024 * 1024) {
-        alert(
-          "The total file size exceeds 10 MB. Please select smaller files."
-        );
-        return;
+
+      for (const file of newFiles) {
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds the 2 MB limit.`);
+          return;
+        }
       }
+
+      const updatedFiles = [...formik.values.pdfs, ...newFiles];
       formik.setFieldValue("pdfs", updatedFiles);
       e.target.value = "";
     }
   };
 
   const handleDeletePdf = async (index: number, id: number) => {
+    setDeletingPdf(true);
+    if (pdfExisting) {
+      // Create a promise for the delete and update operations
+      const deletePromise = async () => {
+        if (!id) return;
+        const response = await api.delete(
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${id}`
+        );
+
+        const brandBody = {};
+        await api.put(
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+          brandBody
+        );
+
+        return response; // Return the response for further processing if needed
+      };
+
+      // Use toast.promise to handle the promise
+      toast.promise(deletePromise(), {
+        loading: "Deleting PDF...",
+        success: () => {
+          // Update formik state only on success
+          const updatedFiles = formik.values.pdfs.filter(
+            (_, idx) => idx !== index
+          );
+          formik.setFieldValue("pdfs", updatedFiles);
+          return <b>PDF removed. Please upload a new PDF!</b>;
+        },
+        error: <b>Could not delete the PDF. Please try again!</b>,
+      });
+    }
     const updatedFiles = formik.values.pdfs.filter((_, idx) => idx !== index);
     formik.setFieldValue("pdfs", updatedFiles);
-
-    if (pdfExisting) {
-      const response = await api.delete(
-        `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${id}`
-      );
-      const brandBody = {};
-      const responseUpdateBrand = await api.put(
-        `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
-        brandBody
-      );
-      toast.success("Removed Pdf. Please upload new Pdf!");
-    }
+    setDeletingPdf(false);
   };
 
   const handleDeleteDocument = (docId: number) => {
@@ -621,24 +643,35 @@ const Form: React.FC = () => {
   };
 
   const handleRemoveCSV = () => {
-    if (productExisting) {
+    if (productExisting && latestCsvId) {
       const deleteCsv = async () => {
         try {
           const response = await api.delete(
-            `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${csvName[0]?.id}`
+            `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/${
+              csvName[0]?.id || latestCsvId.current
+            }`
           );
           const brandBody = {};
           const responseUpdateBrand = await api.put(
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
             brandBody
           );
-          toast.success("Removed CSV. Please upload new CSV!");
         } catch (error) {
           console.log(error, "error while deleting csv");
         }
       };
 
-      deleteCsv();
+      toast.promise(deleteCsv(), {
+        loading: "Deleting CSV...",
+        success: () => {
+          formik.setFieldValue("csv", null);
+          setProducts([]);
+          setCsvError(null);
+          setSelectedCsv(null);
+          return <b>Removed csv.Please upload a new csv!</b>;
+        },
+        error: <b>Could not delete the CSV. Please try again!</b>,
+      });
     }
     formik.setFieldValue("csv", null);
     setProducts([]);
@@ -648,7 +681,7 @@ const Form: React.FC = () => {
 
   return (
     <div className="h-full">
-      {loading && (
+      {(loading || deletingPdf) && (
         <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50">
           <ClipLoader color="white" loading={loading} size={50} />
         </div>
@@ -865,6 +898,19 @@ const Form: React.FC = () => {
                 </div>
               )}
             </div>
+            {formik.touched.pdfs && formik.errors.pdfs && (
+              <div className="text-red-500 text-sm">
+                {
+                  typeof formik.errors.pdfs === "string"
+                    ? formik.errors.pdfs
+                    : Array.isArray(formik.errors.pdfs)
+                    ? formik.errors.pdfs.map((error, index) => (
+                        <div key={index}>{String(error)}</div> // Convert to string if necessary
+                      ))
+                    : "An error occurred" // Fallback
+                }
+              </div>
+            )}
 
             {/* {formik.values.pdfs.length > 0 && (
                 <div className="flex flex-wrap ml-4 mr-2">
@@ -888,7 +934,7 @@ const Form: React.FC = () => {
                 </div>
               )} */}
 
-            {documents.length > 0 && (
+            {/* {documents.length > 0 && (
               <div className="flex flex-wrap ml-4 mr-2">
                 {documents.map((doc, idx) => (
                   <div key={idx} className="w-full">
@@ -908,7 +954,7 @@ const Form: React.FC = () => {
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
           </div>
           {/* )} */}
 
