@@ -6,6 +6,8 @@ import Cookies from "js-cookie";
 import useBrandStore from "@/store/useBrandStore";
 import { useRouter } from "next/navigation";
 import Navbar from "./Navbar";
+import Image from "next/image";
+import { loginImage } from "@/constants";
 
 interface Props {
   email: string;
@@ -178,7 +180,14 @@ export default function OtpVerification({
               Verify
             </button>
           </div>
-          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden"></div>
+        <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
+            <Image
+              src={loginImage}
+              alt="A person logging in"
+              layout="fill"
+              objectFit="cover"
+            />
+          </div>
         </div>
       </div>
     </main>

@@ -9,6 +9,8 @@ import Navbar from "@/component/Navbar";
 import { useRef } from "react";
 import api from "@/lib/axiosInstance";
 import Cookies from "js-cookie";
+import Image from "next/image";
+import { loginImage } from "@/constants";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -96,9 +98,6 @@ export default function RegisterPage() {
       );
 
       const logoData = await logoResponse.json();
-
-
-
 
       // // Step 3: Upload the brand logo
       await fetch(logoData.signed_url, {
@@ -461,7 +460,14 @@ export default function RegisterPage() {
             </Formik>
           </div>
           {/* Right Section */}
-          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden "></div>
+          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
+            <Image
+              src={loginImage}
+              alt="A person logging in"
+              layout="fill"
+              objectFit="cover"
+            />
+          </div>
         </div>
       </div>
     </main>
