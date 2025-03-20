@@ -2,8 +2,10 @@
 
 import Navbar from "@/component/Navbar";
 import OtpVerification from "@/component/OtpVerification";
+import { loginImage } from "@/constants";
 import api from "@/lib/axiosInstance";
 import useBrandStore from "@/store/useBrandStore";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -158,7 +160,14 @@ const Page = () => {
           </div>
 
           {/* Right Section */}
-          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden"></div>
+          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
+            <Image
+              src={loginImage}
+              alt="A person logging in"
+              layout="fill"
+              objectFit="cover"
+            />
+          </div>
         </div>
       </div>
     </main>
