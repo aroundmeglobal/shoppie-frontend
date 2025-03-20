@@ -317,6 +317,102 @@ const Form: React.FC = () => {
               body
             );
             latestCsvId.current = responseFileUpload.data.id;
+
+            // if pdf along with csv
+            if (values.pdfs) {
+              const newPdfsToUpload = values.pdfs.filter((pdf) => !pdf.id);
+
+              if (newPdfsToUpload && newPdfsToUpload.length > 0) {
+                for (const uploadedFile of newPdfsToUpload) {
+                  try {
+                    const uploadFileType = uploadedFile.type;
+
+                    // Request to generate signed URL
+
+                    const pdfResonse = await fetch(
+                      `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          name: `${brandName
+                            .replace(/\s+/g, "-")
+                            .toLowerCase()}/${uploadedFile.name}`,
+                          contentType: uploadFileType,
+                          folder: "user-pdf",
+                        }),
+                      }
+                    );
+
+                    const pdfData = await pdfResonse.json();
+
+                    // Upload the file to the generated signed URL
+                    const uploadResponse = await fetch(pdfData.signed_url, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": uploadedFile.type,
+                      },
+                      body: uploadedFile,
+                    });
+
+                    if (uploadResponse.ok) {
+                      console.log(
+                        "File uploaded successfully:",
+                        uploadedFile.name
+                      );
+                      console.log("Product data URL:", pdfData.public_url);
+                    } else {
+                      resetForm({ values });
+                      setIsLoading(false);
+                      throw new Error(
+                        `Error uploading file: ${uploadedFile.name}`
+                      );
+                    }
+
+                    //hit file upload api
+
+                    const body = {
+                      brand_id: brandId,
+                      file: `${pdfData.public_url}`,
+                    };
+
+                    const responseFileUpload = await api.post(
+                      `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-knowledge`,
+                      body
+                    );
+                  } catch (error) {
+                    resetForm({ values });
+                    setIsLoading(false);
+                    toast.error("Error during file upload, Please try again !");
+                    console.error("Error during file upload:", error);
+                  }
+                }
+              }
+            }
+            if (brandDescriptionChanged) {
+              if (values.brandDescription) {
+                try {
+                  const body = {
+                    description: values.brandDescription,
+                  };
+
+                  const responseUpdateBrandDescription = await api.put(
+                    `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+                    body
+                  );
+                } catch (error) {
+                  resetForm({ values });
+                  setIsLoading(false);
+                  toast.error("something went wrong .Please try agian later!");
+                  console.error(
+                    "error while adding description without workspace",
+                    error
+                  );
+                }
+              }
+            }
           } else if (values.pdfs) {
             const newPdfsToUpload = values.pdfs.filter((pdf) => !pdf.id);
 
@@ -385,6 +481,28 @@ const Form: React.FC = () => {
                   setIsLoading(false);
                   toast.error("Error during file upload, Please try again !");
                   console.error("Error during file upload:", error);
+                }
+              }
+            }
+            if (brandDescriptionChanged) {
+              if (values.brandDescription) {
+                try {
+                  const body = {
+                    description: values.brandDescription,
+                  };
+
+                  const responseUpdateBrandDescription = await api.put(
+                    `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+                    body
+                  );
+                } catch (error) {
+                  resetForm({ values });
+                  setIsLoading(false);
+                  toast.error("something went wrong .Please try agian later!");
+                  console.error(
+                    "error while adding description without workspace",
+                    error
+                  );
                 }
               }
             }
