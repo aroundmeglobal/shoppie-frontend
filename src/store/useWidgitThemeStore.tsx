@@ -43,7 +43,7 @@ interface ThemeStoreState {
 const lightThemeValues: ThemeFields = {
   userBgColor: "#1e60fb",
   assistantBgColor: "#Fafafa",
-  embedId: "b5909a44-7e5b-494b-a9e4-3b29c35e1da2",
+  embedId: "db97d397-5bdb-4c85-b41e-7221262d00a3",
   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
   headerColor: "#ededed",
   textHeaderColor: "#000",
@@ -61,7 +61,7 @@ const lightThemeValues: ThemeFields = {
 const darkThemeValues: ThemeFields = {
   userBgColor: "#1e60fb",
   assistantBgColor: "#1B1B1B",
-  embedId: "b5909a44-7e5b-494b-a9e4-3b29c35e1da2",
+  embedId: "db97d397-5bdb-4c85-b41e-7221262d00a3",
   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
   headerColor: "#222222",
   textHeaderColor: "#fff",
