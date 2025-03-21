@@ -1,34 +1,94 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
-import { ChromePicker } from "react-color";
+import { Formik, Field, Form } from "formik";
+import { ChromePicker, ColorResult } from "react-color";
 import useWidgitThemeStore from "@/store/useWidgitThemeStore";
+import { IoMoonOutline } from "react-icons/io5";
+import { CiLight } from "react-icons/ci";
+import api from "@/lib/axiosInstance";
+import useBrandStore from "@/store/useBrandStore";
 
+interface ColorFieldProps {
+  label: string;
+  name: string;
+}
+
+const colorFields: ColorFieldProps[] = [
+  { label: "User Chat Bubble Color", name: "userBgColor" },
+  { label: "User Text Color", name: "userTextColor" },
+  { label: "Assistant Chat Bubble Color", name: "assistantBgColor" },
+  { label: "Bot Text Color", name: "botTextColor" },
+  { label: "Header Color", name: "headerColor" },
+  { label: "Text Header Color", name: "textHeaderColor" },
+  { label: "Background Color", name: "bgColor" },
+  { label: "Input Bar Color", name: "inputbarColor" },
+  { label: "Card Background Color", name: "cardBgColor" },
+  { label: "Card Text Color", name: "cardTextColor" },
+  { label: "Card Text Sub Color", name: "cardTextSubColour" },
+  // { label: "Prompt Background Color", name: "prompotBgColor" },
+  // { label: "Prompt Border Color", name: "promptBorderColor" },
+];
 
 export default function PageComponent() {
-  const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [currentColorField, setCurrentColorField] = useState(null);
-  
+  const brandId = useBrandStore((state) => state.brandId);
+  const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
+  const [currentColorField, setCurrentColorField] = useState<string | null>(
+    null
+  );
+  const [colorFieldSetters, setColorFieldSetters] = useState<
+    Record<string, (color: string) => void>
+  >({});
+  const [initialValues, setInitialValues] = useState<Record<string, string>>(
+    {}
+  );
+  const [isChanged, setIsChanged] = useState<boolean>(false);
+  const [tempColour, setTempColour] = useState<string | null>(null);
+
   // Use Zustand store for theme management
   const { changedFields, theme, toggleTheme } = useWidgitThemeStore();
 
-  const handleColorFieldClick = (field) => {
-    setCurrentColorField(field);
+  useEffect(() => {
+    setInitialValues(changedFields);
+  }, []);
+
+  useEffect(() => {
+    const hasChanges = Object.keys(changedFields).some(
+      (key) => changedFields[key] !== initialValues[key]
+    );
+    setIsChanged(hasChanges);
+  }, [changedFields, initialValues]);
+
+  const handleColorFieldClick = (fieldName: string) => {
+    setCurrentColorField(fieldName);
     setColorPickerOpen(true);
   };
 
-  const handleColorChange = (color) => {
-    // Update the changedFields in the Zustand store
-    useWidgitThemeStore.setState((state) => ({
-      changedFields: { ...state.changedFields, [currentColorField]: color.hex }
-    }));
+  const handleColorChange = (colorResult: ColorResult) => {
+    setTempColour(colorResult.hex);
+    if (colorFieldSetters[currentColorField!]) {
+      colorFieldSetters[currentColorField!](colorResult.hex);
+    }
   };
-  
-  // Effect to manage the chat widget script
+
+  const handleSave = () => {
+    if (currentColorField && tempColour) {
+      useWidgitThemeStore.setState((state) => ({
+        changedFields: {
+          ...state.changedFields,
+          [currentColorField]: tempColour,
+        },
+      }));
+      setTempColour(null);
+      setColorPickerOpen(false);
+    }
+  };
+
   useEffect(() => {
-    const existingScript = document.getElementById('chat-widget-script');
-    const existingWidgetContainer = document.getElementById('anything-llm-embed-chat-container');
+    const existingScript = document.getElementById("chat-widget-script");
+    const existingWidgetContainer = document.getElementById(
+      "anything-llm-embed-chat-container"
+    );
 
     if (existingScript) {
       document.body.removeChild(existingScript);
@@ -38,14 +98,14 @@ export default function PageComponent() {
       existingWidgetContainer.remove();
     }
 
-    const script = document.createElement('script');
-    script.id = 'chat-widget-script';
-    script.src = 'https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js';
+    const script = document.createElement("script");
+    script.id = "chat-widget-script";
+    script.src =
+      "https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js";
     script.async = true;
-    script.dataset.openOnLoad = 'on';
+    script.dataset.openOnLoad = "on";
 
-    // Set data attributes based on changedFields from Zustand store
-    Object.keys(changedFields).forEach(key => {
+    Object.keys(changedFields).forEach((key) => {
       script.dataset[key] = changedFields[key];
     });
 
@@ -55,83 +115,98 @@ export default function PageComponent() {
       if (script) {
         document.body.removeChild(script);
       }
-      const widgetContainerCleanup = document.getElementById('anything-llm-embed-chat-container');
+      const widgetContainerCleanup = document.getElementById(
+        "anything-llm-embed-chat-container"
+      );
       if (widgetContainerCleanup) {
         widgetContainerCleanup.remove();
       }
     };
-    
   }, [changedFields]);
 
+  const onSend = async () => {
+    console.log("Selected Values:", changedFields);
+    const body = {
+      theme: {
+        userBgColor: changedFields.userBgColor,
+        assistantBgColor: changedFields.assistantBgColor,
+        headerColor: changedFields.headerColor,
+        textHeaderColor: changedFields.textHeaderColor,
+        bgColor: changedFields.bgColor,
+        inputbarColor: changedFields.inputbarColor,
+        cardBgColor: changedFields.cardBgColor,
+        userTextColor: changedFields.userTextColor,
+        botTextColor: changedFields.botTextColor,
+        cardTextColor: changedFields.cardTextColor,
+        cardTextSubColour: changedFields.cardTextSubColour,
+      },
+    };
+    const res = await api.post(`${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`,
+      body
+    );
+    console.log('res',res.data);
+    
+  };
   return (
     <div className="ml-20 px-5 overflow-y-auto h-screen">
       <h1 className="text-2xl font-bold py-5 sticky top-0 bg-[#000] border-b-2">
         Bot Configure
       </h1>
-      
-      <div className="flex gap-4 mb-6">
+
+      <div className=" w-[60%] flex my-6 items-center justify-between">
+        <div className="bg-[#161616] rounded-[20px] overflow-hidden">
+          <button
+            onClick={() => toggleTheme("dark")}
+            className={`px-4 py-4 rounded-[20px] ${
+              theme === "dark" ? "bg-white text-black" : " text-white"
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <IoMoonOutline /> Dark Theme
+            </div>
+          </button>
+          <button
+            onClick={() => toggleTheme("light")}
+            className={`px-4 py-4 rounded-[20px] ${
+              theme === "light" ? "bg-white text-black" : " text-white"
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <CiLight /> Light Theme
+            </div>
+          </button>
+        </div>
+
         <button
-          onClick={() => toggleTheme("light")}
-          className={`px-4 py-2 rounded ${theme === "light" ? "bg-blue-500 text-white" : "bg-white text-black"}`}
+          onClick={onSend}
+          disabled={!isChanged}
+          className={`px-4 py-4 rounded-[20px] text-black ${
+            isChanged
+              ? "bg-white hover:bg-blue-600 active:bg-green-700"
+              : "bg-gray-500 cursor-not-allowed"
+          }`}
         >
-          Light Theme
-        </button>
-        <button
-          onClick={() => toggleTheme("dark")}
-          className={`px-4 py-2 rounded ${theme === "dark" ? "bg-blue-500 text-white" : "bg-black text-white"}`}
-        >
-          Dark Theme
+          Publish
         </button>
       </div>
 
-      <div className="w-full h-[80%] gap-5 mt-8 flex no-scrollbar">
+      <div className="w-full h-[80%] gap-5 flex no-scrollbar">
         <div className="w-[60%] h-full overflow-y-auto overflow-hidden bg-[#161616] rounded-[12px] p-6 no-scrollbar">
-          <Formik
-            initialValues={changedFields}
-            onSubmit={() => {}}
-          >
-            {({ handleBlur, setFieldTouched, setFieldValue }) => (
-              <Form>
-                <div className="space-y-4">
-                  {Object.keys(changedFields)
-                    .filter(key => key !== "embedId" && key !== "baseApiUrl")
-                    .map((key) => (
-                      <div key={key} className="flex flex-col">
-                        <label htmlFor={key} className="text-white">
-                          {key.replace(/([A-Z])/g, " $1")}
-                        </label>
-                        <div className="flex items-center gap-4 justify-center">
-                          {key.includes("Color") ? (
-                            <Field
-                              type="text"
-                              id={key}
-                              name={key}
-                              value={changedFields[key]}
-                              readOnly
-                              className="p-2 mt-1 flex-1 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:border-blue-500 text-white"
-                              onClick={() => handleColorFieldClick(key)}
-                            />
-                          ) : (
-                            <Field
-                              type="text"
-                              id={key}
-                              name={key}
-                              onChange={(e) =>
-                                setFieldValue(key, e.target.value)
-                              }
-                              onBlur={handleBlur}
-                              className="p-2 mt-1 flex-1 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:border-blue-500 text-white"
-                            />
-                          )}
-                          <ErrorMessage
-                            name={key}
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                </div>
+          <Formik initialValues={changedFields} onSubmit={() => {}}>
+            {() => (
+              <Form className="space-y-4">
+                {colorFields.map(({ label, name }) => (
+                  <ColorField
+                    key={name}
+                    label={label}
+                    name={name}
+                    value={changedFields[name]}
+                    onClick={() => handleColorFieldClick(name)}
+                    setSelectedColor={(color) => {
+                      setSelectedColorInField(name, color);
+                    }}
+                  />
+                ))}
               </Form>
             )}
           </Formik>
@@ -140,230 +215,117 @@ export default function PageComponent() {
 
       {colorPickerOpen && (
         <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white p-4 rounded-lg">
+          <div className="bg-[#1d1d1d] p-4 rounded-xl">
             <ChromePicker
-              color={changedFields[currentColorField]}
+              color={tempColour || changedFields[currentColorField!]} // Use tempColour for current color
               onChangeComplete={handleColorChange}
             />
-            <button
-              onClick={() => setColorPickerOpen(false)}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-            >
-              Close
-            </button>
+            <div className="flex gap-5">
+              <button
+                onClick={() => setColorPickerOpen(false)}
+                className="mt-4 px-4 py-2 bg-red-500/40 text-white rounded border border-red-500 hover:bg-red-500 hover:border-red-600 active:bg-red-600"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleSave}
+                className="mt-4 px-4 py-2 bg-blue-500/40 text-white rounded border border-blue-500 hover:bg-blue-500 hover:border-blue-600 active:bg-blue-600"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
+
+  function setSelectedColorInField(name: string, color: string) {
+    setColorFieldSetters((prev) => ({
+      ...prev,
+      [name]: (c) => setSelectedColorInField(name, c),
+    }));
+  }
 }
 
+interface IndividualColorFieldProps {
+  label: string;
+  name: string;
+  value?: string;
+  onClick?: () => void;
+  setSelectedColor?: (color: string) => void;
+}
 
+const ColorField = ({
+  label,
+  name,
+  value,
+  onClick,
+}: IndividualColorFieldProps) => {
+  const colors = [
+    "#7939EE",
+    "#434CE6",
+    "#165EF1",
+    "#2E90FD",
+    "#078AB2",
+    "#0A9250",
+  ];
 
+  const [selectedColor, setSelectedColorLocal] = useState<string | undefined>(
+    value
+  );
 
-// 'use client';
+  const handleColorSelect = (color: string) => {
+    setSelectedColorLocal(color);
+    useWidgitThemeStore.setState((state) => ({
+      changedFields: { ...state.changedFields, [name]: color },
+    }));
+  };
 
-// import { useState, useEffect } from "react";
-// import { Formik, Field, Form, ErrorMessage } from "formik";
-// import { ChromePicker } from "react-color";
+  useEffect(() => {
+    setSelectedColorLocal(value);
+  }, [value]);
 
-// const lightThemeValues = {
-//   userBgColor: "#f0f0f0",
-//   assistantBgColor: "#333333",
-//   embedId: "b5909a44-7e5b-494b-a9e4-3b29c35e1da2",
-//   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
-//   headerColor: "#fff",
-//   textHeaderColor: "#000",
-//   bgColor: "#fff",
-//   inputbarColor: "#fff",
-//   cardBgColor: "#fff",
-// };
-
-// const darkThemeValues = {
-//   userBgColor: "#2563eb",
-//   assistantBgColor: "#ff4b5c",
-//   embedId: "b5909a44-7e5b-494b-a9e4-3b29c35e1da2",
-//   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
-//   headerColor: "#fff",
-//   textHeaderColor: "#000",
-//   bgColor: "#161616",
-//   inputbarColor: "#333333",
-//   cardBgColor: "#333333",
-// };
-
-// export default function PageComponent() {
-//   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-//   const [currentColorField, setCurrentColorField] = useState(null);
-//   const [changedFields, setChangedFields] = useState(lightThemeValues);
-//   const [theme, setTheme] = useState("light");
-
-//   // Toggle between dark and light theme
-//   const toggleTheme = (selectedTheme) => {
-//     if (selectedTheme === "dark") {
-//       setChangedFields(darkThemeValues);
-//       setTheme("dark");
-//     } else {
-//       setChangedFields(lightThemeValues);
-//       setTheme("light");
-//     }
-//   };
-
-//   const handleColorFieldClick = (field) => {
-//     setCurrentColorField(field);
-//     setColorPickerOpen(true);
-//   };
-
-//   const handleColorChange = (color) => {
-//     setChangedFields((prev) => ({ ...prev, [currentColorField]: color.hex }));
-//   };
-
-//   // Effect to manage the chat widget script
-//   useEffect(() => {
-//     // Remove existing script and widget container if present
-//     const existingScript = document.getElementById('chat-widget-script');
-//     const existingWidgetContainer = document.getElementById('anything-llm-embed-chat-container');
-
-//     if (existingScript) {
-//       document.body.removeChild(existingScript);
-//     }
-
-//     if (existingWidgetContainer) {
-//       existingWidgetContainer.remove(); // Remove the old widget container
-//     }
-
-//     // Create new script element
-//     const script = document.createElement('script');
-//     script.id = 'chat-widget-script';
-//     script.src = 'https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js';
-//     script.async = true;
-
-//     // Set data attributes
-//     script.dataset.embedId = changedFields.embedId;
-//     script.dataset.baseApiUrl = changedFields.baseApiUrl;
-//     script.dataset.assistantBgColor = changedFields.assistantBgColor;
-//     script.dataset.openOnLoad = 'on';
-
-//     // Add to document
-//     document.body.appendChild(script);
-
-//     // Cleanup function
-//     return () => {
-//       if (script) {
-//         document.body.removeChild(script);
-//       }
-//       const widgetContainerCleanup = document.getElementById('anything-llm-embed-chat-container');
-//       if (widgetContainerCleanup) {
-//         widgetContainerCleanup.remove();
-//       }
-//     };
-//   }, [changedFields]); // Re-run when changedFields updates
-
-//   return (
-//     <div className="ml-20 px-5 overflow-y-auto h-screen">
-//       <h1 className="text-2xl font-bold py-5 sticky top-0 bg-[#000] border-b-2">
-//         Bot Configure
-//       </h1>
-      
-//       {/* Theme buttons with active styles */}
-//       <div className="flex gap-4 mb-6">
-//         <button
-//           onClick={() => toggleTheme("light")}
-//           className={`px-4 py-2 rounded ${theme === "light" ? "bg-blue-500 text-white" : "bg-white text-black"}`}
-//         >
-//           Light Theme
-//         </button>
-//         <button
-//           onClick={() => toggleTheme("dark")}
-//           className={`px-4 py-2 rounded ${theme === "dark" ? "bg-blue-500 text-white" : "bg-black text-white"}`}
-//         >
-//           Dark Theme
-//         </button>
-//       </div>
-
-//       <div className="w-full h-[80%] gap-5 mt-8 flex no-scrollbar">
-//         <div className="w-[60%] h-full overflow-y-auto overflow-hidden bg-[#161616] rounded-[12px] p-6 no-scrollbar z-[999]">
-//           <Formik
-//             initialValues={changedFields}
-//             onSubmit={() => {}}
-//           >
-//             {({ handleBlur, setFieldTouched, setFieldValue }) => (
-//               <Form>
-//                 <div className="space-y-4">
-//                   {Object.keys(changedFields)
-//                     .filter(
-//                       (key) =>
-//                         key !== "embedId" &&
-//                         key !== "baseApiUrl"
-//                     )
-//                     .map((key) => (
-//                       <div key={key} className="flex flex-col">
-//                         <label htmlFor={key} className="text-white">
-//                           {key.replace(/([A-Z])/g, " $1")}
-//                         </label>
-//                         <div className="flex items-center gap-4 justify-center">
-//                           {key.includes("Color") ? (
-//                             <Field
-//                               type="text"
-//                               id={key}
-//                               name={key}
-//                               value={changedFields[key]}
-//                               readOnly
-//                               className="p-2 mt-1 flex-1 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:border-blue-500 text-white"
-//                               onClick={() => handleColorFieldClick(key)}
-//                             />
-//                           ) : (
-//                             <Field
-//                               type="text"
-//                               id={key}
-//                               name={key}
-//                               onChange={(e) =>
-//                                 setFieldValue(key, e.target.value)
-//                               }
-//                               onBlur={handleBlur}
-//                               className="p-2 mt-1 flex-1 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:border-blue-500 text-white"
-//                             />
-//                           )}
-//                           <ErrorMessage
-//                             name={key}
-//                             component="div"
-//                             className="text-red-500 text-sm"
-//                           />
-//                         </div>
-//                       </div>
-//                     ))}
-//                 </div>
-//               </Form>
-//             )}
-//           </Formik>
-//         </div>
-//       </div>
-
-//       {colorPickerOpen && (
-//         <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-[9999]">
-//           <div className="bg-white p-4 rounded-lg">
-//             <ChromePicker
-//               color={changedFields[currentColorField]}
-//               onChangeComplete={handleColorChange}
-//             />
-//             <button
-//               onClick={() => setColorPickerOpen(false)}
-//               className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-//             >
-//               Close
-//             </button>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
-//    // script.setAttribute("data-user-bg-color", changedFields.userBgColor);
-//     // script.setAttribute("data-assistant-bg-color", changedFields.assistantBgColor);
-//     // script.setAttribute("data-header-color", changedFields.headerColor);
-//     // script.setAttribute("data-text-header-color", changedFields.textHeaderColor);
-//     // script.setAttribute("data-bg-color", changedFields.bgColor);
-//     // script.setAttribute("data-inputbar-color", changedFields.inputbarColor);
-//     // script.setAttribute("data-card-bg-color", changedFields.cardBgColor);
+  return (
+    <div className="flex justify-between bg-[#1d1d1d] p-3 rounded-[12px]">
+      <div>
+        <label className="text-white text-[17px] font-semibold">{label}</label>
+        <h2 className="text-[15px] text-[#fff]/60 mt-2">
+          Customize your color
+        </h2>
+      </div>
+      <div>
+        <div className="flex justify-evenly mt-2">
+          {colors.map((color) => (
+            <div
+              key={color}
+              className={`w-8 h-8 rounded-full border-2 cursor-pointer transition ${
+                selectedColor === color
+                  ? "border-white scale-110"
+                  : "border-transparent"
+              }`}
+              style={{ backgroundColor: color }}
+              onClick={() => handleColorSelect(color)}
+            />
+          ))}
+        </div>
+        <div className="flex gap-3 items-center mt-3 bg-[#222222] px-3 py-2 rounded-xl">
+          <div>Custom color:</div>
+          <Field
+            type="text"
+            name={name}
+            value={value}
+            readOnly
+            className="mt-1 px-2 py-1 max-w-[90px] w-auto rounded-xl items-center justify-center bg-transparent border border-[#5a5a5a]/50 focus:outline-none focus:border-blue-500 text-white cursor-pointer text-center"
+            onClick={onClick}
+          />
+          <div
+            className="w-10 h-10 rounded-xl border-[1px] border-[#5a5a5a]"
+            style={{ backgroundColor: value }}
+            onClick={onClick}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};

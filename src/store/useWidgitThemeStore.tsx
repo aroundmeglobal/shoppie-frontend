@@ -30,8 +30,8 @@ interface ThemeFields {
   botTextColor: string;
   cardTextColor: string;
   cardTextSubColour: string;
-  prompotBgColor: string;
-  promptBorderColor: string;
+  // prompotBgColor: string;
+  // promptBorderColor: string;
 }
 
 interface ThemeStoreState {
@@ -54,8 +54,8 @@ const lightThemeValues: ThemeFields = {
   botTextColor: "#000",
   cardTextColor: "#000",
   cardTextSubColour: "#a4a4a4",
-  prompotBgColor: "#1E60FB66",
-  promptBorderColor: "#1E60FBBB",
+  // prompotBgColor: "#1E60FB66",
+  // promptBorderColor: "#1E60FBBB",
 };
 
 const darkThemeValues: ThemeFields = {
@@ -72,19 +72,19 @@ const darkThemeValues: ThemeFields = {
   botTextColor: "#fff",
   cardTextColor: "#fff",
   cardTextSubColour: "#a4a4a4",
-  prompotBgColor: "#1E60FB66",
-  promptBorderColor: "#1E60FBBB",
+  // prompotBgColor: "#1E60FB66",
+  // promptBorderColor: "#1E60FBBB",
 };
 
 const useWidgitThemeStore = create<ThemeStoreState>((set) => ({
-  theme: "light",
-  changedFields: lightThemeValues,
+  theme: "dark",
+  changedFields: darkThemeValues,
 
   toggleTheme: (selectedTheme: "light" | "dark") => {
-    if (selectedTheme === "dark") {
-      set({ changedFields: darkThemeValues, theme: "dark" });
-    } else {
+    if (selectedTheme === "light") {
       set({ changedFields: lightThemeValues, theme: "light" });
+    } else {
+      set({ changedFields: darkThemeValues, theme: "dark" });
     }
   },
 }));
