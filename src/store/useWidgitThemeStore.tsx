@@ -1,20 +1,4 @@
-import create, { StateCreator } from "zustand";
-
-// interface ThemeFields {
-//     userBubbleColor: string;
-//     assistantBubbleColor: string,
-//     headerColor: string;
-//     textHeaderColor: string;
-//     bgColor: string;
-//     inputbarColor: string;
-//     cardBgColor: string;
-//     userTextColor: string;
-//     botTextColor: string;
-//     cardTextColor: string;
-//     cardTextSubColour: string;
-//     prompotBgColor: string;
-//     promptBorderColor: string;
-//   }
+import create from "zustand";
 
 interface ThemeFields {
   userBgColor: string;
@@ -30,8 +14,7 @@ interface ThemeFields {
   botTextColor: string;
   cardTextColor: string;
   cardTextSubColour: string;
-  // prompotBgColor: string;
-  // promptBorderColor: string;
+  inputbarDisabled:boolean,
 }
 
 interface ThemeStoreState {
@@ -43,7 +26,7 @@ interface ThemeStoreState {
 const lightThemeValues: ThemeFields = {
   userBgColor: "#1e60fb",
   assistantBgColor: "#Fafafa",
-  embedId: "db97d397-5bdb-4c85-b41e-7221262d00a3",
+  embedId: "bbc22a75-2033-41a9-8327-6e51caad0c39",
   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
   headerColor: "#ededed",
   textHeaderColor: "#000",
@@ -54,14 +37,13 @@ const lightThemeValues: ThemeFields = {
   botTextColor: "#000",
   cardTextColor: "#000",
   cardTextSubColour: "#a4a4a4",
-  // prompotBgColor: "#1E60FB66",
-  // promptBorderColor: "#1E60FBBB",
+  inputbarDisabled:true,
 };
 
 const darkThemeValues: ThemeFields = {
   userBgColor: "#1e60fb",
   assistantBgColor: "#1B1B1B",
-  embedId: "db97d397-5bdb-4c85-b41e-7221262d00a3",
+  embedId: "bbc22a75-2033-41a9-8327-6e51caad0c39",
   baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
   headerColor: "#222222",
   textHeaderColor: "#fff",
@@ -72,8 +54,7 @@ const darkThemeValues: ThemeFields = {
   botTextColor: "#fff",
   cardTextColor: "#fff",
   cardTextSubColour: "#a4a4a4",
-  // prompotBgColor: "#1E60FB66",
-  // promptBorderColor: "#1E60FBBB",
+  inputbarDisabled:true,
 };
 
 const useWidgitThemeStore = create<ThemeStoreState>((set) => ({
