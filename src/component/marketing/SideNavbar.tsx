@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Configure from "../../../public/assets/svg/Configure";
@@ -18,37 +18,41 @@ import Product from "../../../public/assets/svg/Product";
 import { TbLogout2 } from "react-icons/tb";
 import useRemoveAuthToken from "@/hooks/useRemoveAuthToken";
 import { useRouter } from "next/navigation";
+import WidgetTheme from "../../../public/assets/svg/WidgetTheme";
+import Dialog from "../Dialog";
+import toast from "react-hot-toast";
+import { set } from "date-fns";
 // Define primary nav items along with their routes.
 
 // Define sub nav items with an explicit route for each.
 // For example, "Configure" uses "/marketing", and the rest follow the "/marketing/[slug]" pattern.
 const subcomponent = [
-  { title: "Products", icon: <Product />, route: "/brand/product" },
-  { title: "Configure", icon: <Configure />, route: "/brand/configure" },
+  { title: "Upload products", icon: <Product />, route: "/brand/product" },
+  { title: "Configure widget", icon: <Configure />, route: "/brand/configure" },
   // { title: "Create", icon: <CreateCampaigns />, route: "/brand/create" },
   // { title: "Campaigns", icon: <Campaigns />, route: "/brand/campaigns" },
+  {
+    title: "Widget theme",
+    icon: <WidgetTheme />,
+    route: "/brand/configure-bot",
+  },
   {
     title: "Code snippet",
     icon: <CodeSnippet />,
     route: "/brand/code-snippet",
   },
-  {
-    title: "Bot configure",
-    icon: <CodeSnippet />,
-    route: "/brand/configure-bot",
-  },
   { title: "Analytics", icon: <Analytics />, route: "/brand/analytics" },
-  {
-    title: "Billings and payments",
-    icon: <BillingAndPayments />,
-    route: "/brand/billings-and-payments",
-  },
-  { title: "Help", icon: <Help />, route: "/brand/help" },
-  {
-    title: "Smart assist",
-    icon: <SmartAssist />,
-    route: "/brand/smart-assist",
-  },
+  // {
+  //   title: "Billings and payments",
+  //   icon: <BillingAndPayments />,
+  //   route: "/brand/billings-and-payments",
+  // },
+  // { title: "Help", icon: <Help />, route: "/brand/help" },
+  // {
+  //   title: "Smart assist",
+  //   icon: <SmartAssist />,
+  //   route: "/brand/smart-assist",
+  // },
   {
     title: "Logout",
     icon: <TbLogout2 size={30} />,
@@ -62,6 +66,10 @@ const SideNavbar = () => {
   const brandName = useBrandStore((state) => state.brandName);
   const removeToken = useRemoveAuthToken();
   const router = useRouter();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const primaryItems = [
     { title: "Shoppie", icon: <Shoppiee />, route: "/" },
     {
@@ -72,10 +80,15 @@ const SideNavbar = () => {
     },
   ];
 
-  const onLogout = () => {
-    console.log("clicked");
+  const handleLogout = () => {
+    setLoggingOut(true);
     removeToken();
     router.replace("/");
+    setLoggingOut(false);
+  };
+
+  const onLogout = () => {
+    setIsOpen(true);
   };
 
   return (
@@ -149,7 +162,9 @@ const SideNavbar = () => {
                         : "bg-[#133E9F]/10 hover:bg-[#133E9F]/80"
                     }`}
                   >
-                    <div className="text-xl ml-[-2px]">{item.icon}</div>
+                    <div className="text-xl ml-[-2px] text-red-500">
+                      {item.icon}
+                    </div>
                     <span className="ml-4 hidden group-hover:inline-block transition-opacity duration-300 whitespace-nowrap">
                       {item.title}
                     </span>
@@ -177,6 +192,12 @@ const SideNavbar = () => {
             );
           })}
         </div>
+        <Dialog
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          secondFunction={handleLogout}
+          loader={loggingOut}
+        />
       </div>
     </div>
   );
