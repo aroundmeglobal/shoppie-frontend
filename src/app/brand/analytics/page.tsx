@@ -102,27 +102,29 @@ const Page = () => {
       {
         title: "Unique views",
         no: errorUniqueView ? 0 : uniqueViewData || 0,
-        description: "Unique visitors who interacted with your AI chatbot.",
+        description: "No.of unique customers viewed your AI asisstant",
       },
       {
-        title: "Number of taps",
+        title: "Unique widget taps",
         no: errorWidgetTaps ? 0 : totalWidgetTapsData || 0,
-        description: "Total user interactions with the chatbot.",
+        description: "No.of unique customers opened your AI asisstant",
       },
       {
-        title: "Conversations started",
+        title: "No.of conversations",
         no: errorFirstMessages ? 0 : totalFirstMessagesData || 0,
-        description: "Users who initiated a chat with your AI.",
+        description:
+          "No.of unique customers started a conversation with your AI asisstant",
       },
       {
-        title: "Number of Messages",
+        title: "Messages exchanged",
         no: errorSentMessages ? 0 : totalSentMessagesData || 0,
-        description: "Total messages exchanged between users and your bot.",
+        description:
+          "The total number of messages sent & recieved by customers.",
       },
       {
-        title: "Average message per conversation",
+        title: "Average messages/convo",
         no: errorAverageData ? 0 : averageData || 0,
-        description: "The average number of messages per chat.",
+        description: "The average number of messages per conversation.",
       },
     ],
     [
