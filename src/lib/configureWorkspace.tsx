@@ -20,15 +20,16 @@ type SubmissionData = {
   deletedDocuments: string[];
   faqs: string;
   customInstruction: string;
+  displayMessage: string;
 };
 
 const configureWorkspace = async (
   submissionData: SubmissionData,
   brandDescriptionChanged: any,
   customInstructionChanged: any,
-  pdfChanged: boolean
+  pdfChanged: boolean,
+  displayMessageChanged: boolean
 ): Promise<any> => {
-  // return;
   // Check if pdfs exist in the submission data and loop through each file for upload
   const newPdfsToUpload = submissionData.pdfs.filter((pdf) => !pdf.id);
 
@@ -98,6 +99,16 @@ const configureWorkspace = async (
         throw new Error(`Server is down.Please try again!`);
       }
     }
+  }
+
+  if (displayMessageChanged) {
+    const body = {
+      opening_message: submissionData.displayMessage,
+    };
+    const responseUpdateBrandDescription = await api.put(
+      `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${submissionData.brandId}`,
+      body
+    );
   }
 
   if (brandDescriptionChanged || customInstructionChanged) {

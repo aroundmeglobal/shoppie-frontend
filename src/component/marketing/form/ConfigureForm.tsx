@@ -2,23 +2,22 @@
 import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { FiUpload, FiX } from "react-icons/fi"; // Import FiX for delete icon
 import useBrandStore from "@/store/useBrandStore";
 import { ClipLoader } from "react-spinners";
 import configureWorkspace from "@/lib/configureWorkspace";
-import toast, { Toaster } from "react-hot-toast";
-import FaqComponent from "../FaqComponent";
-import { FAQ } from "../../../../types";
+import toast from "react-hot-toast";
 import api from "@/lib/axiosInstance";
 import { handleDownloadCSV } from "@/lib/downloadCSV";
 import Papa from "papaparse";
-import Product from "@/component/ChatBot/Product";
 import UploadedFileComponent from "./UploadedFileComponent";
 import ProductCardForForm from "./ProductCardForForm";
 import { SlArrowRight } from "react-icons/sl";
 import { useRouter } from "next/navigation";
 import useCsvStore from "@/store/useCsvStore";
-import { log } from "console";
+import Image from "next/image";
+import { loginImage } from "@/constants";
+import DarkIcon from "../../../../public/assets/svg/DarkIcon";
+import LightIcon from "../../../../public/assets/svg/LightIcon";
 
 const Form: React.FC = () => {
   const brandId = useBrandStore((state) => state.brandId);
@@ -27,13 +26,14 @@ const Form: React.FC = () => {
   const brandDomain = useBrandStore((state) => state.brandDomain);
   const brandFaqs = useBrandStore((state) => state.faqs);
   const workspaceExist = useBrandStore((state) => state.workspaceExists);
+  const brandLogo = useBrandStore((state) => state.logo);
   const brandCustomInstruction = useBrandStore(
     (state) => state.customInstruction
   );
+  const brandDisplayMessage = useBrandStore((state) => state.displayMessage);
 
   const { setSelectedCsv, selectedCsv } = useCsvStore();
 
-  const [documents, setDocuments] = useState<any[]>([]);
   const [deletedDocuments, setDeletedDocuments] = useState<any[]>([]);
   const [loading, setIsLoading] = useState(false);
   const [deletingPdf, setDeletingPdf] = useState(false);
@@ -43,10 +43,12 @@ const Form: React.FC = () => {
   );
   const setBrandDomain = useBrandStore((state) => state.setBrandDomain);
   const setWorkspaceExist = useBrandStore((state) => state.setWorkspaceExists);
+  const setDisplayMessage = useBrandStore((state) => state.setDisplayMessage);
   const setFaqs = useBrandStore((state) => state.setFaqs);
   const setCustomInstruction = useBrandStore(
     (state) => state.setCustomInstruction
   );
+  const [isDarkmode, setIsDarkmode] = useState(false);
 
   const router = useRouter();
 
@@ -65,6 +67,7 @@ const Form: React.FC = () => {
     faqs: brandFaqs,
     customInstruction: brandCustomInstruction,
     csv: null as File | null,
+    displayMessage: brandDisplayMessage,
   });
 
   useEffect(() => {
@@ -97,6 +100,7 @@ const Form: React.FC = () => {
           faqs: brandFaqs,
           customInstruction: brandCustomInstruction,
           csv: null as File | null,
+          displayMessage: brandDisplayMessage,
         });
         setPdfExisting(true);
       } else {
@@ -106,6 +110,7 @@ const Form: React.FC = () => {
           faqs: brandFaqs,
           customInstruction: brandCustomInstruction,
           csv: null as File | null,
+          displayMessage: brandDisplayMessage,
         });
       }
       setCsvName(data);
@@ -123,6 +128,10 @@ const Form: React.FC = () => {
     validationSchema: Yup.object({
       brandDescription: Yup.string().required("Brand description is required"),
       customInstruction: Yup.string(),
+      displayMessage: Yup.string()
+        .min(5, "Minimum 5 characters")
+        .max(80, "Maximum 80 characters")
+        .required("display message is required"),
       pdfs: Yup.array().test(
         "fileSize",
         "Each file should be less than 10 MB", // Changed message
@@ -146,6 +155,8 @@ const Form: React.FC = () => {
       const customInstructionChanged =
         values.customInstruction !== initialValues.customInstruction;
       const pdfChanged = values.pdfs !== initialValues.pdfs;
+      const displayMessageChanged =
+        values.displayMessage !== initialValues.displayMessage;
 
       // return
       if (!uploadedFile && !values.pdfs) {
@@ -174,6 +185,10 @@ const Form: React.FC = () => {
             values.customInstruction !== brandCustomInstruction
               ? values.customInstruction
               : brandCustomInstruction, // Send updated customInstruction if changed
+          displayMessage:
+            values.displayMessage !== brandDisplayMessage
+              ? values.displayMessage
+              : brandDisplayMessage, // Send updated displayMessage if changed
         };
 
         try {
@@ -228,14 +243,17 @@ const Form: React.FC = () => {
             submissionData,
             brandDescriptionChanged,
             customInstructionChanged,
-            pdfChanged
+            pdfChanged,
+            displayMessageChanged
           );
           console.log("Workspace configured successfully:", response);
           if (values.brandDescription !== brandDescription) {
             setBrandDescription(values.brandDescription);
             setBrandDomain(values.brandDescription);
           }
-          if (values.faqs !== brandFaqs) setFaqs(values.faqs);
+          if (values.displayMessage !== brandDisplayMessage)
+            setDisplayMessage(values.displayMessage);
+
           if (values.customInstruction !== brandCustomInstruction)
             setCustomInstruction(values.customInstruction);
           toast.success("Workspace configured successfully!");
@@ -528,6 +546,15 @@ const Form: React.FC = () => {
               }
             }
           }
+          if (displayMessageChanged) {
+            const body = {
+              opening_message: values.displayMessage,
+            };
+            const responseUpdateBrandDescription = await api.put(
+              `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+              body
+            );
+          }
 
           const brandBody = {};
           const responseUpdateBrand = await api.put(
@@ -538,7 +565,9 @@ const Form: React.FC = () => {
             setBrandDescription(values.brandDescription);
             setBrandDomain(values.brandDescription);
           }
-          if (values.faqs !== brandFaqs) setFaqs(values.faqs);
+          if (values.displayMessage !== brandDisplayMessage)
+            setDisplayMessage(values.displayMessage);
+
           if (values.customInstruction !== brandCustomInstruction)
             setCustomInstruction(values.customInstruction);
           resetForm({ values });
@@ -603,14 +632,6 @@ const Form: React.FC = () => {
     const updatedFiles = formik.values.pdfs.filter((_, idx) => idx !== index);
     formik.setFieldValue("pdfs", updatedFiles);
     setDeletingPdf(false);
-  };
-
-  const handleDeleteDocument = (docId: number) => {
-    const deletedDoc = documents.find((doc) => doc.id === docId);
-    if (deletedDoc) {
-      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
-      setDeletedDocuments((prev) => [...prev, deletedDoc]);
-    }
   };
 
   // useEffect to parse CSV data when it's passed as a prop
@@ -834,6 +855,16 @@ const Form: React.FC = () => {
     setSelectedCsv(null);
   };
 
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("isDarkmode") === "true";
+    setIsDarkmode(storedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkmode((prev) => !prev);
+    localStorage.setItem("isDarkmode", !isDarkmode);
+  };
+
   return (
     <div className="h-full">
       {(loading || deletingPdf) && (
@@ -898,7 +929,7 @@ const Form: React.FC = () => {
               {/* Download CSV Template Button */}
               {!products?.length ? (
                 <>
-                  <div className="w-1/3 bg-[#272727] p-6 py-10">
+                  <div className="w-1/3 bg-[#272727] p-6 py-10 ">
                     <div className="flex  flex-col items-center justify-center  text-white  rounded-lg ">
                       <button
                         onClick={handleDownloadCSV}
@@ -907,7 +938,7 @@ const Form: React.FC = () => {
                       >
                         Download CSV template
                       </button>
-                      <p className="text-sm text-gray-400 mt-2">
+                      <p className="text-sm text-gray-400 mt-2 text-start pl-3">
                         Get a template for your products.
                       </p>
                     </div>
@@ -980,7 +1011,6 @@ const Form: React.FC = () => {
           </div>
 
           {/* Upload Knowledge PDFs */}
-          {/* {!workspaceExist && ( */}
           <div className="mb-4">
             <label
               htmlFor="pdfs"
@@ -1066,60 +1096,94 @@ const Form: React.FC = () => {
                 }
               </div>
             )}
+          </div>
 
-            {/* {formik.values.pdfs.length > 0 && (
-                <div className="flex flex-wrap ml-4 mr-2">
-                  {formik.values.pdfs.map((file, idx) => (
-                    <div key={idx} className="w-full">
-                      <div className="flex justify-between w-full mb-2">
-                        <div className="text-sm text-gray-300">
-                          <span>{file.name}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePdf(idx)}
-                          aria-label={`Delete file: ${file.name}`}
-                          className=" text-red-500"
-                        >
-                          <FiX size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+          {/* Greeting Message */}
+
+          <div className="mb-4">
+            <label
+              htmlFor="displayMessage"
+              className="block text-sm font-semibold text-[#FAFAFA]"
+            >
+              <span className="text-red-400">*</span> Display Message:
+            </label>
+            <div className="min-h-28 p-5 mt-1 bg-[#1d1d1d] flex flex-col   gap-5 w-full  text-white  rounded-xl">
+              <div className="flex">
+                <div className="bg-[#232323] p-4 rounded-xl w-1/3 h-24 ">
+                  <p className="text-sm text-white">
+                    Showcase your marketing message and make your customers feel
+                    special.
+                  </p>
                 </div>
-              )} */}
+                <div className="w-2/3 flex justify-center items-center">
+                  <div className="flex flex-col  w-[80%] ">
+                    <div
+                      className={`relative ${
+                        isDarkmode ? "bg-[#232323]" : "bg-white"
+                      } mr-8 rounded-xl p-2 mb-2  shadow-md  h-24`}
+                    >
+                      <textarea
+                        id="displayMessage"
+                        name="displayMessage"
+                        value={formik.values.displayMessage}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`resize-none  ${
+                          isDarkmode
+                            ? "text-white bg-[#232323]"
+                            : "text-[#232323] bg-white"
+                        } text-sm h-20  pt-2 pl-2 focus-visible:outline-none w-full items-start justify-start `}
+                        placeholder="Ex- Get your personalised summer routine from experts!"
+                        maxLength={80}
+                        rows={2}
+                      />
 
-            {/* {documents.length > 0 && (
-              <div className="flex flex-wrap ml-4 mr-2">
-                {documents.map((doc, idx) => (
-                  <div key={idx} className="w-full">
-                    <div className="flex justify-between w-full mb-2">
-                      <div className="text-sm text-gray-300">
-                        <span>{doc.title}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        className=" text-red-500"
-                        aria-label={`Delete file: ${doc.id}`}
-                      >
-                        <FiX size={16} />
-                      </button>
+                      <div
+                        className={`absolute -bottom-4 right-6 border-t-[20px] ${
+                          isDarkmode ? "border-t-[#232323]" : "border-t-white"
+                        } border-l-[30px]  border-l-transparent  border-r-[0px]  border-r-transparent`}
+                      ></div>
+                    </div>
+                    <div className="mt-4  flex justify-end">
+                      <Image
+                        src={brandLogo || loginImage}
+                        width={65}
+                        height={65}
+                        alt="brand logo"
+                        className="rounded-full"
+                        priority
+                      />
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            )} */}
+              <div className="flex items-center flex-row -mt-16 ml-5 gap-6">
+                <button
+                  className={`w-20  h-10 rounded-full flex items-center transition duration-300 focus:outline-none shadow ${
+                    isDarkmode ? "bg-gray-700" : "bg-white"
+                  }`}
+                  type="button"
+                  onClick={toggleTheme}
+                >
+                  <div
+                    className={`w-12 h-12 relative rounded-full transition duration-500 transform p-1 text-white ${
+                      isDarkmode
+                        ? "bg-gray-700 translate-x-full"
+                        : "bg-yellow-500 -translate-x-2"
+                    }`}
+                  >
+                    {isDarkmode ? <DarkIcon /> : <LightIcon />}
+                  </div>
+                </button>
+                <p>Switch theme</p>
+              </div>
+            </div>
+            {formik.touched.displayMessage && formik.errors.displayMessage && (
+              <div className="text-red-500 text-sm">
+                {formik.errors.displayMessage}
+              </div>
+            )}
           </div>
-          {/* )} */}
-
-          {/* FAQs Section */}
-          {/* <FaqComponent
-            faqs={formik.values.faqs}
-            onChange={(newFaqs: FAQ[]) => {
-              formik.setFieldValue("faqs", newFaqs);
-            }}
-          /> */}
 
           {/* Custom Instruction */}
           <div className="mb-4">
@@ -1138,7 +1202,7 @@ const Form: React.FC = () => {
               placeholder="Enter custom instructions..."
               className="mt-1 text-sm flex items-center justify-between w-full border border-[#2d2d2d] rounded-xl px-2 py-[5px] bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] "
               rows={4}
-            ></textarea>
+            />
             {formik.touched.customInstruction &&
               formik.errors.customInstruction && (
                 <div className="text-red-500 text-sm">
@@ -1151,9 +1215,9 @@ const Form: React.FC = () => {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={!formik.dirty || loading} // Only enable if form is dirty and not loading
+          disabled={!formik.dirty || loading || !formik.values.displayMessage} // Only enable if form is dirty and not loading
           className={`w-full py-2 rounded-xl mt-8 text-white ${
-            formik.dirty && !loading
+            formik.dirty && !loading && formik.values.displayMessage
               ? "bg-[#00AFFE] cursor-pointer"
               : "bg-[#2d2d2d] cursor-not-allowed"
           } disabled:opacity-50 disabled:cursor-not-allowed`}
