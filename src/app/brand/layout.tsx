@@ -2,6 +2,7 @@ import "@/app/globals.css";
 import SideNavbar from "@/component/marketing/SideNavbar";
 import RedirectHandler from "@/component/RedirectHandler";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -18,11 +19,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* <!-- Google tag (gtag.js) --> */}
-        <script
+        <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-0HF9D3DQTP"
-        ></script>
-        <script
+        />
+        <Script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
