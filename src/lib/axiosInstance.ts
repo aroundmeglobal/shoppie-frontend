@@ -1,9 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const BASE_URL =
-  // process.env.NEXT_PUBLIC_DEVBASEURL;
-  "https://shoppie-backend.aroundme.global/api";
+const BASE_URL = process.env.NEXT_PUBLIC_DEVBASEURL;
 
 const api = axios.create({
   baseURL: BASE_URL,
