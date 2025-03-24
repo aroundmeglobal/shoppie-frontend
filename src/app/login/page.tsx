@@ -18,7 +18,7 @@ const Page = () => {
   const setEmailInStore = useBrandStore((state) => state.setEmail);
 
   const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i; // Standard email validation regex
     return regex.test(email);
   };
 
@@ -35,8 +35,6 @@ const Page = () => {
 
     try {
       setIsLoading(true);
-      // const response = await api.post("/session/request-otp", { email: email });
-
       const body = {
         email: `${email}`,
       };
@@ -44,18 +42,7 @@ const Page = () => {
         `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/otp/email/send`,
         body
       );
-      // const response = await fetch(
-      //   `https://shoppie-backend.aroundme.global/api/brands/otp/email/send`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       email: email,
-      //     }),
-      //   }
-      // );
+
       if (response.status === 200) {
         toast.success("OTP sented to email");
         setEmailInStore(email);
@@ -73,8 +60,16 @@ const Page = () => {
   useEffect(() => {
     if (email.length > 1) {
       if (validateEmail(email)) {
-        setIsEmailValid(true);
-        setEmailError("");
+        const domain = email.split("@")[1];
+        if (domain && domain.toLowerCase() === "gmail.com") {
+          setIsEmailValid(false);
+          setEmailError(
+            "Business emails are required. Gmail addresses are not allowed."
+          );
+        } else {
+          setIsEmailValid(true);
+          setEmailError("");
+        }
       } else {
         setIsEmailValid(false);
         setEmailError("Please enter a valid email address.");
@@ -111,7 +106,7 @@ const Page = () => {
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-300">
-                Email
+                Business Email
               </label>
               <input
                 type="email"
@@ -119,8 +114,8 @@ const Page = () => {
                 name="campaignName"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
-                className="mt-1 block w-full border border-[#2d2d2d] focus:bg-none rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] placeholder:text-[#5a5a5a] placeholder:text-sm"
+                placeholder="Enter business email"
+                className="mt-1  block w-full border border-[#2d2d2d] focus:bg-none rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d] placeholder:text-[#5a5a5a] placeholder:text-sm"
               />
               {emailError && (
                 <p className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -163,9 +158,12 @@ const Page = () => {
           <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
             <Image
               src={loginImage}
+              width={500}
+              height={400}
+              priority
               alt="A person logging in"
-              layout="fill"
-              objectFit="cover"
+              style={{ width: "auto", height: "auto" }}
+              className="object-cover aspect-auto w-full h-full"
             />
           </div>
         </div>

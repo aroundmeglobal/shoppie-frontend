@@ -180,12 +180,15 @@ export default function OtpVerification({
               Verify
             </button>
           </div>
-        <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
+          <div className="w-1/2 bg-[#1f1f1f] md:flex hidden relative">
             <Image
               src={loginImage}
+              width={500}
+              height={400}
+              priority
               alt="A person logging in"
-              layout="fill"
-              objectFit="cover"
+              style={{ width: "auto", height: "auto" }}
+              className="object-cover aspect-auto w-full h-full"
             />
           </div>
         </div>
