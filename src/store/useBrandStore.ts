@@ -13,6 +13,8 @@ interface BrandStoreState {
   faqs: FAQ[];
   customInstruction: string;
   workspaceExists: boolean;
+  displayMessage: string;
+  embedId: string;
 
   setEmail: (newEmail: string) => void;
   setBrandName: (newBrandName: string) => void;
@@ -23,6 +25,8 @@ interface BrandStoreState {
   setFaqs: (newFaqs: FAQ[]) => void;
   setCustomInstruction: (newCustomInstruction: string) => void;
   setWorkspaceExists: (newWorkspaceExists: boolean) => void;
+  setDisplayMessage: (newDisplayMessage: string) => void;
+  setEmbedId: (newEmbedId: string) => void;
 }
 
 const useBrandStore = create<BrandStoreState>()(
@@ -38,6 +42,8 @@ const useBrandStore = create<BrandStoreState>()(
       faqs: [],
       customInstruction: "",
       workspaceExists: false,
+      displayMessage: "",
+      embedId: "",
 
       // Setters
       setEmail: (newEmail) => set({ email: newEmail }),
@@ -50,7 +56,11 @@ const useBrandStore = create<BrandStoreState>()(
       setFaqs: (newFaqs) => set({ faqs: newFaqs }),
       setCustomInstruction: (newCustomInstruction) =>
         set({ customInstruction: newCustomInstruction }),
-      setWorkspaceExists: (newWorkspaceExists) => set({ workspaceExists : newWorkspaceExists }),
+      setWorkspaceExists: (newWorkspaceExists) =>
+        set({ workspaceExists: newWorkspaceExists }),
+      setDisplayMessage: (newDisplayMessage) =>
+        set({ displayMessage: newDisplayMessage }),
+      setEmbedId: (newEmbedId) => set({ embedId: newEmbedId }),
     }),
     {
       name: "brand-storage", // Key for localStorage

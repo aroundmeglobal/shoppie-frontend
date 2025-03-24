@@ -141,16 +141,16 @@ export default function PageComponent() {
         cardTextSubColour: changedFields.cardTextSubColour,
       },
     };
-    const res = await api.post(`${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`,
+    const res = await api.post(
+      `${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`,
       body
     );
-    console.log('res',res.data);
-    
+    console.log("res", res.data);
   };
   return (
     <div className="ml-20 px-5 overflow-y-auto h-screen">
       <h1 className="text-2xl font-bold py-5 sticky top-0 bg-[#000] border-b-2">
-        Bot Configure
+        Widget theme
       </h1>
 
       <div className=" w-[60%] flex my-6 items-center justify-between">

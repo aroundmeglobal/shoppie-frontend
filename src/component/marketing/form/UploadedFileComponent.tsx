@@ -3,7 +3,7 @@ import { MdAttachFile } from "react-icons/md";
 
 interface Types {
   file: any;
-  deletePdf: (idx: number | string | null,id:number|any) => void;
+  deletePdf: (idx: number | string | null, id: number | any) => void;
   idx: number | string;
 }
 
@@ -19,7 +19,8 @@ export default function UploadedFileComponent({ file, deletePdf, idx }: Types) {
   };
 
   useEffect(() => {
-    if (file.file_type === "products" || file.file_type === "knowledge") {
+    if (!file) return;
+    if (file?.file_type === "products" || file?.file_type === "knowledge") {
       const name = file.file_name.split("/").pop();
       setFileName(name);
     } else {

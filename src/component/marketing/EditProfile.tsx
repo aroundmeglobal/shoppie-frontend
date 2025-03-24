@@ -10,7 +10,6 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import BrandInfoForm from "./form/BrandInfoForm";
 import BrandSocialForm from "./form/BrandSocialForm";
-import { stat } from "fs";
 import { getBradData } from "@/api/getBradData";
 import { useQuery } from "@tanstack/react-query";
 
@@ -84,8 +83,11 @@ const EditProfile = () => {
   const setBrandDescription = useBrandStore(
     (state) => state.setBrandDescription
   );
+
   const setBrandDomain = useBrandStore((state) => state.setBrandDomain);
   const setWorkspaceExists = useBrandStore((state) => state.setWorkspaceExists);
+  const setDisplayMessage = useBrandStore((state) => state.setDisplayMessage);
+  const setEmbedId = useBrandStore((state) => state.setEmbedId);
 
   const { data: brandDataResponse, error } = useQuery({
     queryKey: ["brands-data"],
@@ -97,9 +99,6 @@ const EditProfile = () => {
     const fetchBrandDetails = async () => {
       setIsLoading(true);
       try {
-        // const brandDataResponse = await getBradData(brandId);
-
-        // const response = await api.get(`/brands/`);
         const data = brandDataResponse;
 
         initialFetchedDataRef.current = data;
@@ -109,6 +108,8 @@ const EditProfile = () => {
         setBrandName(data?.brandData.name);
         setBrandDescription(data?.brandData.description);
         setBrandDomain(data?.brandData.industry);
+        setDisplayMessage(data?.brandData?.opening_message || "");
+        setEmbedId(data?.brandData?.workspaces[0].embed_id || "");
 
         if (
           data?.brandData.workspaces &&
