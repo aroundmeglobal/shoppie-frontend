@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { ChangeEvent } from "react";
 import { FaCamera, FaPen } from "react-icons/fa";
 
@@ -32,10 +33,13 @@ const BrandInfoForm: React.FC<BrandInfoFormProps> = ({
         >
           {formData.photo ? (
             formData.photo?.type?.startsWith("image/") ? (
-              <img
+              <Image
                 src={URL.createObjectURL(formData.photo)}
                 alt="Uploaded Preview"
                 className="w-32 h-32 rounded-[20px]"
+                priority
+                width={32}
+                height={32}
               />
             ) : formData.photo?.type?.startsWith("video/") ? (
               <video
@@ -44,9 +48,12 @@ const BrandInfoForm: React.FC<BrandInfoFormProps> = ({
                 className="max-w-full h-auto rounded-md"
               />
             ) : (
-              <img
-                src={formData.photo}
+              <Image
+                src={formData?.photo}
                 alt="Uploaded Photo"
+                width={40}
+                height={40}
+                priority
                 className="w-40 h-40 rounded-full object- border-2 border-dashed border-[#3d3d3d]"
               />
             )
