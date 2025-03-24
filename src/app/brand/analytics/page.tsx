@@ -194,8 +194,7 @@ const Page = () => {
             className="w-1/3 h-[180px] max-w-[calc(33.333%-1.25rem)] bg-[#161616] flex flex-col justify-between  p-4 rounded-xl shadow-md"
           >
             <h3 className="text-xl ">{card.title}</h3>
-              <Counter endNumber={card.no} />
-              {/* <p className="text-5xl font-medium mb-[-15px]">{card.no}</p> */}
+            <p className="text-5xl font-medium mb-[-15px]">{card.no}</p>
 
             <p className="text-sm">{card.description}</p>
           </div>
