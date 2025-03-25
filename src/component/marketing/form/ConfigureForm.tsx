@@ -160,12 +160,8 @@ const Form: React.FC = () => {
       const displayMessageChanged =
         values.displayMessage !== initialValues.displayMessage;
 
-      // return
-      if (
-        (!uploadedFile && !values.pdfs) ||
-        (uploadedFile === null && !values.pdfs.length)
-      ) {
-        toast.error("csv or knowledge pdf is mandatory");
+      if (!uploadedFile && !selectedCsv) {
+        toast.error("csv is mandatory");
         setIsLoading(false);
         return;
       }
@@ -251,7 +247,6 @@ const Form: React.FC = () => {
             pdfChanged,
             displayMessageChanged
           );
-          console.log("Workspace configured successfully:", response);
           if (values.brandDescription !== brandDescription) {
             setBrandDescription(values.brandDescription);
             setBrandDomain(values.brandDescription);
@@ -303,11 +298,6 @@ const Form: React.FC = () => {
             `Workspace creation failed: ${responseCreateWorkspace.statusText}`
           );
         } else {
-          console.log(
-            responseCreateWorkspace.data,
-            "resonseCreateWorkspace.data"
-          );
-
           setEmbedId(responseCreateWorkspace?.data?.embed_id);
 
           if (uploadedFile) {
@@ -347,103 +337,10 @@ const Form: React.FC = () => {
               body
             );
             latestCsvId.current = responseFileUpload.data.id;
+          }
 
-            // if pdf along with csv
-            if (values.pdfs) {
-              const newPdfsToUpload = values.pdfs.filter((pdf) => !pdf.id);
-
-              if (newPdfsToUpload && newPdfsToUpload.length > 0) {
-                for (const uploadedFile of newPdfsToUpload) {
-                  try {
-                    const uploadFileType = uploadedFile.type;
-
-                    // Request to generate signed URL
-
-                    const pdfResonse = await fetch(
-                      `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          name: `${brandName
-                            .replace(/\s+/g, "-")
-                            .toLowerCase()}/${uploadedFile.name}`,
-                          contentType: uploadFileType,
-                          folder: "user-pdf",
-                        }),
-                      }
-                    );
-
-                    const pdfData = await pdfResonse.json();
-
-                    // Upload the file to the generated signed URL
-                    const uploadResponse = await fetch(pdfData.signed_url, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": uploadedFile.type,
-                      },
-                      body: uploadedFile,
-                    });
-
-                    if (uploadResponse.ok) {
-                      console.log(
-                        "File uploaded successfully:",
-                        uploadedFile.name
-                      );
-                      console.log("Product data URL:", pdfData.public_url);
-                    } else {
-                      resetForm({ values });
-                      setIsLoading(false);
-                      throw new Error(
-                        `Error uploading file: ${uploadedFile.name}`
-                      );
-                    }
-
-                    //hit file upload api
-
-                    const body = {
-                      brand_id: brandId,
-                      file: `${pdfData.public_url}`,
-                    };
-
-                    const responseFileUpload = await api.post(
-                      `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-knowledge`,
-                      body
-                    );
-                  } catch (error) {
-                    resetForm({ values });
-                    setIsLoading(false);
-                    toast.error("Error during file upload, Please try again !");
-                    console.error("Error during file upload:", error);
-                  }
-                }
-              }
-            }
-            if (brandDescriptionChanged) {
-              if (values.brandDescription) {
-                try {
-                  const body = {
-                    description: values.brandDescription,
-                  };
-
-                  const responseUpdateBrandDescription = await api.put(
-                    `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
-                    body
-                  );
-                } catch (error) {
-                  resetForm({ values });
-                  setIsLoading(false);
-                  toast.error("something went wrong .Please try agian later!");
-                  console.error(
-                    "error while adding description without workspace",
-                    error
-                  );
-                }
-              }
-            }
-          } else if (values.pdfs) {
+          // if pdf along with csv
+          if (values.pdfs) {
             const newPdfsToUpload = values.pdfs.filter((pdf) => !pdf.id);
 
             if (newPdfsToUpload && newPdfsToUpload.length > 0) {
@@ -482,11 +379,6 @@ const Form: React.FC = () => {
                   });
 
                   if (uploadResponse.ok) {
-                    console.log(
-                      "File uploaded successfully:",
-                      uploadedFile.name
-                    );
-                    console.log("Product data URL:", pdfData.public_url);
                   } else {
                     resetForm({ values });
                     setIsLoading(false);
@@ -514,29 +406,10 @@ const Form: React.FC = () => {
                 }
               }
             }
-            if (brandDescriptionChanged) {
-              if (values.brandDescription) {
-                try {
-                  const body = {
-                    description: values.brandDescription,
-                  };
+          }
+          // if brand description changed
 
-                  const responseUpdateBrandDescription = await api.put(
-                    `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
-                    body
-                  );
-                } catch (error) {
-                  resetForm({ values });
-                  setIsLoading(false);
-                  toast.error("something went wrong .Please try agian later!");
-                  console.error(
-                    "error while adding description without workspace",
-                    error
-                  );
-                }
-              }
-            }
-          } else if (brandDescriptionChanged) {
+          if (brandDescriptionChanged) {
             if (values.brandDescription) {
               try {
                 const body = {
@@ -558,6 +431,8 @@ const Form: React.FC = () => {
               }
             }
           }
+          // if display message changed
+
           if (displayMessageChanged) {
             const body = {
               opening_message: values.displayMessage,
@@ -655,6 +530,7 @@ const Form: React.FC = () => {
 
   // Function to parse CSV data and set the products state
   const parseCSVData = (csvData: string) => {
+    setCsvError("");
     Papa?.parse(csvData, {
       header: true,
       skipEmptyLines: true,
@@ -670,9 +546,14 @@ const Form: React.FC = () => {
           "Purchase_link",
         ];
         if (results.meta && results.meta.fields) {
-          const missingFields = requiredFields.filter(
-            (field) => !results.meta!.fields.includes(field)
+          const trimmedFields = results.meta.fields.map((field: any) =>
+            field.trim()
           );
+
+          const missingFields = requiredFields.filter(
+            (field) => !trimmedFields.includes(field)
+          );
+
           if (missingFields.length > 0) {
             setCsvError(
               `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
@@ -689,25 +570,39 @@ const Form: React.FC = () => {
         // Wrap row validation and mapping in a try-catch block.
         try {
           const data = results.data as any[];
-          const parsedProducts: Product[] = data.map((row, index) => {
-            let missing = false;
+          const parsedProducts = data.map((row, index) => {
+            let missingFields = [];
+            let missingColumns = [];
+
+            const trimmedRow = Object.keys(row).reduce((acc, key) => {
+              acc[key.trim()] = row[key];
+              return acc;
+            }, {});
+
             for (const field of requiredFields) {
               if (
-                row[field] === undefined ||
-                row[field] === null ||
-                row[field].toString().trim() === ""
+                trimmedRow[field] === undefined ||
+                trimmedRow[field] === "" ||
+                trimmedRow[field] === null
               ) {
-                missing = true;
+                const columnNumber = requiredFields.indexOf(field) + 1;
+                missingFields.push(field);
+                missingColumns.push(columnNumber);
                 break;
               }
             }
-            if (missing) {
+
+            if (missingFields.length > 0) {
+              const missingDetails = missingFields
+                .map((field, i) => `${field} (Column ${missingColumns[i]})`)
+                .join(", ");
               throw new Error(
                 `Row ${
                   index + 1
-                } has missing fields. Please check the CSV data.`
+                } is missing the following fields: ${missingDetails}. Please check the CSV data.`
               );
             }
+
             return {
               product_name: row.Product_name,
               product_images: row.Product_images,
@@ -715,13 +610,12 @@ const Form: React.FC = () => {
               original_price: row.Original_price,
               discounted_price: row.Discounted_price,
               tags: row.Tags
-                ? row.Tags.split(",").map((tag: string) => tag.trim())
+                ? row.Tags.split(",").map((tag) => tag.trim())
                 : [],
               purchase_link: row.Purchase_link,
             };
           });
           setProducts(parsedProducts);
-          setUploadedFile(csvData);
           formik.setFieldValue("csv", csvData);
         } catch (error: any) {
           setCsvError(error.message);
@@ -735,6 +629,8 @@ const Form: React.FC = () => {
   };
 
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCsvError("");
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
@@ -756,8 +652,12 @@ const Form: React.FC = () => {
 
           // Check for missing fields in the CSV header
           if (results.meta && results.meta.fields) {
+            const trimmedFields = results.meta.fields.map((field: any) =>
+              field.trim()
+            );
+
             const missingFields = requiredFields.filter(
-              (field) => !results.meta.fields.includes(field)
+              (field) => !trimmedFields.includes(field)
             );
             if (missingFields.length > 0) {
               setCsvError(
@@ -776,23 +676,34 @@ const Form: React.FC = () => {
           try {
             const data = results.data as any[]; // Cast to any[] or define a specific type
             const parsedProducts = data.map((row, index) => {
-              // Validate each row for required fields
-              let missing = false;
+              let missingFields = [];
+              let missingColumns = [];
+
+              const trimmedRow = Object.keys(row).reduce((acc, key) => {
+                acc[key.trim()] = row[key];
+                return acc;
+              }, {});
+
               for (const field of requiredFields) {
                 if (
-                  row[field] === undefined ||
-                  row[field] === null ||
-                  row[field].toString().trim() === ""
+                  trimmedRow[field] === undefined ||
+                  trimmedRow[field] === "" ||
+                  trimmedRow[field] === null
                 ) {
-                  missing = true;
+                  const columnNumber = requiredFields.indexOf(field) + 1;
+                  missingFields.push(field);
+                  missingColumns.push(columnNumber);
                   break;
                 }
               }
-              if (missing) {
+              if (missingFields.length > 0) {
+                const missingDetails = missingFields
+                  .map((field, i) => `${field} (Column ${missingColumns[i]})`)
+                  .join(", ");
                 throw new Error(
                   `Row ${
                     index + 1
-                  } has missing fields. Please check the CSV data.`
+                  } is missing the following fields: ${missingDetails}. Please check the CSV data.`
                 );
               }
 
@@ -810,8 +721,10 @@ const Form: React.FC = () => {
               };
             });
 
-            // Update products state with parsed products
             setProducts(parsedProducts);
+            formik.setFieldValue("csv", file);
+            setSelectedCsv(file); // Store in Zustand
+            setUploadedFile(file); // Store uploaded file state
           } catch (error: any) {
             formik.errors.csv = error.message; // Capture error in Formik
             setCsvError(error.message); // Set CSV error state
@@ -822,11 +735,6 @@ const Form: React.FC = () => {
           setCsvError(`Error parsing CSV: ${error.message}`);
         },
       });
-
-      // Update Formik and Zustand states with the uploaded file
-      formik.setFieldValue("csv", file);
-      setSelectedCsv(file); // Store in Zustand
-      setUploadedFile(file); // Store uploaded file state
     }
   };
 
@@ -856,6 +764,7 @@ const Form: React.FC = () => {
           setProducts([]);
           setCsvError(null);
           setSelectedCsv(null);
+          setUploadedFile(null);
           return <b>Removed csv.Please upload a new csv!</b>;
         },
         error: <b>Could not delete the CSV. Please try again!</b>,
@@ -877,8 +786,37 @@ const Form: React.FC = () => {
     localStorage.setItem("isDarkmode", !isDarkmode);
   };
 
+  const handleDiscard = () => {
+    setUploadedFile(null);
+    setProducts([]);
+    setCsvError("");
+  };
   return (
     <div className="h-full">
+      {/* CSV Error Overlay */}
+      {csvError && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+          <div className="bg-[#1d1d1d] p-8 rounded-xl shadow-xl text-center max-w-xl mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-white">
+              CSV Parsing Error
+            </h2>
+            <div className="mb-6 text-left text-white">
+              <ul className="list-disc ml-5">
+                {csvError.split("\n").map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={handleDiscard}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {(loading || deletingPdf) && (
         <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50">
           <ClipLoader color="white" loading={loading} size={50} />
@@ -934,7 +872,7 @@ const Form: React.FC = () => {
               htmlFor="brandDescription"
               className="block text-[16px] font-semibold text-[#FAFAFA]"
             >
-              Products:
+              <span className="text-red-400">*</span> Products:
             </label>
 
             <div className=" mt-1 flex w-full items-center justify-center bg-[#1d1d1d]  rounded-2xl overflow-hidden">
