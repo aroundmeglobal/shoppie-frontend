@@ -27,6 +27,8 @@ const Form: React.FC = () => {
   const brandFaqs = useBrandStore((state) => state.faqs);
   const workspaceExist = useBrandStore((state) => state.workspaceExists);
   const brandLogo = useBrandStore((state) => state.logo);
+  const setEmbedId = useBrandStore((state) => state.setEmbedId);
+
   const brandCustomInstruction = useBrandStore(
     (state) => state.customInstruction
   );
@@ -159,7 +161,10 @@ const Form: React.FC = () => {
         values.displayMessage !== initialValues.displayMessage;
 
       // return
-      if (!uploadedFile && !values.pdfs) {
+      if (
+        (!uploadedFile && !values.pdfs) ||
+        (uploadedFile === null && !values.pdfs.length)
+      ) {
         toast.error("csv or knowledge pdf is mandatory");
         setIsLoading(false);
         return;
@@ -298,6 +303,13 @@ const Form: React.FC = () => {
             `Workspace creation failed: ${responseCreateWorkspace.statusText}`
           );
         } else {
+          console.log(
+            responseCreateWorkspace.data,
+            "resonseCreateWorkspace.data"
+          );
+
+          setEmbedId(responseCreateWorkspace?.data?.embed_id);
+
           if (uploadedFile) {
             const productResponse = await fetch(
               `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
