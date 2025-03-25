@@ -177,8 +177,6 @@ const Products = () => {
   const [productExisting, setProductExisting] = useState(false);
   const latestId = useRef();
 
-  const [refreshData, setRefreshData] = useState(false);
-
   const renderOldProducts = oldProducts.map((product, index) => (
     <ProductCard
       key={index}
@@ -209,98 +207,233 @@ const Products = () => {
     }
   }, [selectedCsv]);
 
-  const parseCSVData = (csvData: string) => {
-    Papa.parse(csvData, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const requiredFields = [
-          "Product_name",
-          "Product_images",
-          "Product_description",
-          "Original_price",
-          "Discounted_price",
-          "Tags",
-          "Purchase_link",
-        ];
+  // const parseCSVData = (csvData: string, type: string) => {
+  //   Papa.parse(csvData, {
+  //     header: true,
+  //     skipEmptyLines: true,
+  //     complete: (results) => {
+  //       const requiredFields = [
+  //         "Product_name",
+  //         "Product_images",
+  //         "Product_description",
+  //         "Original_price",
+  //         "Discounted_price",
+  //         "Tags",
+  //         "Purchase_link",
+  //       ];
 
-        if (results.meta && results.meta.fields) {
-          const missingFields = requiredFields.filter(
-            (field) => !results.meta.fields.includes(field)
-          );
-          if (missingFields.length > 0) {
-            setCsvError(
-              `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
-                "\n"
-              )}`
+  //       if (results.meta && results.meta.fields) {
+  //         const missingFields = requiredFields.filter(
+  //           (field) => !results.meta.fields.includes(field)
+  //         );
+  //         if (missingFields.length > 0) {
+  //           setCsvError(
+  //             `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+  //               "\n"
+  //             )}`
+  //           );
+  //           return;
+  //         }
+  //       } else {
+  //         setCsvError("CSV header error: Unable to read header fields.");
+  //         return;
+  //       }
+
+  //       try {
+  //         const data = results.data as any[];
+  //         const parsedProducts = data.map((row, index) => {
+  //           let missing = false;
+  //           for (const field of requiredFields) {
+  //             if (
+  //               row[field] === undefined ||
+  //               row[field] === null ||
+  //               row[field].toString().trim() === ""
+  //             ) {
+  //               missing = true;
+  //               break;
+  //             }
+  //           }
+  //           if (missing) {
+  //             throw new Error(
+  //               `Row ${
+  //                 index + 1
+  //               } has missing fields. Please check the CSV data.`
+  //             );
+  //           }
+  //           return {
+  //             product_name: row.Product_name,
+  //             product_images: row.Product_images,
+  //             product_description: row.Product_description,
+  //             original_price: row.Original_price,
+  //             discounted_price: row.Discounted_price,
+  //             tags: row.Tags
+  //               ? row.Tags.split(",").map((tag) => tag.trim())
+  //               : [],
+  //             purchase_link: row.Purchase_link,
+  //           };
+  //         });
+
+  //         // Update Zustand store with parsed products
+  //         if (type !== "uploading") {
+  //           setProducts(parsedProducts);
+  //           return;
+  //         }
+  //         console.log(parsedProducts, "pppp");
+  //           resolve(parsedProducts);
+
+  //         return parsedProducts;
+  //       } catch (error: any) {
+  //         setCsvError(error.message);
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error("Error parsing CSV:", error);
+  //       setCsvError(`Error parsing CSV: ${error.message}`);
+  //     },
+  //   });
+  // };
+
+  // const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   let data ;
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     const reader = new FileReader();
+
+  //     reader.onload = (event: ProgressEvent<FileReader>) => {
+  //       const csvData = event.target?.result as string;
+  //     data =    parseCSVData(csvData, "uploading");
+  //     console.log(data,"ddd");
+
+  //     };
+
+  //     reader.readAsText(file);
+  //     handleSubmit(file,data);
+  //     setUploadedFile(file);
+  //   }
+  // };
+
+  const parseCSVData = (csvData: string, type: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const requiredFields = [
+            "Product_name",
+            "Product_images",
+            "Product_description",
+            "Original_price",
+            "Discounted_price",
+            "Tags",
+            "Purchase_link",
+          ];
+
+          if (results.meta && results.meta.fields) {
+            const missingFields = requiredFields.filter(
+              (field) => !results.meta.fields.includes(field)
+            );
+            if (missingFields.length > 0) {
+              setCsvError(
+                `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+                  "\n"
+                )}`
+              );
+              reject(
+                new Error(
+                  `CSV header error: Missing or misspelled field(s):\n${missingFields.join(
+                    "\n"
+                  )}`
+                )
+              );
+              return;
+            }
+          } else {
+            setCsvError("CSV header error: Unable to read header fields.");
+            reject(
+              new Error("CSV header error: Unable to read header fields.")
             );
             return;
           }
-        } else {
-          setCsvError("CSV header error: Unable to read header fields.");
-          return;
-        }
 
-        try {
-          const data = results.data as any[];
-          const parsedProducts = data.map((row, index) => {
-            let missing = false;
-            for (const field of requiredFields) {
-              if (
-                row[field] === undefined ||
-                row[field] === null ||
-                row[field].toString().trim() === ""
-              ) {
-                missing = true;
-                break;
+          try {
+            const data = results.data as any[];
+            const parsedProducts = data.map((row, index) => {
+              let missing = false;
+              for (const field of requiredFields) {
+                if (
+                  row[field] === undefined ||
+                  row[field] === null ||
+                  row[field].toString().trim() === ""
+                ) {
+                  missing = true;
+                  break;
+                }
               }
-            }
-            if (missing) {
-              throw new Error(
-                `Row ${
-                  index + 1
-                } has missing fields. Please check the CSV data.`
-              );
-            }
-            return {
-              product_name: row.Product_name,
-              product_images: row.Product_images,
-              product_description: row.Product_description,
-              original_price: row.Original_price,
-              discounted_price: row.Discounted_price,
-              tags: row.Tags
-                ? row.Tags.split(",").map((tag) => tag.trim())
-                : [],
-              purchase_link: row.Purchase_link,
-            };
-          });
+              if (missing) {
+                throw new Error(
+                  `Row ${
+                    index + 1
+                  } has missing fields. Please check the CSV data.`
+                );
+              }
+              return {
+                product_name: row.Product_name,
+                product_images: row.Product_images,
+                product_description: row.Product_description,
+                original_price: row.Original_price,
+                discounted_price: row.Discounted_price,
+                tags: row.Tags
+                  ? row.Tags.split(",").map((tag) => tag.trim())
+                  : [],
+                purchase_link: row.Purchase_link,
+              };
+            });
 
-          // Update Zustand store with parsed products
-          setProducts(parsedProducts);
-        } catch (error: any) {
-          setCsvError(error.message);
-        }
-      },
-      error: (error) => {
-        console.error("Error parsing CSV:", error);
-        setCsvError(`Error parsing CSV: ${error.message}`);
-      },
+            // Update Zustand store with parsed products
+            if (type !== "uploading") {
+              setProducts(parsedProducts);
+              resolve(parsedProducts); // Resolve with parsed products
+              return;
+            }
+            resolve(parsedProducts);
+            return parsedProducts; // Make sure to return the parsed products
+          } catch (error: any) {
+            setCsvError(error.message);
+            reject(error); // Reject the promise with the error
+          }
+        },
+        error: (error) => {
+          console.error("Error parsing CSV:", error);
+          setCsvError(`Error parsing CSV: ${error.message}`);
+          reject(error);
+        },
+      });
     });
   };
-
-  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
 
-      reader.onload = (event: ProgressEvent<FileReader>) => {
+      reader.onload = async (event: ProgressEvent<FileReader>) => {
         const csvData = event.target?.result as string;
-        parseCSVData(csvData);
+        try {
+          const data = await parseCSVData(csvData, "uploading");
+          await handleSubmit(file, data); // Wait for handleSubmit to complete
+          setUploadedFile(file);
+        } catch (error: any) {
+          // Handle errors from parseCSVData or handleSubmit
+          console.error("Error during CSV processing:", error);
+          // Optionally set an error state or display an error message to the user
+        }
+      };
+
+      reader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        // Handle file reading errors
       };
 
       reader.readAsText(file);
-      setUploadedFile(file);
-      handleSubmit(file);
     }
   };
 
@@ -347,7 +480,7 @@ const Products = () => {
     setSelectedCsv(null);
   };
 
-  const handleSubmit = async (uploadedFile: any) => {
+  const handleSubmit = async (uploadedFile: any, data: any) => {
     setLoading(true);
 
     if (!uploadedFile) {
@@ -400,9 +533,9 @@ const Products = () => {
         brandBody
       );
 
+      setProducts(data);
       toast.success("CSV added successfully");
       setLoading(false);
-      setRefreshData((prev) => !prev); // Trigger re-fetch after delete
     } catch (error) {
       setLoading(false);
 
