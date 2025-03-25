@@ -95,6 +95,10 @@ const EditProfile = () => {
     enabled: !!brandId,
   });
 
+  console.log(brandId, "bradn");
+
+  console.log(brandDataResponse, "brand");
+
   useEffect(() => {
     const fetchBrandDetails = async () => {
       setIsLoading(true);
@@ -109,18 +113,17 @@ const EditProfile = () => {
         setBrandDescription(data?.brandData.description);
         setBrandDomain(data?.brandData.industry);
         setDisplayMessage(data?.brandData?.opening_message || "");
-        if (data?.brandData?.workspace?.length) {
-          setEmbedId(data?.brandData?.workspaces[0]?.embed_id);
-        } else {
-          setEmbedId("");
-        }
 
         if (
           data?.brandData.workspaces &&
           data?.brandData.workspaces.length > 0
         ) {
+          setEmbedId(data?.brandData?.workspaces[0]?.embed_id);
+
           setWorkspaceExists(true);
         } else {
+          setEmbedId("");
+
           setWorkspaceExists(false);
         }
 
