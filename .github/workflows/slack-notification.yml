@@ -1,0 +1,79 @@
+name: Slack Notification on Push
+
+on:
+  push:
+    branches:
+      - prayag  # This will trigger on pushes to the prayag branch
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history to get proper commit info
+      
+      - name: Get commit details
+        id: commit-details
+        run: |
+          COMMITTER=$(git show -s --format='%an' ${{ github.sha }})
+          COMMIT_MSG=$(git show -s --format='%s' ${{ github.sha }})
+          echo "committer=$COMMITTER" >> $GITHUB_OUTPUT
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification for prayag branch
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:rocket: Pushed!* A new push to the main branch [SHOPPIE FRONTEND] was successful!\n*Committer:* ${{ steps.commit-details.outputs.committer }}\n*Commit Message:* ${{ steps.commit-details.outputs.message }}\n*Commit Hash:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
+
+  # Add a separate job for the development branch if needed
+  notify-dev:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Get commit details
+        id: commit-details
+        run: |
+          COMMITTER=$(git show -s --format='%an' ${{ github.sha }})
+          COMMIT_MSG=$(git show -s --format='%s' ${{ github.sha }})
+          echo "committer=$COMMITTER" >> $GITHUB_OUTPUT
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification for development branch
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:rocket: Pushed!* A new push to the development branch [SHOPPIE FRONTEND] was successful!\n*Committer:* ${{ steps.commit-details.outputs.committer }}\n*Commit Message:* ${{ steps.commit-details.outputs.message }}\n*Commit Hash:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
