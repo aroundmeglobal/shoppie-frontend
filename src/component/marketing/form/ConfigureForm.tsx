@@ -160,7 +160,7 @@ const Form: React.FC = () => {
       const displayMessageChanged =
         values.displayMessage !== initialValues.displayMessage;
 
-      if (!uploadedFile && !selectedCsv) {
+      if (!uploadedFile && !selectedCsv && !products) {
         toast.error("csv is mandatory");
         setIsLoading(false);
         return;
@@ -630,6 +630,7 @@ const Form: React.FC = () => {
 
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError("");
+    formik.setFieldError("csv", ""); // Remove any previous CSV error
 
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -722,12 +723,11 @@ const Form: React.FC = () => {
             });
 
             setProducts(parsedProducts);
-            formik.setFieldValue("csv", file);
             setSelectedCsv(file); // Store in Zustand
             setUploadedFile(file); // Store uploaded file state
           } catch (error: any) {
-            formik.errors.csv = error.message; // Capture error in Formik
             setCsvError(error.message); // Set CSV error state
+            e.target.value = "";
           }
         },
         error: (error) => {
@@ -752,6 +752,8 @@ const Form: React.FC = () => {
             `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
             brandBody
           );
+          formik.setFieldValue("csv", null);
+          formik.resetForm();
         } catch (error) {
           console.log(error, "error while deleting csv");
         }
@@ -765,6 +767,8 @@ const Form: React.FC = () => {
           setCsvError(null);
           setSelectedCsv(null);
           setUploadedFile(null);
+          formik.resetForm();
+
           return <b>Removed csv.Please upload a new csv!</b>;
         },
         error: <b>Could not delete the CSV. Please try again!</b>,
@@ -1092,17 +1096,19 @@ const Form: React.FC = () => {
                         className={`absolute -bottom-4 right-6 border-t-[20px] ${
                           isDarkmode ? "border-t-[#232323]" : "border-t-white"
                         } border-l-[30px]  border-l-transparent  border-r-[0px]  border-r-transparent`}
-                      ></div>
-                    </div>
-                    <div className="mt-4  flex justify-end">
-                      <Image
-                        src={brandLogo || loginImage}
-                        width={65}
-                        height={65}
-                        alt="brand logo"
-                        className="rounded-full"
-                        priority
                       />
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="mt-4 flex justify-end object-cover rounded-full bg-red-300 w-[65px] h-[65px] overflow-hidden">
+                        <Image
+                          src={brandLogo || loginImage}
+                          width={65}
+                          height={65}
+                          alt="brand logo"
+                          className="object-cover w-full h-full"
+                          priority
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
