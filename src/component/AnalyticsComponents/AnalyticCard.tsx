@@ -28,10 +28,10 @@ export default function AnalyticCard({ card }: CardProps) {
             />
             <div
               role="tooltip"
-              className="tooltip absolute bottom-full right-0 mb-2 px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-[#2d2d2d] rounded-[13px] shadow-xs opacity-0 group-hover:opacity-100 pointer-events-none"
+              className="tooltip absolute bottom-full right-0 mb-2 px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-[#2d2d2d] rounded-br-[10px] rounded-bl-[13px] rounded-t-[13px]  shadow-xs opacity-0 group-hover:opacity-100 pointer-events-none"
             >
               {card.description}
-              <div className="absolute top-0   right-2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-[#2d2d2d]" />
+              <div className="absolute top-full   right-2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-[#2d2d2d]" />
             </div>
           </div>
         </div>

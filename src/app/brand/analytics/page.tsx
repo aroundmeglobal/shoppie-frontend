@@ -137,8 +137,6 @@ const Page = () => {
     ]
   );
 
-  console.log(isLoadingUniqueView, "123123");
-
   async function handleRefresh() {
     setRefreshing(true);
     await Promise.all([
@@ -184,9 +182,9 @@ const Page = () => {
               />
             </button>
           </div>
-          <div className="flex gap-2 items-center bg-[#1C1C1D] p-3 rounded-xl border-[1px]">
+          {/* <div className="flex gap-2 items-center bg-[#1C1C1D] p-3 rounded-xl border-[1px]">
             date <MdDateRange />
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="w-full gap-6 mt-8 flex flex-wrap justify-start no-scrollbar ">
