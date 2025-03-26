@@ -90,6 +90,7 @@ const Page = () => {
   const {
     data: products,
     isLoading: productsLoading,
+    isFetched: productsFetched,
     error: productError,
   } = useQuery({
     queryKey: ["products", brandId],
@@ -159,6 +160,8 @@ const Page = () => {
       setLastRefresh(new Date(storedTime));
     }
   }, [brandId]);
+
+  console.log(productsLoading, "proo");
 
   return (
     <div className="ml-20 px-5  h-screen ">
@@ -233,6 +236,13 @@ const Page = () => {
             </div>
           ))}
         </div>
+        {productsFetched && !products?.length && (
+          <div className="w-full flex justify-center  p-4">
+            <span className="text-sm text-center text-red-500 ">
+              You need to add corresponding csv to see products!
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
