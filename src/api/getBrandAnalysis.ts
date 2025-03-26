@@ -1,10 +1,10 @@
 import api from "@/lib/axiosInstance";
 
 export async function fetchUniqueViewData(brandId: string) {
-  console.log(brandId);
+  // need to change env for analysis in prod till then we go with hardcoded api
 
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/unique-view?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/unique-view?brand_id=${brandId}`
   );
 
   return response.data;
@@ -12,35 +12,35 @@ export async function fetchUniqueViewData(brandId: string) {
 
 export async function fetchTotalSentMessagesData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-sent-messages?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/total-sent-messages?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function fetchTotalFirstMessagesData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-first-messages?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/total-first-messages?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function fetchTotalWidgetTapsData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-widget-taps?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/total-widget-taps?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function getAverage(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/average-messages-per-conversation/?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/average-messages-per-conversation/?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function getProductTaps(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/product-taps/?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/product-taps/?brand_id=${brandId}`
   );
   return response.data;
 }
