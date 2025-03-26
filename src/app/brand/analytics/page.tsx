@@ -15,7 +15,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { LuRefreshCw } from "react-icons/lu";
 import { MdDateRange } from "react-icons/md";
 import { formatDistance } from "date-fns";
-import Counter from "@/component/Counter";
+import AnalyticCard from "@/component/AnalyticsComponents/AnalyticCard";
 
 const Page = () => {
   const brandId = useBrandStore((state) => state.brandId);
@@ -101,29 +101,29 @@ const Page = () => {
     () => [
       {
         title: "Unique views",
-        no: errorUniqueView ? 0 : uniqueViewData || 0,
+        no: uniqueViewData,
         description: "No.of unique customers viewed your AI asisstant",
       },
       {
         title: "Unique widget taps",
-        no: errorWidgetTaps ? 0 : totalWidgetTapsData || 0,
+        no: totalWidgetTapsData,
         description: "No.of unique customers opened your AI asisstant",
       },
       {
         title: "No.of conversations",
-        no: errorFirstMessages ? 0 : totalFirstMessagesData || 0,
+        no: totalFirstMessagesData,
         description:
           "No.of unique customers started a conversation with your AI asisstant",
       },
       {
         title: "Messages exchanged",
-        no: errorSentMessages ? 0 : totalSentMessagesData || 0,
+        no: totalSentMessagesData,
         description:
           "The total number of messages sent & recieved by customers.",
       },
       {
         title: "Average messages/convo",
-        no: errorAverageData ? 0 : averageData || 0,
+        no: averageData,
         description: "The average number of messages per conversation.",
       },
     ],
@@ -190,17 +190,10 @@ const Page = () => {
         </div>
       </div>
       <div className="w-full gap-6 mt-8 flex flex-wrap justify-start no-scrollbar ">
-        {cardsData.map((card) => (
-          <div
-            key={Math.random()}
-            className="w-1/3 h-[180px] max-w-[calc(33.333%-1.25rem)] bg-[#161616] flex flex-col justify-between  p-4 rounded-xl shadow-md"
-          >
-            <h3 className="text-xl ">{card.title}</h3>
-            <p className="text-5xl font-medium mb-[-15px]">{card.no}</p>
-
-            <p className="text-sm">{card.description}</p>
-          </div>
+        {cardsData.map((card, index) => (
+          <AnalyticCard card={card} key={index} />
         ))}
+
         <div className="w-full h-full bg-[#161616] rounded-xl">
           {/* Heading section */}
           <div className="flex justify-between items-center p-4">
