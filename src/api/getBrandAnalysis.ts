@@ -4,7 +4,7 @@ export async function fetchUniqueViewData(brandId: string) {
   console.log(brandId);
 
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/unique-view?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/unique-view?brand_id=${brandId}`
   );
 
   return response.data;
@@ -12,35 +12,35 @@ export async function fetchUniqueViewData(brandId: string) {
 
 export async function fetchTotalSentMessagesData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/total-sent-messages?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-sent-messages?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function fetchTotalFirstMessagesData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/total-first-messages?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-first-messages?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function fetchTotalWidgetTapsData(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/total-widget-taps?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/total-widget-taps?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function getAverage(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/average-messages-per-conversation/?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/average-messages-per-conversation/?brand_id=${brandId}`
   );
   return response.data;
 }
 
 export async function getProductTaps(brandId: string) {
   const response = await api.get(
-    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/product-taps/?brand_id=${brandId}`
+    `${process.env.NEXT_PUBLIC_ANALYSIS_BACKEND}/shoppie/product-taps/?brand_id=${brandId}`
   );
   return response.data;
 }
