@@ -329,6 +329,7 @@ const Products = () => {
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
       const reader = new FileReader();
 
       reader.onload = async (event: ProgressEvent<FileReader>) => {
@@ -340,7 +341,9 @@ const Products = () => {
         } catch (error: any) {
           // Handle errors from parseCSVData or handleSubmit
           console.error("Error during CSV processing:", error);
-          // Optionally set an error state or display an error message to the user
+          e.target.value = "";
+        } finally {
+          e.target.value = ""; 
         }
       };
 
