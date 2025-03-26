@@ -780,16 +780,6 @@ const Form: React.FC = () => {
     setSelectedCsv(null);
   };
 
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("isDarkmode") === "true";
-    setIsDarkmode(storedTheme);
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDarkmode((prev) => !prev);
-    localStorage.setItem("isDarkmode", !isDarkmode);
-  };
-
   const handleDiscard = () => {
     setUploadedFile(null);
     setProducts([]);
@@ -1112,26 +1102,6 @@ const Form: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center flex-row -mt-16 ml-5 gap-6">
-                <button
-                  className={`w-20  h-10 rounded-full flex items-center transition duration-300 focus:outline-none shadow ${
-                    isDarkmode ? "bg-gray-700" : "bg-white"
-                  }`}
-                  type="button"
-                  onClick={toggleTheme}
-                >
-                  <div
-                    className={`w-12 h-12 relative rounded-full transition duration-500 transform p-1 text-white ${
-                      isDarkmode
-                        ? "bg-gray-700 translate-x-full"
-                        : "bg-yellow-500 -translate-x-2"
-                    }`}
-                  >
-                    {isDarkmode ? <DarkIcon /> : <LightIcon />}
-                  </div>
-                </button>
-                <p>Switch theme</p>
               </div>
             </div>
             {formik.touched.displayMessage && formik.errors.displayMessage && (
