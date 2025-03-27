@@ -113,10 +113,12 @@ export default function PageComponent() {
 
     return () => {
       if (script) {
+        script.dataset.openOnLoad = "off";
+
         document.body.removeChild(script);
       }
       const widgetContainerCleanup = document.getElementById(
-        "anything-llm-embed-chat-container"
+        "anyhting-all-wrapper"
       );
       if (widgetContainerCleanup) {
         widgetContainerCleanup.remove();
