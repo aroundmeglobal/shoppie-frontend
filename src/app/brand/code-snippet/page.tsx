@@ -6,23 +6,9 @@ import "prismjs/components/prism-jsx";
 import "../../prism-theme.css";
 import useBrandStore from "@/store/useBrandStore";
 import Code from "@/component/Code";
-
-export const pageIndex = `
-<!--
-Paste this script at the bottom of your HTML before the </body> tag.
-See more style and config options on our docs
-https://github.com/Mintplex-Labs/anything-llm/tree/master/embed/README.md 
--->
-
-<script
-  data-embed-id="b5909a44-7e5b-494b-a9e4-3b29c35e1da2"
-  data-base-api-url="https://anythingllm.aroundme.global/api/embed"
-  src="https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js">
-</script>
-
-<!-- AnythingLLM (https://anythingllm.com) -->
-
-`;
+import { useRouter } from "next/navigation";
+import Spinner from "@/component/Spinner";
+import { GiAutoRepair } from "react-icons/gi";
 
 const hilight = (code: any, language = "markup") => {
   return Prism.highlight(code, Prism.languages[language], language);
@@ -31,11 +17,52 @@ const hilight = (code: any, language = "markup") => {
 const Page = () => {
   const brandId = useBrandStore((state) => state.brandId);
   const workspaceExist = useBrandStore((state) => state.workspaceExists);
+  const embed_id = useBrandStore((state) => state.embedId);
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+
+  const pageIndex = `
+<!--
+Paste this script at the bottom of your HTML before the </body> tag.
+See more style and config options on our docs
+https://github.com/Mintplex-Labs/anything-llm/tree/master/embed/README.md 
+-->
+
+<script
+    data-embed-id="${embed_id || brandId}"
+    data-base-api-url="https://anythingllm.aroundme.global/api/embed"
+    src="https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js">
+  </script>
+
+<!-- AnythingLLM (https://anythingllm.com) -->
+
+`;
+
   const paCode = hilight(pageIndex);
 
   const pageCodeSnippets = [
     { heading: "Script code", content: paCode, copyContent: pageIndex },
   ];
+
+  useEffect(() => {
+    const widgetContainerCleanup = document.getElementById(
+      "anyhting-all-wrapper"
+    );
+    if (widgetContainerCleanup) {
+      widgetContainerCleanup.remove();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (brandId) {
+      setLoading(false);
+    }
+  }, [brandId]);
+
+  if (loading) {
+    return <Spinner />;
+  }
 
   return (
     <div>
@@ -71,6 +98,29 @@ const Page = () => {
           </div>
         </div>
       </div>
+      {workspaceExist && (
+        <div className="fixed z-10 inset-0 flex items-center justify-center bg-black backdrop-blur-sm bg-opacity-50">
+          <div className="bg-[#1d1d1d] rounded-xl shadow-lg p-6 w-96">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-[#2d2d2d] rounded-full">
+                <GiAutoRepair size={30} />
+              </div>
+              <h2 className="text-lg font-semibold mt-4">
+                Configure Your Brand's AI
+              </h2>
+            </div>
+            <button
+              type="submit"
+              onClick={() => router.replace("/brand/configure")}
+              className={`w-full  py-2 rounded-xl mt-5 text-white 
+                          bg-[#00AFFE] cursor-pointer
+                       disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Configure AI
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
