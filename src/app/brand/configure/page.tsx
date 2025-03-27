@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ConfigureForm from "@/component/marketing/form/ConfigureForm";
 
 import useBrandStore from "@/store/useBrandStore";
 import Image from "next/image";
 import { IoMdArrowUp } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
+import Spinner from "@/component/Spinner";
 
 const Page = () => {
   const brandId = useBrandStore((state) => state.brandId);
@@ -16,6 +17,8 @@ const Page = () => {
 
   const embedId = useBrandStore((state) => state.embedId);
   const displayMessage = useBrandStore((state) => state.displayMessage);
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!workspaceExist) return;
@@ -67,6 +70,12 @@ const Page = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (brandId) {
+      setLoading(false);
+    }
+  }, [brandId]);
+
   // useEffect(() => {
   //   if (!displayMessage) return;
   //   const pTag = document.getElementById("allm-starting-message");
@@ -75,6 +84,9 @@ const Page = () => {
   //   }
   // }, [displayMessage]);
 
+  if (loading) {
+    return <Spinner />;
+  }
   return (
     <div>
       {/* Main content container */}
