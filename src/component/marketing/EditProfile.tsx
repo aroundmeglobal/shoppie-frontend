@@ -88,16 +88,15 @@ const EditProfile = () => {
   const setWorkspaceExists = useBrandStore((state) => state.setWorkspaceExists);
   const setDisplayMessage = useBrandStore((state) => state.setDisplayMessage);
   const setEmbedId = useBrandStore((state) => state.setEmbedId);
+  const setCustomInstruction = useBrandStore(
+    (state) => state.setCustomInstruction
+  );
 
   const { data: brandDataResponse, error } = useQuery({
     queryKey: ["brands-data"],
     queryFn: () => getBradData(brandId),
     enabled: !!brandId,
   });
-
-  console.log(brandId, "bradn");
-
-  console.log(brandDataResponse, "brand");
 
   useEffect(() => {
     const fetchBrandDetails = async () => {
@@ -113,6 +112,9 @@ const EditProfile = () => {
         setBrandDescription(data?.brandData.description);
         setBrandDomain(data?.brandData.industry);
         setDisplayMessage(data?.brandData?.opening_message || "");
+        setCustomInstruction(
+          data?.brandData?.workspaces[0]?.open_ai_prompt || ""
+        );
 
         if (
           data?.brandData.workspaces &&
