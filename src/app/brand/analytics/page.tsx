@@ -161,7 +161,14 @@ const Page = () => {
     }
   }, [brandId]);
 
-  console.log(productsLoading, "proo");
+  useEffect(() => {
+    const widgetContainerCleanup = document.getElementById(
+      "anyhting-all-wrapper"
+    );
+    if (widgetContainerCleanup) {
+      widgetContainerCleanup.remove();
+    }
+  }, []);
 
   return (
     <div className="ml-20 px-5  h-screen ">

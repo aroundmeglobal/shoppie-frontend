@@ -208,6 +208,15 @@ const Products = () => {
     }
   }, [selectedCsv]);
 
+  useEffect(() => {
+    const widgetContainerCleanup = document.getElementById(
+      "anyhting-all-wrapper"
+    );
+    if (widgetContainerCleanup) {
+      widgetContainerCleanup.remove();
+    }
+  }, []);
+
   const parseCSVData = (csvData: string, type: string): Promise<any[]> => {
     setCsvError("");
     return new Promise((resolve, reject) => {
@@ -343,7 +352,7 @@ const Products = () => {
           console.error("Error during CSV processing:", error);
           e.target.value = "";
         } finally {
-          e.target.value = ""; 
+          e.target.value = "";
         }
       };
 

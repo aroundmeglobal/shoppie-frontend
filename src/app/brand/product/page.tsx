@@ -1,6 +1,5 @@
 import Products from "@/component/marketing/Products";
 import React from "react";
-import { useSearchParams } from "next/navigation";
 
 const Page = () => {
   return (
