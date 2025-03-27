@@ -132,7 +132,7 @@ const Form: React.FC = () => {
       customInstruction: Yup.string(),
       displayMessage: Yup.string()
         .min(5, "Minimum 5 characters")
-        .max(80, "Maximum 80 characters")
+        .max(150, "Maximum 150 characters")
         .required("display message is required"),
       pdfs: Yup.array().test(
         "fileSize",
@@ -1078,7 +1078,7 @@ const Form: React.FC = () => {
                             : "text-[#232323] bg-white"
                         } text-sm h-20  pt-2 pl-2 focus-visible:outline-none w-full items-start justify-start `}
                         placeholder="Ex- Get your personalised summer routine from experts!"
-                        maxLength={80}
+                        maxLength={150}
                         rows={2}
                       />
 
