@@ -98,9 +98,9 @@ https://github.com/Mintplex-Labs/anything-llm/tree/master/embed/README.md
           </div>
         </div>
       </div>
-      {workspaceExist && (
+      {!workspaceExist && (
         <div className="fixed z-10 inset-0 flex items-center justify-center bg-black backdrop-blur-sm bg-opacity-50">
-          <div className="bg-[#1d1d1d] rounded-xl shadow-lg p-6 w-96">
+          <div className="bg-[#1d1d1d] rounded-xl shadow-lg p-6 w-96  ">
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center w-12 h-12 bg-[#2d2d2d] rounded-full">
                 <GiAutoRepair size={30} />
