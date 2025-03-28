@@ -67,7 +67,6 @@ export default function RegisterPage() {
       setSubmitting: setSubmitting,
     }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
-    return;
     try {
       // Destructure values for easier access
       const {
