@@ -116,7 +116,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-[url(/login-background.png)] bg-fixed bg-cover bg-center ">
+    <div className=" bg-fixed bg-cover bg-center ">
       <Navbar />
       <main className="flex min-h-screen flex-col items-center justify-between  mx-auto  max-w-screen-2xl pb-20">
         <div className="mt-5 md:mt-16 text-4xl md:text-6xl font-bold text-center leading-relaxed ">
