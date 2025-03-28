@@ -12,3 +12,33 @@ export type Product = {
   tags: string[];
   purchase_link: string;
 };
+
+export interface ThemeFields {
+  userBgColor: string;
+  assistantBgColor: string;
+  embedId: string;
+  baseApiUrl: string;
+  headerColor: string;
+  textHeaderColor: string;
+  bgColor: string;
+  inputbarColor: string;
+  cardBgColor: string;
+  userTextColor: string;
+  botTextColor: string;
+  cardTextColor: string;
+  cardTextSubColour: string;
+  inputbarDisabled: boolean;
+  startingMessageTheme: string;
+  openingMessageTextColor: string;
+  InputTextColor: string;
+}
+
+interface ColorFieldProps {
+  label: string;
+  name: string;
+}
+
+export interface ColorCategory {
+  category: string;
+  fields: ColorFieldProps[];
+}
