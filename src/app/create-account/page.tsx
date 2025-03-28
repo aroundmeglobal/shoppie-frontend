@@ -43,7 +43,10 @@ export default function RegisterPage() {
     businessDomain: Yup.string().required("Business domain is required"),
     website: Yup.string().url("Enter a valid URL").nullable(),
     contactName: Yup.string().required("Contact name is required"),
-    contactPhone: Yup.string().required("Contact phone is required").max(10,"Maximum 10 numbers").min(10),
+    contactPhone: Yup.string()
+      .required("Contact phone is required")
+      .max(10, "Maximum 10 numbers")
+      .min(10, "Minimum 10 numbers"),
     acceptedTerms: Yup.boolean().oneOf(
       [true],
       "You must accept the terms and conditions"
@@ -64,6 +67,7 @@ export default function RegisterPage() {
       setSubmitting: setSubmitting,
     }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
+    return;
     try {
       // Destructure values for easier access
       const {
@@ -143,6 +147,12 @@ export default function RegisterPage() {
       // );
 
       // const brand = await brandResponse.json();
+
+      toast.promise(api.post(`/brands/`, brandData), {
+        loading: "Creating account...",
+        success: "Account created successfully",
+        error: "Error creating account",
+      });
 
       const brandResponse = await api.post(`/brands/`, brandData);
       const brand = await brandResponse.data;
@@ -402,10 +412,8 @@ export default function RegisterPage() {
                           className="placeholder:text-[#5a5a5a] placeholder:text-sm mt-1 text-sm block w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]"
                         />
                         <Field
-                          
                           type="number"
                           name="contactPhone"
-                          max={10}
                           placeholder="Phone number"
                           className="placeholder:text-[#5a5a5a] placeholder:text-sm appearance-none mt-1 text-sm block w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]"
                         />
