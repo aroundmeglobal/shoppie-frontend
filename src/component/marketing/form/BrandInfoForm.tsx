@@ -36,7 +36,7 @@ const BrandInfoForm: React.FC<BrandInfoFormProps> = ({
               <Image
                 src={URL.createObjectURL(formData.photo)}
                 alt="Uploaded Preview"
-                className="w-32 h-32 rounded-[20px]"
+                className="w-32 h-32 rounded-full object-cover"
                 priority
                 width={32}
                 height={32}
@@ -54,7 +54,7 @@ const BrandInfoForm: React.FC<BrandInfoFormProps> = ({
                 width={40}
                 height={40}
                 priority
-                className="w-40 h-40 rounded-full object- border-2 border-dashed border-[#3d3d3d]"
+                className="w-32 h-32 rounded-full object-cover border-2 border-dashed border-[#3d3d3d]"
               />
             )
           ) : (

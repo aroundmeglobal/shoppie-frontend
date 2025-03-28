@@ -12,6 +12,7 @@ import BrandInfoForm from "./form/BrandInfoForm";
 import BrandSocialForm from "./form/BrandSocialForm";
 import { getBradData } from "@/api/getBradData";
 import { useQuery } from "@tanstack/react-query";
+import Spinner from "../Spinner";
 
 const EditProfile = () => {
   const initialSocialData = [
@@ -91,6 +92,8 @@ const EditProfile = () => {
   const setCustomInstruction = useBrandStore(
     (state) => state.setCustomInstruction
   );
+
+  const [loading, setLoading] = useState(true);
 
   const { data: brandDataResponse, error } = useQuery({
     queryKey: ["brands-data"],
@@ -281,26 +284,55 @@ const EditProfile = () => {
     }
 
     try {
-      await api.put("/users/update-brand", {
-        user_id: formData.user_id,
-        brand_name: formData.brandName,
-        domain: formData.brandDomain,
-        website: updatedSocialMediaData.find(
-          (item) => item.platform === "Website"
-        )?.inputValue,
-        logo: mediaPublicUrl || formData.photo,
-        name: formData.brandName,
-        phone_number: formData.contactMobile,
-        meta: updatedMeta,
-      });
-
-      setLogoInStore(mediaPublicUrl || formData.photo);
-      toast.success("Successfully updated.");
+      toast.promise(
+        api.put(
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/brands/?brand_id=${brandId}`,
+          {
+            user_id: formData.user_id,
+            brand_name: formData.brandName,
+            domain: formData.brandDomain,
+            website: updatedSocialMediaData.find(
+              (item) => item.platform === "Website"
+            )?.inputValue,
+            logo: mediaPublicUrl || formData.photo,
+            name: formData.brandName,
+            phone_number: formData.contactMobile,
+            meta: updatedMeta,
+          }
+        ),
+        {
+          loading: "Updating data...",
+          success: () => {
+            setLogoInStore(mediaPublicUrl || formData.photo);
+            return <b> Successfully updated</b>;
+          },
+          error: <b>Could not update the data. Please try again!</b>,
+        }
+      );
     } catch (error) {
       console.error("API Error:", error);
       toast.error("Failed to update data, please try again.");
     }
   };
+
+  useEffect(() => {
+    const widgetContainerCleanup = document.getElementById(
+      "anyhting-all-wrapper"
+    );
+    if (widgetContainerCleanup) {
+      widgetContainerCleanup.remove();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (brandId) {
+      setLoading(false);
+    }
+  }, [brandId]);
+
+  if (loading) {
+    return <Spinner />;
+  }
 
   return (
     <div>
