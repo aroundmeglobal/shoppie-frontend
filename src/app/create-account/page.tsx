@@ -6,7 +6,7 @@ import { FaChevronDown } from "react-icons/fa";
 import useBrandStore from "@/store/useBrandStore";
 import { useRouter } from "next/navigation";
 import Navbar from "@/component/Navbar";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import api from "@/lib/axiosInstance";
 import Cookies from "js-cookie";
 import Image from "next/image";
@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const setBrandName = useBrandStore((state) => state.setBrandName);
   const setBrandId = useBrandStore((state) => state.setBrandId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading,setLoading] = useState(false);
 
   const initialValues = {
     email: email,
@@ -67,6 +68,7 @@ export default function RegisterPage() {
       setSubmitting: setSubmitting,
     }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
+    setLoading(true);
     try {
       // Destructure values for easier access
       const {
@@ -131,7 +133,7 @@ export default function RegisterPage() {
         logo: logoData.public_url,
         // incoperation_certificate: certificateData.public_url,
         contact_person_name: contactName,
-        contact_person_phone_number: contactPhone,
+        contact_person_phone_number: contactPhone.toString(),
       };
 
       // const brandResponse = await fetch(
@@ -166,11 +168,13 @@ export default function RegisterPage() {
       // Navigate to the brand status page
       // router.push("/brand-status");
       router.replace("/brand/profile");
+      setLoading(false);
       setSubmitting(false);
     } catch (error) {
       toast.error(error.response.data.detail);
       console.error("Error during submission", error);
       setSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -448,7 +452,7 @@ export default function RegisterPage() {
 
                     <button
                       type="submit"
-                      disabled={isSubmitting || !isValid}
+                      disabled={isSubmitting || !isValid || loading}
                       className={`cursor-pointer mt-4 w-full rounded-xl text-sm py-2 font-semibold transition 
                         ${
                           isValid && dirty && !isSubmitting
