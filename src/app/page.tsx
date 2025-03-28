@@ -99,7 +99,9 @@ export default function Home() {
   const handleBrandOverview = (brand: Brand) => {
     setBrand(brand);
     if (isMobile) {
-      router.push("/brand-page");
+      ChatWidget(brand.workspaces[0].embed_id, brand.brand_opening_message);
+
+      // router.push("/brand-page");
     } else {
       setBrandOverview(brand);
     }

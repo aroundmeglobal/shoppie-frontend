@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import useSelectedBrandStore from "@/store/selectedBrand";
 import api from "@/lib/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
+import { ChatWidget } from "@/lib/ChatWidget";
 
 export interface Brand {
   brand_id: number;
@@ -100,7 +101,7 @@ export default function Home() {
   const handleBotClick = (brand: Brand) => {
     if (isMobile) {
       setBrand(brand);
-      router.push(`/chat/${brand?.workspaces[0].slug}`);
+      ChatWidget(brand.workspaces[0].embed_id, brand.brand_opening_message);
     } else {
       handleBrandClick(brand);
     }
@@ -109,7 +110,9 @@ export default function Home() {
   const handleBrandOverview = (brand: Brand) => {
     setBrand(brand);
     if (isMobile) {
-      router.push("/brand-page");
+      ChatWidget(brand.workspaces[0].embed_id, brand.brand_opening_message);
+
+      // router.push("/brand-page");
     } else {
       setBrandOverview(brand);
     }
