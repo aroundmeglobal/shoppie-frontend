@@ -264,7 +264,7 @@ const Form: React.FC = () => {
           console.error("Error configuring workspace:", error);
           toast.error("Error configuring workspace. Please try again.");
           resetForm({ values });
-
+          setSelectedCsv(null);
           setIsLoading(false);
         } finally {
           setIsLoading(false);
@@ -294,6 +294,7 @@ const Form: React.FC = () => {
             "Error creating workspace:",
             responseCreateWorkspace.statusText
           );
+          setSelectedCsv(null);
           throw new Error(
             `Workspace creation failed: ${responseCreateWorkspace.statusText}`
           );
@@ -301,42 +302,47 @@ const Form: React.FC = () => {
           setEmbedId(responseCreateWorkspace?.data?.embed_id);
 
           if (uploadedFile) {
-            const productResponse = await fetch(
-              `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
-              {
-                method: "POST",
+            try {
+              const productResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_DEVBASEURL}/upload/generate-upload-url`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    name: `${brandName
+                      .replace(/\s+/g, "-")
+                      .toLowerCase()}-product`,
+                    contentType: `${uploadedFile.type}`,
+                    folder: "user-products",
+                  }),
+                }
+              );
+
+              const productData = await productResponse.json();
+
+              await fetch(productData.signed_url, {
+                method: "PUT",
                 headers: {
-                  "Content-Type": "application/json",
+                  "Content-Type": uploadedFile.type,
                 },
-                body: JSON.stringify({
-                  name: `${brandName
-                    .replace(/\s+/g, "-")
-                    .toLowerCase()}-product`,
-                  contentType: `${uploadedFile.type}`,
-                  folder: "user-products",
-                }),
-              }
-            );
+                body: uploadedFile,
+              });
 
-            const productData = await productResponse.json();
-
-            await fetch(productData.signed_url, {
-              method: "PUT",
-              headers: {
-                "Content-Type": uploadedFile.type,
-              },
-              body: uploadedFile,
-            });
-
-            const body = {
-              brand_id: brandId,
-              file: `${productData.public_url}`,
-            };
-            const responseFileUpload = await api.post(
-              `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
-              body
-            );
-            latestCsvId.current = responseFileUpload.data.id;
+              const body = {
+                brand_id: brandId,
+                file: `${productData.public_url}`,
+              };
+              const responseFileUpload = await api.post(
+                `${process.env.NEXT_PUBLIC_DEVBASEURL}/files/upload-products`,
+                body
+              );
+              latestCsvId.current = responseFileUpload.data.id;
+            } catch (error) {
+              setSelectedCsv(null);
+              toast.error("Something went wrong while uploading CSV!");
+            }
           }
 
           // if pdf along with csv

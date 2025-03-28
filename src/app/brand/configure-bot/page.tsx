@@ -8,30 +8,16 @@ import { IoMoonOutline } from "react-icons/io5";
 import { CiLight } from "react-icons/ci";
 import api from "@/lib/axiosInstance";
 import useBrandStore from "@/store/useBrandStore";
-
-interface ColorFieldProps {
-  label: string;
-  name: string;
-}
-
-const colorFields: ColorFieldProps[] = [
-  { label: "User Chat Bubble Color", name: "userBgColor" },
-  { label: "User Text Color", name: "userTextColor" },
-  { label: "Assistant Chat Bubble Color", name: "assistantBgColor" },
-  { label: "Bot Text Color", name: "botTextColor" },
-  { label: "Header Color", name: "headerColor" },
-  { label: "Text Header Color", name: "textHeaderColor" },
-  { label: "Background Color", name: "bgColor" },
-  { label: "Input Bar Color", name: "inputbarColor" },
-  { label: "Card Background Color", name: "cardBgColor" },
-  { label: "Card Text Color", name: "cardTextColor" },
-  { label: "Card Text Sub Color", name: "cardTextSubColour" },
-  // { label: "Prompt Background Color", name: "prompotBgColor" },
-  // { label: "Prompt Border Color", name: "promptBorderColor" },
-];
+import toast from "react-hot-toast";
+import useCustomWidgetThemeStore from "@/store/useCustomWidgetThemeStore";
+import Spinner from "@/component/Spinner";
+import Image from "next/image";
+import DummyChatBot from "@/component/ChatBot/DummyChatBot";
+import { colorCategories } from "@/constants";
 
 export default function PageComponent() {
-  const brandId = useBrandStore((state) => state.brandId);
+  const { brandName, logo, brandId, displayMessage } = useBrandStore();
+  const { theme: customTheme, setTheme }: any = useCustomWidgetThemeStore();
   const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
   const [currentColorField, setCurrentColorField] = useState<string | null>(
     null
@@ -44,20 +30,12 @@ export default function PageComponent() {
   );
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [tempColour, setTempColour] = useState<string | null>(null);
-
   // Use Zustand store for theme management
   const { changedFields, theme, toggleTheme } = useWidgitThemeStore();
 
-  useEffect(() => {
-    setInitialValues(changedFields);
-  }, []);
+  const [showChatBot, setShowChatBot] = useState(true);
 
-  useEffect(() => {
-    const hasChanges = Object.keys(changedFields).some(
-      (key) => changedFields[key] !== initialValues[key]
-    );
-    setIsChanged(hasChanges);
-  }, [changedFields, initialValues]);
+  const [loading, setLoading] = useState(true);
 
   const handleColorFieldClick = (fieldName: string) => {
     setCurrentColorField(fieldName);
@@ -84,134 +62,231 @@ export default function PageComponent() {
     }
   };
 
-  useEffect(() => {
-    const existingScript = document.getElementById("chat-widget-script");
-    const existingWidgetContainer = document.getElementById(
-      "anything-llm-embed-chat-container"
-    );
-
-    if (existingScript) {
-      document.body.removeChild(existingScript);
-    }
-
-    if (existingWidgetContainer) {
-      existingWidgetContainer.remove();
-    }
-
-    const script = document.createElement("script");
-    script.id = "chat-widget-script";
-    script.src =
-      "https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js";
-    script.async = true;
-    script.dataset.openOnLoad = "on";
-
-    Object.keys(changedFields).forEach((key) => {
-      script.dataset[key] = changedFields[key];
-    });
-
-    document.body.appendChild(script);
-
-    return () => {
-      if (script) {
-        script.dataset.openOnLoad = "off";
-
-        document.body.removeChild(script);
-      }
-      const widgetContainerCleanup = document.getElementById(
-        "anyhting-all-wrapper"
-      );
-      if (widgetContainerCleanup) {
-        widgetContainerCleanup.remove();
-      }
-    };
-  }, [changedFields]);
-
   const onSend = async () => {
-    console.log("Selected Values:", changedFields);
-    const body = {
-      theme: {
-        userBgColor: changedFields.userBgColor,
-        assistantBgColor: changedFields.assistantBgColor,
-        headerColor: changedFields.headerColor,
-        textHeaderColor: changedFields.textHeaderColor,
-        bgColor: changedFields.bgColor,
-        inputbarColor: changedFields.inputbarColor,
-        cardBgColor: changedFields.cardBgColor,
-        userTextColor: changedFields.userTextColor,
-        botTextColor: changedFields.botTextColor,
-        cardTextColor: changedFields.cardTextColor,
-        cardTextSubColour: changedFields.cardTextSubColour,
-      },
-    };
-    const res = await api.post(
-      `${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`,
-      body
-    );
-    console.log("res", res.data);
+    try {
+      const body = {
+        theme: {
+          userBgColor: changedFields.userBgColor,
+          assistantBgColor: changedFields.assistantBgColor,
+          headerColor: changedFields.headerColor,
+          textHeaderColor: changedFields.textHeaderColor,
+          bgColor: changedFields.bgColor,
+          inputbarColor: changedFields.inputbarColor,
+          cardBgColor: changedFields.cardBgColor,
+          userTextColor: changedFields.userTextColor,
+          botTextColor: changedFields.botTextColor,
+          cardTextColor: changedFields.cardTextColor,
+          cardTextSubColour: changedFields.cardTextSubColour,
+          startingMessageTheme: changedFields.startingMessageTheme,
+        },
+      };
+      toast.promise(
+        api.post(
+          `${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`,
+          body
+        ),
+        {
+          loading: "Updating theme...",
+          success: () => {
+            setTheme({
+              ...body.theme,
+              embedId: "bbc22a75-2033-41a9-8327-6e51caad0c39",
+              baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
+            });
+            setIsChanged(false);
+            toggleTheme("custom");
+            return <b>Theme updated</b>;
+          },
+
+          error: <b>Could not update the theme. Please try again!</b>,
+        }
+      );
+    } catch (error) {
+      toast.error(
+        "Something went wrong while updating theme. Please try again later!"
+      );
+    }
   };
+
+  useEffect(() => {
+    if (customTheme.bgColor) {
+      toggleTheme("custom");
+    }
+    setInitialValues(changedFields);
+  }, [customTheme]);
+
+  useEffect(() => {
+    const hasChanges = Object.keys(changedFields).some(
+      (key) => changedFields[key] !== initialValues[key]
+    );
+    setIsChanged(hasChanges);
+  }, [changedFields, initialValues]);
+
+  useEffect(() => {
+    const widgetContainerCleanup = document.getElementById(
+      "anyhting-all-wrapper"
+    );
+    if (widgetContainerCleanup) {
+      widgetContainerCleanup.remove();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (brandId) {
+      setLoading(false);
+    }
+  }, [brandId]);
+
+  if (loading) {
+    return <Spinner />;
+  }
+
   return (
-    <div className="ml-20 px-5 overflow-y-auto h-screen">
+    <div className="ml-20 px-5">
       <h1 className="text-2xl font-bold py-5 sticky top-0 bg-[#000] border-b-2">
         Widget theme
       </h1>
+      <div className="flex justify-between h-full ">
+        <div className="flex flex-col w-[60%] ">
+          <div className=" flex my-6 items-center justify-between ">
+            <div className="bg-[#161616] rounded-[20px] overflow-hidden space-x-2">
+              <button
+                onClick={() => {
+                  toggleTheme("dark");
+                }}
+                className={`px-4 py-4 rounded-[20px] ${
+                  theme === "dark" ? "bg-white text-black" : " text-white"
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <IoMoonOutline /> Dark Theme
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  toggleTheme("light");
+                }}
+                className={`px-4 py-4 rounded-[20px] ${
+                  theme === "light" ? "bg-white text-black" : " text-white"
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <CiLight /> Light Theme
+                </div>
+              </button>
+              {customTheme.userBgColor && (
+                <button
+                  onClick={() => toggleTheme("custom")}
+                  className={`px-4 py-4 rounded-[20px] ${
+                    theme === "custom" ? "bg-white text-black" : " text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">Custom Theme</div>
+                </button>
+              )}
+            </div>
 
-      <div className=" w-[60%] flex my-6 items-center justify-between">
-        <div className="bg-[#161616] rounded-[20px] overflow-hidden">
-          <button
-            onClick={() => toggleTheme("dark")}
-            className={`px-4 py-4 rounded-[20px] ${
-              theme === "dark" ? "bg-white text-black" : " text-white"
-            }`}
-          >
-            <div className="flex items-center gap-1">
-              <IoMoonOutline /> Dark Theme
-            </div>
-          </button>
-          <button
-            onClick={() => toggleTheme("light")}
-            className={`px-4 py-4 rounded-[20px] ${
-              theme === "light" ? "bg-white text-black" : " text-white"
-            }`}
-          >
-            <div className="flex items-center gap-1">
-              <CiLight /> Light Theme
-            </div>
-          </button>
+            <button
+              onClick={onSend}
+              disabled={!isChanged}
+              className={`px-4 py-4 rounded-[20px] text-black ${
+                isChanged
+                  ? "bg-white hover:bg-blue-600 active:bg-green-700"
+                  : "bg-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Publish
+            </button>
+          </div>
+
+          <div className="flex-grow overflow-y-auto no-scrollbar h-[calc(100vh-200px)] bg-[#161616] rounded-[12px] p-6">
+            <Formik initialValues={changedFields} onSubmit={() => {}}>
+              {() => (
+                <Form className="space-y-4">
+                  {colorCategories.map((category) => (
+                    <div key={category.category}>
+                      <h3 className="text-xl font-semibold text-white pt-2 ">
+                        {category.category}
+                      </h3>
+                      <div className="mt-4  rounded-2xl overflow-hidden ">
+                        {category.fields.map((field, index) => (
+                          <div key={field.name} className=" bg-[#1d1d1d]">
+                            <ColorField
+                              label={field.label}
+                              name={field.name}
+                              value={changedFields[field.name]}
+                              onClick={() => handleColorFieldClick(field.name)}
+                              setSelectedColor={(color) => {
+                                setSelectedColorInField(field.name, color);
+                              }}
+                            />
+                            {index !== category.fields.length - 1 && (
+                              <div className="border-[#5A5A5A]/50 border-[0.5px]  bg-[#1d1d1d] mt-2  " />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </Form>
+              )}
+            </Formik>
+          </div>
         </div>
+        {!showChatBot && (
+          <div className="bottom-10 right-5 fixed cursor-pointer flex flex-col items-center">
+            {/* Wrapper to keep the message and logo aligned properly */}
+            <div className="relative flex flex-col items-center mr-8">
+              {/* Message Box */}
+              <div
+                className="relative rounded-xl bottom-[80px]  shadow-md max-w-[300px] min-w-[100px] px-4 py-2 mr-auto "
+                style={{ backgroundColor: changedFields.startingMessageTheme }}
+              >
+                <div id="displayMessage" className="rounded-xl text-sm">
+                  <span
+                    style={{ color: changedFields.openingMessageTextColor }}
+                  >
+                    {displayMessage || "Hello, how can I help you?"}
+                  </span>
+                </div>
 
-        <button
-          onClick={onSend}
-          disabled={!isChanged}
-          className={`px-4 py-4 rounded-[20px] text-black ${
-            isChanged
-              ? "bg-white hover:bg-blue-600 active:bg-green-700"
-              : "bg-gray-500 cursor-not-allowed"
-          }`}
+                {/* Message Tail */}
+                <div
+                  className="absolute -bottom-4 right-0 -translate-x-1/2 border-t-[20px] border-l-[16px] border-l-transparent border-r-[14px] border-r-transparent"
+                  style={{ borderTopColor: changedFields.startingMessageTheme }}
+                />
+              </div>
+
+              {/* Logo (Now Positioned Independently) */}
+              <div className=" bottom-8 right-8 fixed">
+                <Image
+                  onClick={() => setShowChatBot(true)}
+                  src={
+                    logo || "https://storage.aroundme.global/avatar_default.png"
+                  }
+                  alt="Logo"
+                  width={65}
+                  height={65}
+                  className="object-cover rounded-full"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={`fixed  
+          transform transition-all duration-300 origin-bottom-right right-5 
+          ${showChatBot ? "scale-100 opacity-100" : "scale-0 opacity-0"}
+        `}
         >
-          Publish
-        </button>
-      </div>
-
-      <div className="w-full h-[80%] gap-5 flex no-scrollbar">
-        <div className="w-[60%] h-full overflow-y-auto overflow-hidden bg-[#161616] rounded-[12px] p-6 no-scrollbar">
-          <Formik initialValues={changedFields} onSubmit={() => {}}>
-            {() => (
-              <Form className="space-y-4">
-                {colorFields.map(({ label, name }) => (
-                  <ColorField
-                    key={name}
-                    label={label}
-                    name={name}
-                    value={changedFields[name]}
-                    onClick={() => handleColorFieldClick(name)}
-                    setSelectedColor={(color) => {
-                      setSelectedColorInField(name, color);
-                    }}
-                  />
-                ))}
-              </Form>
-            )}
-          </Formik>
+          <DummyChatBot
+            brandName={brandName}
+            logo={logo}
+            changedFields={changedFields}
+            showBot={showChatBot}
+            setShowBot={setShowChatBot}
+          />
         </div>
       </div>
 
@@ -265,12 +340,12 @@ const ColorField = ({
   onClick,
 }: IndividualColorFieldProps) => {
   const colors = [
+    "#FAFAFA",
+    "#161616",
+    "#003CC9",
     "#7939EE",
-    "#434CE6",
-    "#165EF1",
     "#2E90FD",
-    "#078AB2",
-    "#0A9250",
+    "#118A4F",
   ];
 
   const [selectedColor, setSelectedColorLocal] = useState<string | undefined>(
@@ -289,7 +364,7 @@ const ColorField = ({
   }, [value]);
 
   return (
-    <div className="flex justify-between bg-[#1d1d1d] p-3 rounded-[12px]">
+    <div className="flex justify-between bg-[#1d1d1d] p-3 ">
       <div>
         <label className="text-white text-[17px] font-semibold">{label}</label>
         <h2 className="text-[15px] text-[#fff]/60 mt-2">

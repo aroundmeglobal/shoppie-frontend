@@ -40,3 +40,10 @@ export async function getBradData(brandId: string) {
     throw new Error(error.message || "An error occurred while fetching data");
   }
 }
+
+export async function getCustomTheme(brandId: string) {
+  const response = await api.get(
+    `${process.env.NEXT_PUBLIC_DEVBASEURL}/widget_theme/?brand_id=${brandId}`
+  );
+  return response.data;
+}

@@ -20,6 +20,15 @@ const Page = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const widgetContainerCleanup = document.getElementById(
+  //     "anyhting-all-wrapper"
+  //   );
+  //   if (widgetContainerCleanup) {
+  //     widgetContainerCleanup.remove();
+  //   }
+  // }, []);
+
   useEffect(() => {
     if (!workspaceExist) return;
     const existingScript = document.getElementById("chat-widget-script");
@@ -43,7 +52,7 @@ const Page = () => {
       "https://anythingllm.aroundme.global/embed/anythingllm-chat-widget.min.js";
     script.async = true;
     script.dataset.baseApiUrl = "https://anythingllm.aroundme.global/api/embed";
-    script.dataset.openOnLoad = "on";
+    script.dataset.openOnLoad = "off";
     script.dataset.openingMessage = displayMessage;
 
     document.body.appendChild(script);
@@ -60,15 +69,6 @@ const Page = () => {
       }
     };
   }, [embedId, displayMessage, workspaceExist]);
-
-  useEffect(() => {
-    const widgetContainerCleanup = document.getElementById(
-      "anyhting-all-wrapper"
-    );
-    if (widgetContainerCleanup) {
-      widgetContainerCleanup.remove();
-    }
-  }, []);
 
   useEffect(() => {
     if (brandId) {
