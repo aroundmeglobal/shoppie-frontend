@@ -26,7 +26,7 @@ export async function fetchTotalFirstMessagesData(brandId: string) {
 
 export async function fetchTotalWidgetTapsData(brandId: string) {
   const response = await api.get(
-    `https://analytics-backend.aroundme.global/api/shoppie/total-widget-taps?brand_id=${brandId}`
+    `https://analytics-backend.aroundme.global/api/shoppie/unique-widget-taps?brand_id=${brandId}`
   );
   return response.data;
 }
