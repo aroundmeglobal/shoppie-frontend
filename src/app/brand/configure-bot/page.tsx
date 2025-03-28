@@ -78,6 +78,8 @@ export default function PageComponent() {
           cardTextColor: changedFields.cardTextColor,
           cardTextSubColour: changedFields.cardTextSubColour,
           startingMessageTheme: changedFields.startingMessageTheme,
+          openingMessageTextColor: changedFields.openingMessageTextColor,
+          InputTextColor: changedFields.InputTextColor,
         },
       };
       toast.promise(
