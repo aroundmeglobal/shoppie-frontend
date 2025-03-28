@@ -147,12 +147,6 @@ export default function RegisterPage() {
 
       // const brand = await brandResponse.json();
 
-      toast.promise(api.post(`/brands/`, brandData), {
-        loading: "Creating account...",
-        success: "Account created successfully",
-        error: "Error creating account",
-      });
-
       const brandResponse = await api.post(`/brands/`, brandData);
       const brand = await brandResponse.data;
 
