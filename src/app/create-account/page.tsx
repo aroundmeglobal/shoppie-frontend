@@ -11,6 +11,7 @@ import api from "@/lib/axiosInstance";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import { loginImage } from "@/constants";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function RegisterPage() {
     businessDomain: Yup.string().required("Business domain is required"),
     website: Yup.string().url("Enter a valid URL").nullable(),
     contactName: Yup.string().required("Contact name is required"),
-    contactPhone: Yup.string().required("Contact phone is required"),
+    contactPhone: Yup.string().required("Contact phone is required").max(10,"Maximum 10 numbers").min(10),
     acceptedTerms: Yup.boolean().oneOf(
       [true],
       "You must accept the terms and conditions"
@@ -164,6 +165,7 @@ export default function RegisterPage() {
       router.replace("/brand/profile");
       setSubmitting(false);
     } catch (error) {
+      toast.error(error.response.data.detail);
       console.error("Error during submission", error);
       setSubmitting(false);
     }
@@ -400,8 +402,10 @@ export default function RegisterPage() {
                           className="placeholder:text-[#5a5a5a] placeholder:text-sm mt-1 text-sm block w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]"
                         />
                         <Field
-                          type="text"
+                          
+                          type="number"
                           name="contactPhone"
+                          max={10}
                           placeholder="Phone number"
                           className="placeholder:text-[#5a5a5a] placeholder:text-sm appearance-none mt-1 text-sm block w-full border border-[#2d2d2d] rounded-xl p-2 bg-transparent text-white focus:outline-none focus:ring-0 focus:border-[#4d4d4d]"
                         />
