@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const setBrandName = useBrandStore((state) => state.setBrandName);
   const setBrandId = useBrandStore((state) => state.setBrandId);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const initialValues = {
     email: email,
@@ -42,7 +42,9 @@ export default function RegisterPage() {
     brandName: Yup.string().required("Brand name is required"),
     brandDescription: Yup.string().required("Brand description is required"),
     businessDomain: Yup.string().required("Business domain is required"),
-    website: Yup.string().url("Enter a valid URL").nullable(),
+    website: Yup.string()
+      .url("Enter a valid URL")
+      .required("Website is required"),
     contactName: Yup.string().required("Contact name is required"),
     contactPhone: Yup.string()
       .required("Contact phone is required")
@@ -69,6 +71,7 @@ export default function RegisterPage() {
     }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
     setLoading(true);
+
     try {
       // Destructure values for easier access
       const {
@@ -344,9 +347,9 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Website */}
-                    {/* <div>
+                    <div>
                       <label className="block text-xs font-medium text-gray-300">
-                        Website
+                        <span className="text-red-400">*</span> Website
                       </label>
                       <Field
                         type="text"
@@ -359,7 +362,7 @@ export default function RegisterPage() {
                         component="div"
                         className="text-red-500 text-sm"
                       />
-                    </div> */}
+                    </div>
 
                     {/* GST Certificate Upload */}
                     {/* <div>
