@@ -128,7 +128,8 @@ const SideNavbar = () => {
                         alt="Muscle Blaze Logo"
                         width={30}
                         height={30}
-                        className="rounded-[5px]"
+                        style={{width:"auto",height:"auto"}}
+                        className="rounded-[5px] object-cover"
                       />
                     )}
 
