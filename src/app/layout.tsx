@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <TanstackProvider>{children}</TanstackProvider>;
+  return <TanstackProvider>{children}</TanstackProvider>
 }
