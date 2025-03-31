@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { TanstackProvider } from "@/providers/tanstack-provider";
 import { ReactNode } from "react";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Shoppie",
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <TanstackProvider>{children}</TanstackProvider>;
+  return (
+    <TanstackProvider>
+      {children}
+      <Toaster />
+    </TanstackProvider>
+  );
 }
