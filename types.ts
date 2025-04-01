@@ -30,7 +30,7 @@ export interface ThemeFields {
   inputbarDisabled: boolean;
   startingMessageTheme: string;
   openingMessageTextColor: string;
-  InputTextColor: string;
+  inputTextColor: string;
 }
 
 interface ColorFieldProps {
