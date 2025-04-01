@@ -31,7 +31,8 @@ export default function PageComponent() {
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [tempColour, setTempColour] = useState<string | null>(null);
   // Use Zustand store for theme management
-  const { changedFields, theme, toggleTheme } = useWidgitThemeStore();
+  const { changedFields, theme, toggleTheme, updateCustomTheme } =
+    useWidgitThemeStore();
 
   const [showChatBot, setShowChatBot] = useState(true);
 
@@ -79,7 +80,7 @@ export default function PageComponent() {
           cardTextSubColour: changedFields.cardTextSubColour,
           startingMessageTheme: changedFields.startingMessageTheme,
           openingMessageTextColor: changedFields.openingMessageTextColor,
-          InputTextColor: changedFields.InputTextColor,
+          inputTextColor: changedFields.inputTextColor,
         },
       };
       toast.promise(
@@ -97,6 +98,11 @@ export default function PageComponent() {
             });
             setIsChanged(false);
             toggleTheme("custom");
+            updateCustomTheme({
+              ...body.theme,
+              embedId: "bbc22a75-2033-41a9-8327-6e51caad0c39",
+              baseApiUrl: "https://anythingllm.aroundme.global/api/embed",
+            });
             return <b>Theme updated</b>;
           },
 
@@ -111,16 +117,14 @@ export default function PageComponent() {
   };
 
   useEffect(() => {
-    if (customTheme.bgColor) {
-      toggleTheme("custom");
-    }
     setInitialValues(changedFields);
-  }, [customTheme]);
+  }, []);
 
   useEffect(() => {
     const hasChanges = Object.keys(changedFields).some(
       (key) => changedFields[key] !== initialValues[key]
     );
+
     setIsChanged(hasChanges);
   }, [changedFields, initialValues]);
 
