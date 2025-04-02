@@ -11,7 +11,7 @@ export const colorCategories: ColorCategory[] = [
       { label: "Chat Header Background Color", name: "headerColor" },
       { label: "Text Header Color", name: "textHeaderColor" },
       { label: "Input Bar Color", name: "inputbarColor" },
-      { label: "Input Text Color", name: "InputTextColor" },
+      { label: "Input Text Color", name: "inputTextColor" },
     ],
   },
   {
